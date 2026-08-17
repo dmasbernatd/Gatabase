@@ -12,7 +12,7 @@
 - [x] `pytest-django` y `factory_boy` configurados; `pytest` corre y pasa
 - [x] Un test que comprueba que la página raíz responde
 - [x] Un test que comprueba que una fecha guardada y recuperada mantiene el instante correcto al presentarse en `America/Santiago`
-- [x] Las nueve apps del spec creadas vacías (`tenancy`, `clients`, `patients`, `records`, `preventive`, `scheduling`, `reminders`, `audit`, `imports`), para fijar la estructura desde el principio
+- [x] Las nueve apps del spec creadas vacías (`tenancy`, `tutors`, `patients`, `records`, `preventive`, `scheduling`, `notices`, `audit`, `imports`), para fijar la estructura desde el principio
 
 ## Comments
 
@@ -30,4 +30,4 @@ Implementado. Notas para los tickets siguientes:
 
 Pendiente para el ticket 03: el test estructural de ADR-0003 que recorre los modelos de dominio y falla si a alguno le falta `clinic`. Aquí no había modelos que recorrer.
 
-Nota de vocabulario: los nombres de app `clients` y `reminders` chocan con las palabras a evitar de `CONTEXT.md` (`cliente`, `recordatorio`), pero vienen fijados literalmente por el spec de H1 y por este ticket. Se dejan como están; cambiarlos es una decisión del spec, no de la implementación.
+Nota de vocabulario, **resuelta**: los nombres de app `clients` y `reminders` chocaban con las palabras a evitar de `CONTEXT.md` (`cliente`, `recordatorio`). Renombradas a **`tutors`** y **`notices`** por decisión del usuario, antes de que hubiera modelos ni migraciones. Los specs de H1, H3 y H4 quedan actualizados: donde decían `clients` y `reminders`, ahora dicen `tutors` y `notices`.

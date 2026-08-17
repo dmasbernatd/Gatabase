@@ -62,7 +62,7 @@ Al terminar H1, el sistema todavía no sustituye al papel para la atención clí
 ## Implementation Decisions
 
 - **Stack**: Django con plantillas server-rendered, HTMX y Alpine. Sin SPA, sin API REST. Postgres. `django-allauth` para autenticación. `USE_TZ` activo, hora almacenada en UTC y presentada en `America/Santiago`. `USE_I18N` activo con todos los textos en `gettext`, aunque el único idioma sea `es-CL`.
-- **Apps**: `tenancy` (Clínica, Sede, pertenencia de Usuario, Horario de atención, Clínica de derivación), `clients` (Tutor, vínculo Tutor–Paciente), `patients` (Paciente, identificación, catálogo de especies y razas), `audit` (Registro de acceso), `imports` (importador CSV).
+- **Apps**: `tenancy` (Clínica, Sede, pertenencia de Usuario, Horario de atención, Clínica de derivación), `tutors` (Tutor, vínculo Tutor–Paciente), `patients` (Paciente, identificación, catálogo de especies y razas), `audit` (Registro de acceso), `imports` (importador CSV). Los nombres de app usan el vocabulario de `CONTEXT.md`: `tutors`, no `clients`.
 - **Regla de dependencias entre apps**: `audit` no importa de ninguna app de dominio; recibe eventos. Se documenta en `CLAUDE.md`.
 - **Tenancy** (ADR-0003): clave ajena `clinic` en todos los modelos de dominio, Clínica resuelta en middleware, manager por defecto que filtra. El acceso sin filtrar existe pero es explícito.
 - **Sede**: comparte Tutores y Pacientes con las demás Sedes de la Clínica; no comparte agenda ni bandejas.

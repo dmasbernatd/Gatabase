@@ -57,7 +57,7 @@ Al terminar H3 el sistema genera retorno visible: huecos que se recuperan y refu
 
 ## Implementation Decisions
 
-- **Apps nuevas**: `scheduling` (Cita, tipos de Cita, servicio de disponibilidad), `preventive` (Producto sanitario, Aplicación, Estado sanitario, certificado), `reminders` (Pendiente, resultado de contacto, Aviso de cita, cola de envío).
+- **Apps nuevas**: `scheduling` (Cita, tipos de Cita, servicio de disponibilidad), `preventive` (Producto sanitario, Aplicación, Estado sanitario, certificado), `notices` (Pendiente, resultado de contacto, Aviso de cita, cola de envío) — se llama `notices` por el Aviso de cita, no `reminders`, porque `CONTEXT.md` evita "recordatorio" tanto para el Pendiente como para el Aviso.
 - **Regla de dependencias**: `records` no importa de `scheduling` (ADR de H2). La Cita puede apuntar a la Consulta que generó; nunca al revés.
 - **Recurso reservable**: en H3 se reserva el **veterinario**. El modelo queda abierto a recursos adicionales (box, pabellón) sin implementarlos.
 - **Servicio de disponibilidad**: el cálculo de huecos libres vive en un **módulo de servicio con firma propia y tests propios**, nunca dentro de una vista ni de una plantilla. Recepción lo necesita de todas formas, y es la pieza que un futuro flujo automático de confirmación reutilizaría tal cual. Recibe Sede, veterinario, tipo de Cita y rango de fechas.

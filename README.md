@@ -51,4 +51,6 @@ tests/         tests que cruzan apps
 locale/        catálogos de gettext
 ```
 
-Las apps son `tenancy`, `clients`, `patients`, `records`, `preventive`, `scheduling`, `reminders`, `audit` e `imports`. Existen vacías desde el primer día para fijar dónde va cada cosa. Sus dependencias permitidas están en [`CLAUDE.md`](CLAUDE.md): `records` no importa de `scheduling`, y `audit` no importa de ninguna app de dominio.
+Las apps son `tenancy`, `tutors`, `patients`, `records`, `preventive`, `scheduling`, `notices`, `audit` e `imports`. Existen vacías desde el primer día para fijar dónde va cada cosa. Sus dependencias permitidas están en [`CLAUDE.md`](CLAUDE.md): `records` no importa de `scheduling`, y `audit` no importa de ninguna app de dominio.
+
+Los nombres de app siguen el vocabulario de [`CONTEXT.md`](CONTEXT.md), incluidas sus palabras a evitar: la app de Tutores es `tutors` y no `clients`; la del Aviso de cita y los Pendientes es `notices` y no `reminders`.

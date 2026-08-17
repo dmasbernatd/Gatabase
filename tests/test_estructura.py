@@ -4,12 +4,12 @@ from django.apps import apps
 
 APPS_DEL_DOMINIO = [
     "tenancy",
-    "clients",
+    "tutors",
     "patients",
     "records",
     "preventive",
     "scheduling",
-    "reminders",
+    "notices",
     "audit",
     "imports",
 ]

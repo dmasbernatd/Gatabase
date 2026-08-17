@@ -1,8 +1,8 @@
 from django.apps import AppConfig
 
 
-class RemindersConfig(AppConfig):
+class NoticesConfig(AppConfig):
     """Aviso de cita, Confirmación y Pendientes."""
 
-    name = "apps.reminders"
-    label = "reminders"
+    name = "apps.notices"
+    label = "notices"

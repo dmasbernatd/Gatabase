@@ -1,8 +1,8 @@
 from django.apps import AppConfig
 
 
-class ClientsConfig(AppConfig):
+class TutorsConfig(AppConfig):
     """Tutor y su vínculo con el Paciente."""
 
-    name = "apps.clients"
-    label = "clients"
+    name = "apps.tutors"
+    label = "tutors"

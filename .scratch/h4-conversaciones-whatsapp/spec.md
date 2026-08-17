@@ -41,7 +41,7 @@ El Aviso de cita pasa a enviarse por la misma vía, con plantilla aprobada, en l
 
 ## Implementation Decisions
 
-- **Apps**: `messaging` (Conversación, Mensaje, Autorespuesta, adaptador de canal). `reminders` gana un adaptador nuevo; la cola de envío de H3 no cambia.
+- **Apps**: `messaging` (Conversación, Mensaje, Autorespuesta, adaptador de canal). `notices` gana un adaptador nuevo; la cola de envío de H3 no cambia.
 - **Autorespuesta** (ADR-0005): dos textos por Sede, **dentro de horario** y **fuera de horario**. El texto se elige únicamente por el Horario de atención y sus excepciones. **No interpreta el mensaje y no consulta la base de datos** de Tutores ni de Pacientes. Si la Sede atiende urgencias 24/7, solo existe el texto de dentro de horario.
 - **Sin triaje por palabras clave** (ADR-0005): la información de urgencias va **siempre** en la respuesta de fuera de horario, sin condiciones. Un filtro de palabras falla justo en el caso grave, y equivocarse ahí es la vida de un animal.
 - **Conversación como entidad del dominio**: modelo propio con el canal detrás de un **adaptador**, no un registro del webhook de Meta. Meta cambia sus reglas; el modelo no debe caerse con ellas.
