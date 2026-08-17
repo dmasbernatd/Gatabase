@@ -1,8 +1,38 @@
+# Entorno y secretos. `.env.example` es la única variante que sí se versiona.
 .venv/
 .env
+.env.*
+!.env.example
+
+# Datos: nunca sube una base ni un volcado. Contienen datos de Tutor y Paciente.
+*.sqlite3
+*.sqlite3-journal
+*.sql
+*.dump
+media/
+
+# Importaciones y exportaciones de la clínica (tickets 17-19): datos personales.
+imports/
+exports/
+
+# Artefactos de Python y del build.
 __pycache__/
 *.py[cod]
 .pytest_cache/
 staticfiles/
 *.egg-info/
 *.mo
+.coverage
+htmlcov/
+build/
+dist/
+
+# Registros y temporales.
+*.log
+
+# Entorno local del editor y de la máquina.
+.idea/
+.vscode/
+.direnv/
+.DS_Store
+.claude/settings.local.json
