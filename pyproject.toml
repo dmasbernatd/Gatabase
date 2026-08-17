@@ -1,0 +1,26 @@
+[project]
+name = "gatabase"
+version = "0.1.0"
+description = "Gestión clínica y de negocio para clínicas veterinarias en Chile"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=6.1,<7.0",
+    "psycopg[binary]>=3.2",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-django>=4.9",
+    "factory_boy>=3.3",
+]
+
+[tool.setuptools.packages.find]
+include = ["config*", "apps*"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py", "tests.py"]
+testpaths = ["tests", "apps"]
+addopts = "--strict-markers"
