@@ -145,3 +145,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# `static/` guarda también lo de terceros (htmx), versionado en el repositorio y
+# no enlazado desde un CDN: son páginas con datos personales, y no tienen por
+# qué pedirle un archivo a un tercero (ver `static/vendor/LEEME.md`).
+STATICFILES_DIRS = [BASE_DIR / "static"]

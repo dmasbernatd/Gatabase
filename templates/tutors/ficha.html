@@ -1,15 +1,23 @@
 {% extends "tenancy/base_panel.html" %}
 {% load i18n %}
 
-{% block title %}{{ tutor.nombre }}{% endblock %}
+{% block title %}{{ tutor }}{% endblock %}
 
 {% block panel %}
-  <h1>{{ tutor.nombre }}</h1>
+  <h1>{{ tutor }}</h1>
 
-  <p>
-    <span>{% translate "Teléfono" %}:</span>
-    <strong>{{ tutor.telefono|default:"—" }}</strong>
-  </p>
+  <dl>
+    <dt>{% translate "Teléfono" %}</dt>
+    <dd>{{ tutor.telefono|default:"—" }}</dd>
+
+    <dt>{% translate "Correo" %}</dt>
+    <dd>{{ tutor.email|default:"—" }}</dd>
+
+    <dt>{% translate "Dirección" %}</dt>
+    <dd>{{ tutor.direccion|default:"—" }}</dd>
+  </dl>
+
+  <p><a href="{% url 'tutors:editar' tutor.pk %}">{% translate "Corregir la ficha" %}</a></p>
 
   <p><a href="{% url 'tutors:lista' %}">{% translate "Volver a Tutores" %}</a></p>
 {% endblock %}

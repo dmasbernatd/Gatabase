@@ -1,0 +1,20 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block panel %}
+  <h1>{{ titulo }}</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ formulario.as_p }}
+    <button type="submit">{% translate "Guardar" %}</button>
+  </form>
+
+  {% if tutor %}
+    <p><a href="{% url 'tutors:ficha' tutor.pk %}">{% translate "Volver a la ficha" %}</a></p>
+  {% else %}
+    <p><a href="{% url 'tutors:lista' %}">{% translate "Volver a Tutores" %}</a></p>
+  {% endif %}
+{% endblock %}

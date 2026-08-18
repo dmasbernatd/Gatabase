@@ -1,7 +1,8 @@
 """Formularios de la administración de Usuarios.
 
-Ambos formularios reciben la Clínica de quien administra y limitan a sus Sedes
-lo que se puede elegir: un `<select>` es una sugerencia, no una frontera.
+Ambos formularios reciben la Clínica de quien administra —de eso se encarga
+`FormularioDeLaClinica`— y limitan a sus Sedes lo que se puede elegir: un
+`<select>` es una sugerencia, no una frontera.
 """
 
 from django import forms
@@ -9,29 +10,21 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from apps.tenancy.aislamiento import FormularioDeLaClinica
 from apps.tenancy.models import Usuario
 
 
-class UsuarioForm(forms.ModelForm):
+class UsuarioForm(FormularioDeLaClinica):
     """Alta y edición de un Usuario de la Clínica."""
 
     class Meta:
         model = Usuario
         fields = ["email", "nombre", "apellidos", "rol", "sedes"]
 
-    def __init__(self, *args, clinica, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.clinica = clinica
-        self.fields["sedes"].queryset = clinica.sedes.all()
+        self.fields["sedes"].queryset = self.clinica.sedes.all()
         self.fields["sedes"].required = True
-
-    def save(self, commit=True):
-        usuario = super().save(commit=False)
-        usuario.clinic = self.clinica
-        if commit:
-            usuario.save()
-            self.save_m2m()
-        return usuario
 
 
 class CrearUsuarioForm(UsuarioForm):

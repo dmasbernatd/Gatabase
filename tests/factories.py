@@ -91,7 +91,10 @@ class TutorFactory(FabricaDeLaClinica):
         model = Tutor
 
     nombre = factory.Sequence(lambda n: f"Tutor de prueba {n}")
+    apellidos = factory.Sequence(lambda n: f"Apellidos de prueba {n}")
     telefono = "+56912345678"
+    email = factory.Sequence(lambda n: f"tutor{n}@correo.example")
+    direccion = "Av. Providencia 1234, Santiago"
 
 
 class RegistroDeAccesoFactory(FabricaDeLaClinica):

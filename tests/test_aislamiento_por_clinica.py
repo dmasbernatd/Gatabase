@@ -102,6 +102,41 @@ def test_la_ficha_de_un_tutor_propio_se_ve(client):
     assert "Camila Rojas" in respuesta.content.decode()
 
 
+def test_abrir_para_editar_un_tutor_de_otra_clinica_da_404(client):
+    usuario = UsuarioFactory()
+    ajeno = TutorFactory(nombre="Ignacio", apellidos="Fuentes", telefono="+56911112222")
+    client.force_login(usuario)
+
+    respuesta = client.get(reverse("tutors:editar", args=[ajeno.pk]))
+
+    assert respuesta.status_code == 404
+    assert "+56911112222" not in respuesta.content.decode()
+
+
+def test_guardar_encima_de_un_tutor_de_otra_clinica_da_404_y_no_lo_toca(client):
+    """Un 404 en el listado no sirve de nada si el formulario acepta el `pk`."""
+    usuario = UsuarioFactory()
+    ajeno = TutorFactory(nombre="Ignacio", apellidos="Fuentes")
+    client.force_login(usuario)
+
+    respuesta = client.post(
+        reverse("tutors:editar", args=[ajeno.pk]), {"nombre": "Camila", "apellidos": "Rojas"}
+    )
+
+    ajeno.refresh_from_db()
+    assert respuesta.status_code == 404
+    assert ajeno.nombre == "Ignacio"
+
+
+def test_el_tutor_que_registra_recepcion_nace_en_su_propia_clinica(client):
+    usuario = UsuarioFactory()
+    client.force_login(usuario)
+
+    client.post(reverse("tutors:crear"), {"nombre": "Camila", "apellidos": "Rojas"})
+
+    assert Tutor.de_todas_las_clinicas.get().clinic == usuario.clinic
+
+
 def test_la_clinica_activa_no_sobrevive_a_la_peticion(client):
     usuario = UsuarioFactory()
     client.force_login(usuario)

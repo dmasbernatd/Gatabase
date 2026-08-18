@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 22:46-0400\n"
+"POT-Creation-Date: 2026-08-17 23:21-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -83,12 +83,12 @@ msgstr ""
 msgid "Registros de acceso"
 msgstr ""
 
-#: apps/tenancy/aislamiento.py:69 apps/tenancy/models.py:21
+#: apps/tenancy/aislamiento.py:70 apps/tenancy/models.py:21
 #: apps/tenancy/models.py:36 apps/tenancy/models.py:85
 msgid "Clínica"
 msgstr ""
 
-#: apps/tenancy/forms.py:45
+#: apps/tenancy/forms.py:38
 msgid "Contraseña inicial"
 msgstr ""
 
@@ -146,7 +146,7 @@ msgid ""
 msgstr ""
 
 #: apps/tenancy/models.py:17 apps/tenancy/models.py:38
-#: apps/tenancy/models.py:90 apps/tutors/models.py:17
+#: apps/tenancy/models.py:90 apps/tutors/models.py:26
 msgid "nombre"
 msgstr ""
 
@@ -158,7 +158,7 @@ msgstr ""
 msgid "Clínicas"
 msgstr ""
 
-#: apps/tenancy/models.py:39
+#: apps/tenancy/models.py:39 apps/tutors/models.py:30
 msgid "dirección"
 msgstr ""
 
@@ -187,11 +187,11 @@ msgstr ""
 msgid "Un Usuario necesita un correo para entrar."
 msgstr ""
 
-#: apps/tenancy/models.py:89
+#: apps/tenancy/models.py:89 apps/tutors/models.py:29
 msgid "correo"
 msgstr ""
 
-#: apps/tenancy/models.py:91
+#: apps/tenancy/models.py:91 apps/tutors/models.py:27
 msgid "apellidos"
 msgstr ""
 
@@ -219,17 +219,42 @@ msgstr ""
 msgid "Editar Usuario"
 msgstr ""
 
-#: apps/tutors/models.py:18
+#: apps/tutors/listado.py:33
+msgid "Apellidos"
+msgstr ""
+
+#: apps/tutors/listado.py:34 templates/tenancy/usuarios.html:14
+msgid "Nombre"
+msgstr ""
+
+#: apps/tutors/listado.py:35 templates/tutors/ficha.html:10
+msgid "Teléfono"
+msgstr ""
+
+#: apps/tutors/listado.py:36 templates/tenancy/usuarios.html:15
+#: templates/tutors/ficha.html:13
+msgid "Correo"
+msgstr ""
+
+#: apps/tutors/models.py:28
 msgid "teléfono"
 msgstr ""
 
-#: apps/tutors/models.py:21
+#: apps/tutors/models.py:39
 msgid "Tutor"
 msgstr ""
 
-#: apps/tutors/models.py:22 templates/tenancy/base_panel.html:29
+#: apps/tutors/models.py:40 templates/tenancy/base_panel.html:29
 #: templates/tutors/lista.html:4 templates/tutors/lista.html:7
 msgid "Tutores"
+msgstr ""
+
+#: apps/tutors/views.py:70 templates/tutors/lista.html:9
+msgid "Registrar Tutor"
+msgstr ""
+
+#: apps/tutors/views.py:85 templates/tutors/ficha.html:20
+msgid "Corregir la ficha"
 msgstr ""
 
 #: templates/account/login.html:4 templates/account/login.html:7
@@ -272,16 +297,16 @@ msgstr ""
 msgid "No hay accesos registrados que cumplan el filtro."
 msgstr ""
 
-#: templates/audit/registro.html:53
+#: templates/audit/registro.html:53 templates/tutors/listado.html:67
 msgid "Anterior"
 msgstr ""
 
-#: templates/audit/registro.html:55
+#: templates/audit/registro.html:55 templates/tutors/listado.html:69
 #, python-format
 msgid "Página %(actual)s de %(total)s"
 msgstr ""
 
-#: templates/audit/registro.html:57
+#: templates/audit/registro.html:57 templates/tutors/listado.html:72
 msgid "Siguiente"
 msgstr ""
 
@@ -310,6 +335,7 @@ msgid "Salir"
 msgstr ""
 
 #: templates/tenancy/formulario_de_usuario.html:12
+#: templates/tutors/formulario.html:12
 msgid "Guardar"
 msgstr ""
 
@@ -332,14 +358,6 @@ msgstr ""
 msgid "Usuarios de la Clínica"
 msgstr ""
 
-#: templates/tenancy/usuarios.html:14
-msgid "Nombre"
-msgstr ""
-
-#: templates/tenancy/usuarios.html:15
-msgid "Correo"
-msgstr ""
-
 #: templates/tenancy/usuarios.html:16
 msgid "Rol"
 msgstr ""
@@ -360,22 +378,30 @@ msgstr ""
 msgid "Desactivar"
 msgstr ""
 
-#: templates/tutors/ficha.html:10
-msgid "Teléfono"
+#: templates/tutors/ficha.html:16
+msgid "Dirección"
 msgstr ""
 
-#: templates/tutors/ficha.html:14
+#: templates/tutors/ficha.html:22 templates/tutors/formulario.html:18
 msgid "Volver a Tutores"
 msgstr ""
 
-#: templates/tutors/lista.html:10
-msgid "Buscar por nombre"
+#: templates/tutors/formulario.html:16
+msgid "Volver a la ficha"
 msgstr ""
 
-#: templates/tutors/lista.html:12
+#: templates/tutors/listado.html:18
+msgid "Buscar por nombre, apellidos, teléfono o correo"
+msgstr ""
+
+#: templates/tutors/listado.html:21
 msgid "Buscar"
 msgstr ""
 
-#: templates/tutors/lista.html:22
-msgid "No hay Tutores que mostrar."
+#: templates/tutors/listado.html:53
+msgid "Ningún Tutor de la Clínica coincide con la búsqueda."
+msgstr ""
+
+#: templates/tutors/listado.html:55
+msgid "Todavía no hay Tutores registrados."
 msgstr ""

@@ -16,6 +16,7 @@ salte a la vista en una revisión.
 from contextlib import contextmanager
 from contextvars import ContextVar
 
+from django import forms
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -74,3 +75,27 @@ class ModeloDeLaClinica(models.Model):
 
     class Meta:
         abstract = True
+
+
+class FormularioDeLaClinica(forms.ModelForm):
+    """Base de todo formulario de un modelo de dominio: la Clínica la pone él.
+
+    Va aquí, al lado de `ModeloDeLaClinica`, porque es la misma frontera vista
+    desde el otro extremo: el modelo garantiza que nadie lea fuera de su
+    Clínica, y esto que nadie escriba fuera de la suya. La Clínica se recibe de
+    quien está rellenando el formulario y no como un campo más, porque un
+    `<select>` de Clínicas sería una frontera dibujada en el navegador, y las
+    fronteras no se dibujan ahí (ADR-0003).
+    """
+
+    def __init__(self, *args, clinica, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.clinica = clinica
+
+    def save(self, commit=True):
+        objeto = super().save(commit=False)
+        objeto.clinic = self.clinica
+        if commit:
+            objeto.save()
+            self.save_m2m()
+        return objeto

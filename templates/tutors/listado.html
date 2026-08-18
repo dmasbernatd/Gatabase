@@ -1,0 +1,74 @@
+{% load i18n %}
+{% comment %}
+  El listado: la caja de búsqueda, la tabla con sus cabeceras ordenables y el
+  paginador. Es lo que htmx cambia entero al buscar, ordenar o pasar de página, y
+  también lo que se incrusta en la página completa la primera vez.
+
+  La caja de búsqueda entra aquí —y no fuera, junto al título— porque arrastra el
+  orden actual en un campo oculto: si se quedara fuera del trozo que se
+  sustituye, seguiría llevando el orden de antes y la siguiente búsqueda
+  desharía la ordenación que el Usuario acaba de pedir.
+
+  Los enlaces solo llevan `hx-get`: el destino del intercambio lo heredan del
+  contenedor que los envuelve, que sigue en su sitio después de cada
+  intercambio. Y todos llevan además su `href`, así que sin JavaScript siguen
+  funcionando pulsados; htmx solo evita recargar la página entera.
+{% endcomment %}
+<form method="get" action="{% url 'tutors:lista' %}" hx-get="{% url 'tutors:lista' %}">
+  <label for="q">{% translate "Buscar por nombre, apellidos, teléfono o correo" %}</label>
+  <input type="search" id="q" name="q" value="{{ listado.buscado }}">
+  <input type="hidden" name="orden" value="{{ listado.orden }}">
+  <button type="submit">{% translate "Buscar" %}</button>
+</form>
+
+<table>
+  <thead>
+    <tr>
+      {% for columna in listado.columnas %}
+        <th aria-sort="{{ columna.aria }}">
+          <a href="{% url 'tutors:lista' %}?{{ columna.enlace }}"
+             hx-get="{% url 'tutors:lista' %}?{{ columna.enlace }}">{{ columna.etiqueta }}</a>
+        </th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for tutor in listado.pagina %}
+      <tr>
+        <td>{{ tutor.apellidos|default:"—" }}</td>
+        {% comment %}
+          El enlace a la ficha va en el nombre, que es el único dato obligatorio:
+          un Tutor registrado con las prisas del mostrador, sin apellidos, tiene
+          que poder abrirse igual.
+        {% endcomment %}
+        <td><a href="{% url 'tutors:ficha' tutor.pk %}">{{ tutor.nombre }}</a></td>
+        <td>{{ tutor.telefono|default:"—" }}</td>
+        <td>{{ tutor.email|default:"—" }}</td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="4">
+          {% if listado.buscado %}
+            {% translate "Ningún Tutor de la Clínica coincide con la búsqueda." %}
+          {% else %}
+            {% translate "Todavía no hay Tutores registrados." %}
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if listado.pagina.has_other_pages %}
+  <nav>
+    {% if listado.enlace_anterior %}
+      <a href="{% url 'tutors:lista' %}?{{ listado.enlace_anterior }}"
+         hx-get="{% url 'tutors:lista' %}?{{ listado.enlace_anterior }}">{% translate "Anterior" %}</a>
+    {% endif %}
+    <span>{% blocktranslate with actual=listado.pagina.number total=listado.pagina.paginator.num_pages %}Página {{ actual }} de {{ total }}{% endblocktranslate %}</span>
+    {% if listado.enlace_siguiente %}
+      <a href="{% url 'tutors:lista' %}?{{ listado.enlace_siguiente }}"
+         hx-get="{% url 'tutors:lista' %}?{{ listado.enlace_siguiente }}">{% translate "Siguiente" %}</a>
+    {% endif %}
+  </nav>
+{% endif %}

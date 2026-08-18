@@ -6,20 +6,14 @@
 {% block panel %}
   <h1>{% translate "Tutores" %}</h1>
 
-  <form method="get" action="{% url 'tutors:lista' %}">
-    <label for="q">{% translate "Buscar por nombre" %}</label>
-    <input type="search" id="q" name="q" value="{{ buscado }}">
-    <button type="submit">{% translate "Buscar" %}</button>
-  </form>
+  <p><a href="{% url 'tutors:crear' %}">{% translate "Registrar Tutor" %}</a></p>
 
-  <ul>
-    {% for tutor in tutores %}
-      <li>
-        <a href="{% url 'tutors:ficha' tutor.pk %}">{{ tutor.nombre }}</a>
-        {{ tutor.telefono }}
-      </li>
-    {% empty %}
-      <li>{% translate "No hay Tutores que mostrar." %}</li>
-    {% endfor %}
-  </ul>
+  {% comment %}
+    El destino del intercambio se declara una vez aquí: la caja de búsqueda y los
+    enlaces de dentro —cabeceras y paginador— lo heredan, y este contenedor
+    sobrevive a cada intercambio porque lo que se sustituye es su contenido.
+  {% endcomment %}
+  <div id="listado" hx-target="#listado" hx-push-url="true">
+    {% include "tutors/listado.html" %}
+  </div>
 {% endblock %}

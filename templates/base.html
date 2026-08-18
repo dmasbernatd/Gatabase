@@ -1,9 +1,15 @@
-{% load i18n %}<!doctype html>
+{% load i18n static %}<!doctype html>
 <html lang="{{ LANGUAGE_CODE|default:'es-cl' }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{% translate "Gatabase" %}{% endblock %}</title>
+    {% comment %}
+      htmx se sirve desde la propia aplicación, nunca desde un CDN. Con `defer`
+      porque nada de la página lo necesita mientras se dibuja: sin él, la página
+      se sigue usando entera, solo que recargando.
+    {% endcomment %}
+    <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
   </head>
   <body>
     <main>

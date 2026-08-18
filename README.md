@@ -108,6 +108,8 @@ De ahí salen tres reglas prácticas:
 - **Sin Clínica activa, `objects` no devuelve nada.** Un olvido produce una página vacía, jamás datos de la Clínica de al lado.
 - **Cruzar la frontera es explícito.** El manager `de_todas_las_clinicas` existe para lo que de verdad la cruza — el alta de una Clínica, una exportación, las fábricas de test — y su nombre está pensado para saltar a la vista en una revisión.
 
+Y la misma frontera desde el otro extremo: **todo formulario de un modelo de dominio hereda de `apps.tenancy.aislamiento.FormularioDeLaClinica`**, que recibe la Clínica de quien lo está rellenando y se la pone al objeto al guardar. Ningún formulario ofrece la Clínica como campo: un `<select>` de Clínicas sería una frontera dibujada en el navegador, y un `clinic` colado en el POST no va a ninguna parte.
+
 Que la regla se cumpla no depende de nadie: `apps/tenancy/comprobaciones.py` registra un `check` de Django que recorre los modelos de las apps de dominio y falla si alguno no lleva `clinic` o no filtra por ella. Salta al arrancar, en `manage.py check` y en `tests/test_estructura.py`.
 
 ## Registro de acceso
@@ -141,6 +143,33 @@ Una anotación no cambia nunca, y eso lo impone Postgres, no la aplicación (ver
 
 El admin de la Clínica lo consulta en `/panel/registro/`, filtrando por Usuario, por objeto y por rango de fechas. El rango son días de **Santiago**, no instantes en UTC: quien pide "el 20 de junio" quiere los accesos de ese día en la clínica. Un filtro que no se entiende no devuelve nada, nunca el Registro entero. Esa página no se anota a sí misma —el Registro no contiene datos personales de Tutor ni de Paciente— y es de solo lectura, porque no podría ser otra cosa.
 
+## El fichero de Tutores
+
+Recepción registra un Tutor, lo encuentra en el listado, abre su ficha y la corrige, todo en `/panel/tutores/`: el listado, `nuevo/` para el alta, `<pk>/` para la ficha y `<pk>/corregir/` para la corrección.
+
+En el Tutor viven **solo sus datos personales** —nombre, apellidos, teléfono, correo y dirección—, enumerados en `Tutor.DATOS_PERSONALES`. Los datos clínicos son del Paciente y viven en `patients`. La separación es la que hace posible el ticket 20 (ADR-0004): un Tutor puede exigir la supresión de sus datos personales mientras la Historia clínica de sus Pacientes —de la que es titular el animal, no él— tiene que conservarse, así que anonimizar será vaciar esos campos sin tocar ninguna otra tabla. `tests/test_fichas_de_tutor.py` comprueba que la tabla del Tutor no tiene ningún campo fuera de esa lista: un campo nuevo obliga a decidir si es dato personal, y a decidirlo el día que se escribe.
+
+Solo el nombre es obligatorio. En el mostrador a veces no hay más que un nombre y un teléfono, y exigir el resto empuja a rellenarlo con cualquier cosa, que es peor que un hueco: un dato falso no se distingue de uno verdadero.
+
+Buscar, ordenar y paginar el listado es `apps/tutors/listado.py`, fuera de la vista porque es lo que tiene reglas:
+
+- **Se ordena solo por las columnas que el listado enseña** (`COLUMNAS`). Un `orden` que no se reconoce cae en el de siempre en vez de convertirse en un `ORDER BY` cualquiera escrito desde la URL. Cada columna trae su desempate: sin él, dos Tutores del mismo apellido pueden cambiar de sitio entre una página y la siguiente y salir dos veces o ninguna.
+- **La búsqueda reparte lo escrito entre los campos**: cada palabra tiene que aparecer en alguno, no todas en el mismo, así que «camila rojas» encuentra a quien tiene el nombre en un campo y el apellido en otro. Es la búsqueda del fichero de Tutores; la caja única que además busca Pacientes y microchips, tolerante a tildes, es del ticket 11.
+- **El orden y la búsqueda viajan en los enlaces** del paginador y de las cabeceras, y cambiar de orden vuelve a la primera página.
+
+## HTMX
+
+`htmx` está versionado en `static/vendor/` y se sirve desde la propia aplicación, nunca desde un CDN (ver `static/vendor/LEEME.md`): son páginas con datos personales, y un despliegue con la red capada tiene que seguir funcionando.
+
+En el listado de Tutores, buscar, ordenar y pasar de página cambian **solo el listado** (`templates/tutors/listado.html`), que la vista devuelve solo cuando la petición trae la cabecera `HX-Request`. El destino del intercambio se declara una vez en el contenedor y los enlaces de dentro lo heredan.
+
+La caja de búsqueda viaja **dentro** de ese trozo, y no fuera junto al título, porque arrastra el orden actual en un campo oculto: si se quedara fuera de lo que se sustituye, seguiría llevando el orden de antes y la siguiente búsqueda desharía la ordenación recién pedida. Es el tipo de fallo que solo aparece encadenando dos acciones, así que tiene test.
+
+Dos reglas que conviene no perder:
+
+- **Todo sigue funcionando sin JavaScript.** El formulario es un `GET` normal y cada enlace lleva su `href`; htmx solo evita recargar la página entera. Los tests comprueban las dos formas de servir el listado.
+- **No se busca a cada tecla.** Cada una de esas peticiones sirve datos personales y por tanto se anota en el Registro de acceso: una búsqueda por pulsación llenaría de ruido justo la tabla que tiene que valer como prueba. Se dispara al enviar la búsqueda y al pulsar una cabecera o una página. La búsqueda incremental del ticket 11 llega junto con la regla que la hace admisible: registrar el acceso al abrir la ficha, no al listar.
+
 ## Estructura
 
 ```
@@ -148,6 +177,7 @@ config/        configuración de Django, urls y vista raíz
 scripts/       utilidades de desarrollo (levantar Postgres)
 apps/          las nueve apps del dominio
 templates/     plantillas server-rendered
+static/        estáticos propios y de terceros (htmx), versionados
 tests/         tests que cruzan apps
 locale/        catálogos de gettext
 ```
