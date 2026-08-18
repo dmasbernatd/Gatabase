@@ -110,6 +110,37 @@ De ahí salen tres reglas prácticas:
 
 Que la regla se cumpla no depende de nadie: `apps/tenancy/comprobaciones.py` registra un `check` de Django que recorre los modelos de las apps de dominio y falla si alguno no lleva `clinic` o no filtra por ella. Salta al arrancar, en `manage.py check` y en `tests/test_estructura.py`.
 
+## Registro de acceso
+
+Cada vez que un Usuario ve o modifica datos personales queda una anotación de quién, qué y cuándo ([ADR-0004](docs/adr/0004-registro-de-acceso-propio-para-registrar-lecturas.md)). Es la evidencia que exige la Ley 21.719, y es la única pieza del sistema que no se puede añadir con efecto retroactivo.
+
+Se escribe **desde las vistas**, no desde señales de modelo: leer no dispara ninguna señal, así que ninguna librería basada en señales puede capturar una lectura.
+
+**Toda vista que sirva datos personales lleva el decorador `deja_constancia`**, por dentro de `login_required`:
+
+```python
+from apps.audit.models import Accion
+from apps.audit.registro import deja_constancia
+
+@login_required
+@deja_constancia(Accion.LECTURA, sobre=Tutor)          # ficha: el `pk` de la URL dice cuál
+def ficha(request, pk): ...
+
+@login_required
+@deja_constancia(Accion.LECTURA, sobre=Tutor, identificado_por=None)   # listado: el conjunto
+def lista(request): ...
+```
+
+El decorador anota **después** de que la vista responda, y solo si respondió: un 404 —el Tutor es de otra Clínica— no llegó a servir nada, y anotarlo llenaría de accesos falsos justo la tabla que tiene que valer como prueba. Cuando lo accedido no sale de la URL —un formulario que acaba de guardar, una exportación—, la vista llama a `apps.audit.registro.anotar` con el objeto en la mano.
+
+`audit` no importa de ninguna app de dominio: el tipo del objeto se guarda como texto (`tutors.Tutor`), así que el Registro anota accesos a Pacientes, Adjuntos o Conversaciones sin conocer esas apps. De `tenancy` sí depende, y no puede no depender: su tabla lleva `clinic` como cualquier otra y apunta al Usuario que accedió.
+
+Una anotación no cambia nunca, y eso lo impone Postgres, no la aplicación (ver `apps/audit/migrations/0002_registro_inalterable.py`): se le retiran `UPDATE`, `DELETE` y `TRUNCATE` sobre la tabla al rol de la aplicación, **y** un disparador hace reventar el `UPDATE` y el `DELETE`. Las dos cosas, porque un rol superusuario —el de una máquina de desarrollo— se salta los permisos pero no el disparador. Consecuencia buscada: borrar una Clínica con accesos anotados falla, porque el borrado en cascada tropieza con el disparador; una Clínica que se va se exporta y se cierra, no se borra por debajo, y los datos de desarrollo se rehacen recreando la base.
+
+**Condición de despliegue**: en producción la aplicación se conecta con un rol que **no** es superusuario —si no, se salta los permisos igual que en desarrollo— y, si las migraciones se aplican con un rol distinto del de la aplicación, hay que retirarle a ese otro rol los mismos tres permisos: `REVOKE` los concede por nombre, y la migración solo alcanza al rol que la ejecuta.
+
+El admin de la Clínica lo consulta en `/panel/registro/`, filtrando por Usuario, por objeto y por rango de fechas. El rango son días de **Santiago**, no instantes en UTC: quien pide "el 20 de junio" quiere los accesos de ese día en la clínica. Un filtro que no se entiende no devuelve nada, nunca el Registro entero. Esa página no se anota a sí misma —el Registro no contiene datos personales de Tutor ni de Paciente— y es de solo lectura, porque no podría ser otra cosa.
+
 ## Estructura
 
 ```
@@ -121,6 +152,6 @@ tests/         tests que cruzan apps
 locale/        catálogos de gettext
 ```
 
-Las apps son `tenancy`, `tutors`, `patients`, `records`, `preventive`, `scheduling`, `notices`, `audit` e `imports`. Existen vacías desde el primer día para fijar dónde va cada cosa. Sus dependencias permitidas están en [`CLAUDE.md`](CLAUDE.md): `records` no importa de `scheduling`, y `audit` no importa de ninguna app de dominio.
+Las apps son `tenancy`, `tutors`, `patients`, `records`, `preventive`, `scheduling`, `notices`, `audit` e `imports`. Existen vacías desde el primer día para fijar dónde va cada cosa. Sus dependencias permitidas están en [`CLAUDE.md`](CLAUDE.md): `records` no importa de `scheduling`, y `audit` no importa de ninguna app de dominio (de `tenancy` sí: la Clínica es la frontera de todo dato y el Usuario es quien accede).
 
 Los nombres de app siguen el vocabulario de [`CONTEXT.md`](CONTEXT.md), incluidas sus palabras a evitar: la app de Tutores es `tutors` y no `clients`; la del Aviso de cita y los Pendientes es `notices` y no `reminders`.

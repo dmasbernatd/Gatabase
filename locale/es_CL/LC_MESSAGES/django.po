@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 20:23-0400\n"
+"POT-Creation-Date: 2026-08-17 22:46-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -16,6 +16,72 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: apps/audit/forms.py:35 apps/audit/models.py:63 apps/tenancy/models.py:105
+#: templates/audit/registro.html:27
+msgid "Usuario"
+msgstr ""
+
+#: apps/audit/forms.py:36
+msgid "Cualquier Usuario"
+msgstr ""
+
+#: apps/audit/forms.py:38
+msgid "Tipo de objeto"
+msgstr ""
+
+#: apps/audit/forms.py:39 templates/audit/registro.html:29
+msgid "Identificador"
+msgstr ""
+
+#: apps/audit/forms.py:41
+msgid "Desde"
+msgstr ""
+
+#: apps/audit/forms.py:44
+msgid "Hasta"
+msgstr ""
+
+#: apps/audit/forms.py:60
+msgid "Cualquier objeto"
+msgstr ""
+
+#: apps/audit/models.py:44
+msgid "lectura"
+msgstr ""
+
+#: apps/audit/models.py:45
+msgid "creación"
+msgstr ""
+
+#: apps/audit/models.py:46
+msgid "modificación"
+msgstr ""
+
+#: apps/audit/models.py:65
+msgid "tipo de objeto"
+msgstr ""
+
+#: apps/audit/models.py:66
+msgid "identificador"
+msgstr ""
+
+#: apps/audit/models.py:67
+msgid "acción"
+msgstr ""
+
+#: apps/audit/models.py:71
+msgid "momento"
+msgstr ""
+
+#: apps/audit/models.py:74 templates/audit/registro.html:4
+#: templates/audit/registro.html:7 templates/tenancy/base_panel.html:32
+msgid "Registro de acceso"
+msgstr ""
+
+#: apps/audit/models.py:75
+msgid "Registros de acceso"
+msgstr ""
 
 #: apps/tenancy/aislamiento.py:69 apps/tenancy/models.py:21
 #: apps/tenancy/models.py:36 apps/tenancy/models.py:85
@@ -141,19 +207,15 @@ msgstr ""
 msgid "alta"
 msgstr ""
 
-#: apps/tenancy/models.py:105
-msgid "Usuario"
-msgstr ""
-
 #: apps/tenancy/models.py:106 templates/tenancy/base_panel.html:31
 msgid "Usuarios"
 msgstr ""
 
-#: apps/tenancy/views.py:65 templates/tenancy/usuarios.html:9
+#: apps/tenancy/views.py:51 templates/tenancy/usuarios.html:9
 msgid "Crear Usuario"
 msgstr ""
 
-#: apps/tenancy/views.py:79
+#: apps/tenancy/views.py:65
 msgid "Editar Usuario"
 msgstr ""
 
@@ -182,6 +244,47 @@ msgstr ""
 msgid "¿No tiene cuenta? Pídasela al administrador de su Clínica."
 msgstr ""
 
+#: templates/audit/registro.html:9
+msgid "Quién vio o modificó datos personales de esta Clínica, y cuándo."
+msgstr ""
+
+#: templates/audit/registro.html:19
+msgid "Filtrar"
+msgstr ""
+
+#: templates/audit/registro.html:20
+msgid "Quitar el filtro"
+msgstr ""
+
+#: templates/audit/registro.html:26
+msgid "Momento"
+msgstr ""
+
+#: templates/audit/registro.html:28
+msgid "Objeto"
+msgstr ""
+
+#: templates/audit/registro.html:30
+msgid "Acción"
+msgstr ""
+
+#: templates/audit/registro.html:44
+msgid "No hay accesos registrados que cumplan el filtro."
+msgstr ""
+
+#: templates/audit/registro.html:53
+msgid "Anterior"
+msgstr ""
+
+#: templates/audit/registro.html:55
+#, python-format
+msgid "Página %(actual)s de %(total)s"
+msgstr ""
+
+#: templates/audit/registro.html:57
+msgid "Siguiente"
+msgstr ""
+
 #: templates/base.html:6 templates/home.html:4 templates/home.html:7
 msgid "Gatabase"
 msgstr ""
@@ -202,7 +305,7 @@ msgstr ""
 msgid "Inicio"
 msgstr ""
 
-#: templates/tenancy/base_panel.html:37
+#: templates/tenancy/base_panel.html:38
 msgid "Salir"
 msgstr ""
 

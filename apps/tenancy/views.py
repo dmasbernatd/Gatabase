@@ -5,29 +5,15 @@ pide la página. Pedir algo de otra Clínica es un 404, nunca un 403 con
 contenido: la existencia del objeto ya es información (ADR-0003).
 """
 
-from functools import wraps
-
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from apps.tenancy.forms import CrearUsuarioForm, UsuarioForm
 from apps.tenancy.models import Sede, Usuario
+from apps.tenancy.permisos import solo_admin
 from apps.tenancy.sedes import fijar_sede
-
-
-def solo_admin(vista):
-    """Reserva una vista al rol admin. Sin sesión se va al login, no al 403."""
-
-    @wraps(vista)
-    def comprobar_el_rol(request, *args, **kwargs):
-        if not request.user.es_admin:
-            raise PermissionDenied
-        return vista(request, *args, **kwargs)
-
-    return login_required(comprobar_el_rol)
 
 
 def _usuarios_de_la_clinica(request):

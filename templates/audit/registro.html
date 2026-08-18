@@ -1,0 +1,61 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Registro de acceso" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Registro de acceso" %}</h1>
+
+  <p>{% translate "Quién vio o modificó datos personales de esta Clínica, y cuándo." %}</p>
+
+  <form method="get">
+    {% for campo in filtro %}
+      <p>
+        {{ campo.label_tag }}
+        {{ campo }}
+        {{ campo.errors }}
+      </p>
+    {% endfor %}
+    <button type="submit">{% translate "Filtrar" %}</button>
+    <a href="{% url 'audit:registro' %}">{% translate "Quitar el filtro" %}</a>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>{% translate "Momento" %}</th>
+        <th>{% translate "Usuario" %}</th>
+        <th>{% translate "Objeto" %}</th>
+        <th>{% translate "Identificador" %}</th>
+        <th>{% translate "Acción" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for anotacion in pagina %}
+        <tr>
+          <td>{{ anotacion.momento|date:"d/m/Y H:i" }}</td>
+          <td>{{ anotacion.usuario }} &lt;{{ anotacion.usuario.email }}&gt;</td>
+          <td>{{ anotacion.tipo }}</td>
+          <td>{{ anotacion.identificador|default:"—" }}</td>
+          <td>{{ anotacion.get_accion_display }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="5">{% translate "No hay accesos registrados que cumplan el filtro." %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if pagina.has_other_pages %}
+    <nav>
+      {% if pagina.has_previous %}
+        <a href="?{{ filtro_en_la_url }}pagina={{ pagina.previous_page_number }}">{% translate "Anterior" %}</a>
+      {% endif %}
+      <span>{% blocktranslate with actual=pagina.number total=pagina.paginator.num_pages %}Página {{ actual }} de {{ total }}{% endblocktranslate %}</span>
+      {% if pagina.has_next %}
+        <a href="?{{ filtro_en_la_url }}pagina={{ pagina.next_page_number }}">{% translate "Siguiente" %}</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% endblock %}

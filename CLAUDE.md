@@ -19,7 +19,7 @@ Usa el vocabulario de `CONTEXT.md` en código, tests, plantillas y mensajes de c
 ### Dependencias entre apps
 
 - `records` **no importa** de `scheduling`. Una Cita puede apuntar a la Consulta que generó; nunca al contrario. Si no, atender a un espontáneo obliga a inventar una Cita falsa.
-- `audit` no importa de ninguna app de dominio: recibe eventos.
+- `audit` no importa de ninguna app de dominio: recibe eventos y guarda el tipo del objeto como texto (`tutors.Tutor`). De `tenancy` sí depende, y no puede no depender: la Clínica es la frontera de todo dato (ADR-0003) y el Usuario es quien accede.
 - El cálculo de huecos disponibles vive en un módulo de servicio con firma y tests propios, nunca dentro de una vista ni de una plantilla.
 
 ### Invariantes

@@ -13,4 +13,5 @@ urlpatterns = [
     path("accounts/inactivo/", cuentas.account_inactive, name="account_inactive"),
     path("panel/", include("apps.tenancy.urls")),
     path("panel/tutores/", include("apps.tutors.urls")),
+    path("panel/registro/", include("apps.audit.urls")),
 ]

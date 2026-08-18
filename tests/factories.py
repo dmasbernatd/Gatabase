@@ -9,6 +9,7 @@ fábricas de un solo test viven junto a ese test.
 import factory
 from django.contrib.auth import get_user_model
 
+from apps.audit.models import Accion, RegistroDeAcceso
 from apps.tenancy.models import Clinica, Rol, Sede
 from apps.tutors.models import Tutor
 
@@ -91,3 +92,24 @@ class TutorFactory(FabricaDeLaClinica):
 
     nombre = factory.Sequence(lambda n: f"Tutor de prueba {n}")
     telefono = "+56912345678"
+
+
+class RegistroDeAccesoFactory(FabricaDeLaClinica):
+    """Anotación de un acceso a datos personales.
+
+    Arma un Registro ya escrito, para probar lo que se consulta y lo que ya no
+    se puede tocar. Lo que se anota al servir una página se prueba por HTTP: es
+    la vista quien tiene que acordarse, no la fábrica.
+
+    La Clínica sale del Usuario, como en el Registro de verdad: una anotación de
+    un Usuario en una Clínica que no es la suya no significaría nada.
+    """
+
+    class Meta:
+        model = RegistroDeAcceso
+
+    usuario = factory.SubFactory(UsuarioFactory)
+    clinic = factory.SelfAttribute("usuario.clinic")
+    tipo_de_objeto = "tutors.Tutor"
+    identificador = factory.Sequence(str)
+    accion = Accion.LECTURA
