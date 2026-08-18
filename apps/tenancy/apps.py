@@ -6,3 +6,7 @@ class TenancyConfig(AppConfig):
 
     name = "apps.tenancy"
     label = "tenancy"
+
+    def ready(self):
+        # Importar el módulo registra el `check` de aislamiento (ADR-0003).
+        from apps.tenancy import comprobaciones  # noqa: F401

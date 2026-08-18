@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 20:08-0400\n"
+"POT-Creation-Date: 2026-08-17 20:23-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -16,6 +16,11 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: apps/tenancy/aislamiento.py:69 apps/tenancy/models.py:21
+#: apps/tenancy/models.py:36 apps/tenancy/models.py:85
+msgid "Clínica"
+msgstr ""
 
 #: apps/tenancy/forms.py:45
 msgid "Contraseña inicial"
@@ -75,17 +80,12 @@ msgid ""
 msgstr ""
 
 #: apps/tenancy/models.py:17 apps/tenancy/models.py:38
-#: apps/tenancy/models.py:90
+#: apps/tenancy/models.py:90 apps/tutors/models.py:17
 msgid "nombre"
 msgstr ""
 
 #: apps/tenancy/models.py:18
 msgid "creada"
-msgstr ""
-
-#: apps/tenancy/models.py:21 apps/tenancy/models.py:36
-#: apps/tenancy/models.py:85
-msgid "Clínica"
 msgstr ""
 
 #: apps/tenancy/models.py:22
@@ -145,16 +145,29 @@ msgstr ""
 msgid "Usuario"
 msgstr ""
 
-#: apps/tenancy/models.py:106 templates/tenancy/base_panel.html:30
+#: apps/tenancy/models.py:106 templates/tenancy/base_panel.html:31
 msgid "Usuarios"
 msgstr ""
 
-#: apps/tenancy/views.py:66 templates/tenancy/usuarios.html:9
+#: apps/tenancy/views.py:65 templates/tenancy/usuarios.html:9
 msgid "Crear Usuario"
 msgstr ""
 
-#: apps/tenancy/views.py:80
+#: apps/tenancy/views.py:79
 msgid "Editar Usuario"
+msgstr ""
+
+#: apps/tutors/models.py:18
+msgid "teléfono"
+msgstr ""
+
+#: apps/tutors/models.py:21
+msgid "Tutor"
+msgstr ""
+
+#: apps/tutors/models.py:22 templates/tenancy/base_panel.html:29
+#: templates/tutors/lista.html:4 templates/tutors/lista.html:7
+msgid "Tutores"
 msgstr ""
 
 #: templates/account/login.html:4 templates/account/login.html:7
@@ -189,7 +202,7 @@ msgstr ""
 msgid "Inicio"
 msgstr ""
 
-#: templates/tenancy/base_panel.html:36
+#: templates/tenancy/base_panel.html:37
 msgid "Salir"
 msgstr ""
 
@@ -242,4 +255,24 @@ msgstr ""
 
 #: templates/tenancy/usuarios.html:37
 msgid "Desactivar"
+msgstr ""
+
+#: templates/tutors/ficha.html:10
+msgid "Teléfono"
+msgstr ""
+
+#: templates/tutors/ficha.html:14
+msgid "Volver a Tutores"
+msgstr ""
+
+#: templates/tutors/lista.html:10
+msgid "Buscar por nombre"
+msgstr ""
+
+#: templates/tutors/lista.html:12
+msgid "Buscar"
+msgstr ""
+
+#: templates/tutors/lista.html:22
+msgid "No hay Tutores que mostrar."
 msgstr ""

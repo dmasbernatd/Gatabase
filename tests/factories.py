@@ -10,6 +10,7 @@ import factory
 from django.contrib.auth import get_user_model
 
 from apps.tenancy.models import Clinica, Rol, Sede
+from apps.tutors.models import Tutor
 
 CONTRASENA_DE_PRUEBA = "gatabase-de-prueba-2026"
 
@@ -63,3 +64,30 @@ class UsuarioFactory(factory.django.DjangoModelFactory):
         if not crear:
             return
         usuario.sedes.set(extraidas if extraidas is not None else [SedeFactory(clinic=usuario.clinic)])
+
+
+class FabricaDeLaClinica(factory.django.DjangoModelFactory):
+    """Base de las fábricas de modelos de dominio.
+
+    Construye a través del manager sin filtro: una fábrica arma escenarios de
+    varias Clínicas a la vez, y no tiene por qué haber ninguna Clínica activa.
+    """
+
+    class Meta:
+        abstract = True
+
+    clinic = factory.SubFactory(ClinicaFactory)
+
+    @classmethod
+    def _get_manager(cls, model_class):
+        return model_class.de_todas_las_clinicas
+
+
+class TutorFactory(FabricaDeLaClinica):
+    """Persona responsable de un Paciente ante la clínica y ante la ley."""
+
+    class Meta:
+        model = Tutor
+
+    nombre = factory.Sequence(lambda n: f"Tutor de prueba {n}")
+    telefono = "+56912345678"

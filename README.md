@@ -56,12 +56,36 @@ De `django-allauth` se enrutan solo el login, el logout y la página de cuenta d
 
 No hay `django.contrib.admin`: sería una segunda puerta de entrada, con sus propios permisos, al lado de los roles de `tenancy`. El segundo factor para el rol admin y la caducidad de sesión son del ticket 13.
 
+## Aislamiento por Clínica
+
+La Clínica es la frontera de todos los datos ([ADR-0003](docs/adr/0003-tenancy-por-clave-ajena-y-manager.md)). La garantía no es acordarse de filtrar: es que filtrar sea lo que pasa por defecto.
+
+**Todo modelo de dominio nuevo hereda de `apps.tenancy.aislamiento.ModeloDeLaClinica`.** Eso le da la clave ajena `clinic` y un manager `objects` que solo ve la Clínica activa:
+
+```python
+from django.db import models
+from apps.tenancy.aislamiento import ModeloDeLaClinica
+
+class Paciente(ModeloDeLaClinica):
+    nombre = models.CharField(max_length=200)
+```
+
+Quién es la Clínica activa lo resuelve el middleware `apps.tenancy.middleware.clinica_del_usuario` a partir del Usuario autenticado, y queda también en `request.clinica`. Fuera de una petición — comandos, tareas, tests — se fija con el gestor de contexto `activar_clinica(clinica)`.
+
+De ahí salen tres reglas prácticas:
+
+- **Las vistas no filtran por Clínica.** `Tutor.objects.all()` y `get_object_or_404(Tutor, pk=pk)` ya están filtrados. Pedir por su identificador un objeto de otra Clínica da **404, nunca 403 con contenido**: la existencia del objeto ya es información.
+- **Sin Clínica activa, `objects` no devuelve nada.** Un olvido produce una página vacía, jamás datos de la Clínica de al lado.
+- **Cruzar la frontera es explícito.** El manager `de_todas_las_clinicas` existe para lo que de verdad la cruza — el alta de una Clínica, una exportación, las fábricas de test — y su nombre está pensado para saltar a la vista en una revisión.
+
+Que la regla se cumpla no depende de nadie: `apps/tenancy/comprobaciones.py` registra un `check` de Django que recorre los modelos de las apps de dominio y falla si alguno no lleva `clinic` o no filtra por ella. Salta al arrancar, en `manage.py check` y en `tests/test_estructura.py`.
+
 ## Estructura
 
 ```
 config/        configuración de Django, urls y vista raíz
 scripts/       utilidades de desarrollo (levantar Postgres)
-apps/          las nueve apps del dominio (solo `tenancy` tiene modelos)
+apps/          las nueve apps del dominio
 templates/     plantillas server-rendered
 tests/         tests que cruzan apps
 locale/        catálogos de gettext

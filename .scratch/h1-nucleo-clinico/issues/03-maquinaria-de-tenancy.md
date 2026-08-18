@@ -4,12 +4,12 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Clave ajena `clinic` en el modelo Tutor, y manager por defecto que filtra por la Clínica activa
-- [ ] Middleware que resuelve la Clínica activa a partir del Usuario autenticado
-- [ ] Usar el manager por defecto es seguro; el acceso sin filtrar existe pero es explícito y llamativo en el código
-- [ ] **Test estructural**: recorre los modelos de dominio y falla si alguno no tiene `clinic`. Debe fallar de verdad si se añade un modelo sin la clave
-- [ ] Un Usuario que pide por su identificador un Tutor de otra Clínica recibe 404, nunca 403 con contenido
-- [ ] Los listados y las búsquedas nunca devuelven objetos de otra Clínica
-- [ ] Documentado en el README el patrón que debe seguir cualquier modelo de dominio nuevo
+- [x] Clave ajena `clinic` en el modelo Tutor, y manager por defecto que filtra por la Clínica activa
+- [x] Middleware que resuelve la Clínica activa a partir del Usuario autenticado
+- [x] Usar el manager por defecto es seguro; el acceso sin filtrar existe pero es explícito y llamativo en el código
+- [x] **Test estructural**: recorre los modelos de dominio y falla si alguno no tiene `clinic`. Debe fallar de verdad si se añade un modelo sin la clave
+- [x] Un Usuario que pide por su identificador un Tutor de otra Clínica recibe 404, nunca 403 con contenido
+- [x] Los listados y las búsquedas nunca devuelven objetos de otra Clínica
+- [x] Documentado en el README el patrón que debe seguir cualquier modelo de dominio nuevo

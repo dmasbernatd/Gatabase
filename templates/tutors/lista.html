@@ -1,0 +1,25 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Tutores" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Tutores" %}</h1>
+
+  <form method="get" action="{% url 'tutors:lista' %}">
+    <label for="q">{% translate "Buscar por nombre" %}</label>
+    <input type="search" id="q" name="q" value="{{ buscado }}">
+    <button type="submit">{% translate "Buscar" %}</button>
+  </form>
+
+  <ul>
+    {% for tutor in tutores %}
+      <li>
+        <a href="{% url 'tutors:ficha' tutor.pk %}">{{ tutor.nombre }}</a>
+        {{ tutor.telefono }}
+      </li>
+    {% empty %}
+      <li>{% translate "No hay Tutores que mostrar." %}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

@@ -12,4 +12,5 @@ urlpatterns = [
     path("accounts/logout/", cuentas.logout, name="account_logout"),
     path("accounts/inactivo/", cuentas.account_inactive, name="account_inactive"),
     path("panel/", include("apps.tenancy.urls")),
+    path("panel/tutores/", include("apps.tutors.urls")),
 ]
