@@ -5,6 +5,7 @@ description = "Gestión clínica y de negocio para clínicas veterinarias en Chi
 requires-python = ">=3.12"
 dependencies = [
     "django>=6.1,<7.0",
+    "django-allauth>=65.19",
     "psycopg[binary]>=3.2",
     "python-dotenv>=1.0",
 ]

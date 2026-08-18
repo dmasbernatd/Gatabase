@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 18:51-0400\n"
+"POT-Creation-Date: 2026-08-17 20:08-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -17,10 +17,229 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#: apps/tenancy/forms.py:45
+msgid "Contraseña inicial"
+msgstr ""
+
+#: apps/tenancy/management/commands/crear_clinica.py:20
+msgid "Da de alta una Clínica con su primera Sede y su primer admin."
+msgstr ""
+
+#: apps/tenancy/management/commands/crear_clinica.py:23
+msgid "Nombre de la Clínica"
+msgstr ""
+
+#: apps/tenancy/management/commands/crear_clinica.py:24
+msgid "Nombre de la primera Sede"
+msgstr ""
+
+#: apps/tenancy/management/commands/crear_clinica.py:25
+msgid "Dirección de la Sede"
+msgstr ""
+
+#: apps/tenancy/management/commands/crear_clinica.py:26
+msgid "Correo del primer admin"
+msgstr ""
+
+#: apps/tenancy/management/commands/crear_clinica.py:27
+msgid "Nombre del primer admin"
+msgstr ""
+
+#: apps/tenancy/management/commands/crear_clinica.py:28
+msgid "Apellidos del primer admin"
+msgstr ""
+
+#: apps/tenancy/management/commands/crear_clinica.py:31
+msgid "Contraseña del primer admin; si falta, se pide por teclado"
+msgstr ""
+
+#: apps/tenancy/management/commands/crear_clinica.py:40
+#, python-format
+msgid "La Clínica «%s» ya está dada de alta."
+msgstr ""
+
+#: apps/tenancy/management/commands/crear_clinica.py:42
+#, python-format
+msgid "Ya hay un Usuario con el correo %s."
+msgstr ""
+
+#: apps/tenancy/management/commands/crear_clinica.py:44
+msgid "Contraseña del admin: "
+msgstr ""
+
+#: apps/tenancy/management/commands/crear_clinica.py:66
+#, python-format
+msgid ""
+"Clínica «%(clinica)s» dada de alta con la Sede «%(sede)s» y el admin "
+"%(email)s."
+msgstr ""
+
+#: apps/tenancy/models.py:17 apps/tenancy/models.py:38
+#: apps/tenancy/models.py:90
+msgid "nombre"
+msgstr ""
+
+#: apps/tenancy/models.py:18
+msgid "creada"
+msgstr ""
+
+#: apps/tenancy/models.py:21 apps/tenancy/models.py:36
+#: apps/tenancy/models.py:85
+msgid "Clínica"
+msgstr ""
+
+#: apps/tenancy/models.py:22
+msgid "Clínicas"
+msgstr ""
+
+#: apps/tenancy/models.py:39
+msgid "dirección"
+msgstr ""
+
+#: apps/tenancy/models.py:42 templates/tenancy/base_panel.html:8
+msgid "Sede"
+msgstr ""
+
+#: apps/tenancy/models.py:43 apps/tenancy/models.py:94
+#: templates/tenancy/usuarios.html:17
+msgid "Sedes"
+msgstr ""
+
+#: apps/tenancy/models.py:56
+msgid "veterinario"
+msgstr ""
+
+#: apps/tenancy/models.py:57
+msgid "recepción"
+msgstr ""
+
+#: apps/tenancy/models.py:58
+msgid "admin"
+msgstr ""
+
+#: apps/tenancy/models.py:70
+msgid "Un Usuario necesita un correo para entrar."
+msgstr ""
+
+#: apps/tenancy/models.py:89
+msgid "correo"
+msgstr ""
+
+#: apps/tenancy/models.py:91
+msgid "apellidos"
+msgstr ""
+
+#: apps/tenancy/models.py:92
+msgid "rol"
+msgstr ""
+
+#: apps/tenancy/models.py:96 templates/tenancy/usuarios.html:30
+msgid "activo"
+msgstr ""
+
+#: apps/tenancy/models.py:97
+msgid "alta"
+msgstr ""
+
+#: apps/tenancy/models.py:105
+msgid "Usuario"
+msgstr ""
+
+#: apps/tenancy/models.py:106 templates/tenancy/base_panel.html:30
+msgid "Usuarios"
+msgstr ""
+
+#: apps/tenancy/views.py:66 templates/tenancy/usuarios.html:9
+msgid "Crear Usuario"
+msgstr ""
+
+#: apps/tenancy/views.py:80
+msgid "Editar Usuario"
+msgstr ""
+
+#: templates/account/login.html:4 templates/account/login.html:7
+msgid "Entrar en Gatabase"
+msgstr ""
+
+#: templates/account/login.html:15
+msgid "Entrar"
+msgstr ""
+
+#: templates/account/login.html:18
+msgid "¿No tiene cuenta? Pídasela al administrador de su Clínica."
+msgstr ""
+
 #: templates/base.html:6 templates/home.html:4 templates/home.html:7
 msgid "Gatabase"
 msgstr ""
 
 #: templates/home.html:8
 msgid "Gestión clínica para clínicas veterinarias."
+msgstr ""
+
+#: templates/tenancy/base_panel.html:15
+msgid "Cambiar de Sede"
+msgstr ""
+
+#: templates/tenancy/base_panel.html:21
+msgid "Cambiar"
+msgstr ""
+
+#: templates/tenancy/base_panel.html:28
+msgid "Inicio"
+msgstr ""
+
+#: templates/tenancy/base_panel.html:36
+msgid "Salir"
+msgstr ""
+
+#: templates/tenancy/formulario_de_usuario.html:12
+msgid "Guardar"
+msgstr ""
+
+#: templates/tenancy/formulario_de_usuario.html:15
+msgid "Volver a los Usuarios"
+msgstr ""
+
+#: templates/tenancy/inicio.html:9
+#, python-format
+msgid "Está trabajando en la Sede %(sede)s."
+msgstr ""
+
+#: templates/tenancy/inicio.html:11
+msgid ""
+"No pertenece a ninguna Sede todavía. Pídale una al administrador de su "
+"Clínica."
+msgstr ""
+
+#: templates/tenancy/usuarios.html:4 templates/tenancy/usuarios.html:7
+msgid "Usuarios de la Clínica"
+msgstr ""
+
+#: templates/tenancy/usuarios.html:14
+msgid "Nombre"
+msgstr ""
+
+#: templates/tenancy/usuarios.html:15
+msgid "Correo"
+msgstr ""
+
+#: templates/tenancy/usuarios.html:16
+msgid "Rol"
+msgstr ""
+
+#: templates/tenancy/usuarios.html:18
+msgid "Estado"
+msgstr ""
+
+#: templates/tenancy/usuarios.html:30
+msgid "desactivado"
+msgstr ""
+
+#: templates/tenancy/usuarios.html:33
+msgid "Editar"
+msgstr ""
+
+#: templates/tenancy/usuarios.html:37
+msgid "Desactivar"
 msgstr ""

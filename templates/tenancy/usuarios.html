@@ -1,0 +1,45 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Usuarios de la Clínica" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Usuarios de la Clínica" %}</h1>
+
+  <p><a href="{% url 'tenancy:crear_usuario' %}">{% translate "Crear Usuario" %}</a></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>{% translate "Nombre" %}</th>
+        <th>{% translate "Correo" %}</th>
+        <th>{% translate "Rol" %}</th>
+        <th>{% translate "Sedes" %}</th>
+        <th>{% translate "Estado" %}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for usuario in usuarios %}
+        <tr>
+          <td>{{ usuario }}</td>
+          <td>{{ usuario.email }}</td>
+          <td>{{ usuario.get_rol_display }}</td>
+          <td>{% for sede in usuario.sedes.all %}{{ sede }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+          <td>
+            {% if usuario.is_active %}{% translate "activo" %}{% else %}{% translate "desactivado" %}{% endif %}
+          </td>
+          <td>
+            <a href="{% url 'tenancy:editar_usuario' usuario.pk %}">{% translate "Editar" %}</a>
+            {% if usuario.is_active and usuario != user %}
+              <form method="post" action="{% url 'tenancy:desactivar_usuario' usuario.pk %}">
+                {% csrf_token %}
+                <button type="submit">{% translate "Desactivar" %}</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

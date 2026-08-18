@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+  <header>
+    <p>{{ clinica }}</p>
+    <p>
+      <span>{% translate "Sede" %}:</span>
+      <strong>{{ sede_actual|default:"—" }}</strong>
+    </p>
+
+    {% if sedes_del_usuario|length > 1 %}
+      <form method="post" action="{% url 'tenancy:cambiar_sede' %}">
+        {% csrf_token %}
+        <label for="sede">{% translate "Cambiar de Sede" %}</label>
+        <select id="sede" name="sede">
+          {% for sede in sedes_del_usuario %}
+            <option value="{{ sede.pk }}" {% if sede == sede_actual %}selected{% endif %}>{{ sede }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit">{% translate "Cambiar" %}</button>
+      </form>
+    {% endif %}
+
+    <p>{{ user }} — {{ user.get_rol_display }}</p>
+
+    <nav>
+      <a href="{% url 'tenancy:inicio' %}">{% translate "Inicio" %}</a>
+      {% if user.es_admin %}
+        <a href="{% url 'tenancy:usuarios' %}">{% translate "Usuarios" %}</a>
+      {% endif %}
+    </nav>
+
+    <form method="post" action="{% url 'account_logout' %}">
+      {% csrf_token %}
+      <button type="submit">{% translate "Salir" %}</button>
+    </form>
+  </header>
+
+  {% block panel %}{% endblock %}
+{% endblock %}

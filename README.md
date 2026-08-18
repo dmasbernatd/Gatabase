@@ -38,14 +38,30 @@ Un buen test aquí entra por la petición HTTP con el cliente de test de Django 
 - `USE_TZ` activo: la base de datos guarda **UTC** y la presentación usa `America/Santiago` (`TIME_ZONE`). `tests/test_horas.py` lo comprueba en verano y en invierno austral, donde el desfase cambia.
 - `USE_I18N` activo con `LANGUAGE_CODE = "es-cl"`. Todo texto visible pasa por `gettext`, aunque es-CL sea el único idioma: `make messages` lo extrae a `locale/es_CL/LC_MESSAGES/django.po` y `make compile` lo compila. Los `msgstr` están vacíos a propósito — es-CL es el idioma de origen y gettext presenta el `msgid`. `tests/test_plantillas_en_gettext.py` recorre las plantillas y falla si aparece texto visible fuera de `gettext`, para que la regla no dependa de acordarse.
 
-No hay `django.contrib.admin`: la autenticación la deciden los tickets 02 y 13 — `django-allauth`, roles y segundo factor para admin. El admin de Django sería una segunda puerta de entrada que nadie ha decidido.
+## Entrar en el sistema
+
+Un Usuario entra en `/accounts/login/` con su **correo** y su contraseña, y aterriza en el panel de su Clínica (`/panel/`), que le muestra en qué Clínica y en qué Sede está trabajando. Si pertenece a varias Sedes, cambia de Sede desde la cabecera; la Sede actual vive en la sesión, no en el Usuario.
+
+No hay registro abierto: **no existe** una URL de alta. La primera Clínica, su primera Sede y su primer admin se crean por comando:
+
+```sh
+.venv/bin/python manage.py crear_clinica \
+  --clinica "Clínica Los Andes" --sede "Providencia" \
+  --email admin@losandes.example --nombre Camila --apellidos Rojas
+```
+
+La contraseña se pide por teclado si no se pasa `--contrasena`. A partir de ahí, el admin de la Clínica crea el resto de los Usuarios en `/panel/usuarios/`, les asigna rol (`veterinario`, `recepcion`, `admin`) y Sedes, y los desactiva. Hasta que haya correo saliente, el admin fija una contraseña inicial y se la entrega al Usuario.
+
+De `django-allauth` se enrutan solo el login, el logout y la página de cuenta desactivada. Lo que no está enrutado no existe.
+
+No hay `django.contrib.admin`: sería una segunda puerta de entrada, con sus propios permisos, al lado de los roles de `tenancy`. El segundo factor para el rol admin y la caducidad de sesión son del ticket 13.
 
 ## Estructura
 
 ```
 config/        configuración de Django, urls y vista raíz
 scripts/       utilidades de desarrollo (levantar Postgres)
-apps/          las nueve apps del dominio, todavía vacías
+apps/          las nueve apps del dominio (solo `tenancy` tiene modelos)
 templates/     plantillas server-rendered
 tests/         tests que cruzan apps
 locale/        catálogos de gettext

@@ -1,0 +1,13 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{{ clinica }}{% endblock %}
+
+{% block panel %}
+  <h1>{{ clinica }}</h1>
+  {% if sede_actual %}
+    <p>{% blocktranslate with sede=sede_actual %}Está trabajando en la Sede {{ sede }}.{% endblocktranslate %}</p>
+  {% else %}
+    <p>{% translate "No pertenece a ninguna Sede todavía. Pídale una al administrador de su Clínica." %}</p>
+  {% endif %}
+{% endblock %}

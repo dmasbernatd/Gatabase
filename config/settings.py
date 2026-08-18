@@ -36,14 +36,15 @@ SECRET_KEY = _env("DJANGO_SECRET_KEY", CLAVE_DE_DESARROLLO if DEBUG else None)
 ALLOWED_HOSTS = [h for h in _env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
 
 INSTALLED_APPS = [
-    # Sin `django.contrib.admin`: la autenticación la deciden los tickets 02 y
-    # 13 (allauth, roles y segundo factor). El admin sería una segunda puerta
-    # de entrada que nadie ha decidido todavía.
+    # Sin `django.contrib.admin`: sería una segunda puerta de entrada, con sus
+    # propios permisos, al lado de los roles de `tenancy`.
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "allauth",
+    "allauth.account",
     "apps.tenancy",
     "apps.tutors",
     "apps.patients",
@@ -64,6 +65,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -79,6 +81,7 @@ TEMPLATES = [
                 "django.template.context_processors.i18n",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.tenancy.contexto.sesion_de_clinica",
             ],
         },
     },
@@ -98,6 +101,27 @@ DATABASES = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = "tenancy.Usuario"
+
+AUTHENTICATION_BACKENDS = ["allauth.account.auth_backends.AuthenticationBackend"]
+
+# El Usuario entra con su correo y su contraseña, y nada más: no hay registro
+# abierto — sus cuentas las crea el admin de la Clínica — ni verificación por
+# correo, porque todavía no hay correo saliente (ver ticket 02).
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+# No hay registro — no se enruta `account_signup` —, pero `allauth` comprueba al
+# arrancar que sus campos de alta cuadren con el modelo de Usuario, y por
+# omisión incluyen `username`, que aquí no existe.
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*"]
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_LOGOUT_ON_GET = False
+ACCOUNT_TEMPLATE_EXTENDS = "base.html"
+
+LOGIN_URL = "account_login"
+LOGIN_REDIRECT_URL = "tenancy:inicio"
+LOGOUT_REDIRECT_URL = "account_login"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

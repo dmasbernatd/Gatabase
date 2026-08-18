@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Entrar en Gatabase" %}{% endblock %}
+
+{% block content %}
+  <h1>{% translate "Entrar en Gatabase" %}</h1>
+
+  <form method="post" action="{% url 'account_login' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    {% if redirect_field_value %}
+      <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+    {% endif %}
+    <button type="submit">{% translate "Entrar" %}</button>
+  </form>
+
+  <p>{% translate "¿No tiene cuenta? Pídasela al administrador de su Clínica." %}</p>
+{% endblock %}
