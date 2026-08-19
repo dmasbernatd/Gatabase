@@ -4,6 +4,36 @@ Gestión clínica y de negocio para clínicas veterinarias en Chile: agenda, his
 
 El vocabulario del dominio está en [`CONTEXT.md`](CONTEXT.md); las decisiones estructurales, en [`docs/adr/`](docs/adr/). Léelos antes de tocar tenancy, Consulta, auditoría o mensajería.
 
+## Estado
+
+En desarrollo activo, con el hito **H1 — Núcleo clínico** en curso.
+
+**Stack:** Python 3.12 · Django 6.1 · PostgreSQL (psycopg 3) · django-allauth · server-rendered.
+
+**Funcionando hoy:**
+
+- **Aislamiento multi-clínica por defecto.** Los modelos de dominio heredan el filtro por Clínica y un `check` de Django falla al arrancar si alguno no lo cumple ([ADR-0003](docs/adr/0003-tenancy-por-clave-ajena-y-manager.md)). La garantía no depende de acordarse de filtrar.
+- **Autenticación y roles.** Login por correo, roles `veterinario` / `recepcion` / `admin`, cambio de Sede en sesión, y administración de Usuarios desde el panel. Sin registro abierto: la primera Clínica se crea por comando.
+- **Fichas de Tutor**, con RUT y datos de contacto.
+- **Registro de acceso** a datos personales (rama `worktree-04-registro-de-acceso`, pendiente de integrar).
+- **i18n es-CL** con un test que falla si aparece texto visible fuera de `gettext`.
+- **Fechas en UTC** con presentación en `America/Santiago`, verificado en verano e invierno austral.
+
+**Calidad:** 50 tests (`pytest` + `pytest-django` + `factory_boy`) que entran por la petición HTTP y comprueban lo que el Usuario observa. 5 decisiones estructurales registradas en [`docs/adr/`](docs/adr/).
+
+**Hoja de ruta:**
+
+| Hito | Alcance | Estado |
+|------|---------|--------|
+| **H1** — Núcleo clínico | Clínica, Usuarios, Tutores y Pacientes | en curso |
+| **H2** — Historia clínica | Consulta append-only, enmiendas y adjuntos | especificado |
+| **H3** — Agenda y pendientes | Horas, aplicaciones y salud preventiva | especificado |
+| **H4** — Conversaciones | WhatsApp y autorespuesta | especificado |
+
+El proyecto nace de un problema concreto: una clínica veterinaria chilena de una sede que gestiona sus fichas en planillas y papel, y que además debe poder demostrar quién accede a los datos de sus clientes antes de que la **Ley 21.719** de protección de datos personales entre en vigencia el 1 de diciembre de 2026.
+
+Se desarrolla con asistencia de IA como práctica deliberada de esa metodología sobre un stack fullstack Python.
+
 ## Requisitos
 
 - Python 3.12 o superior
