@@ -7,6 +7,13 @@
   <h1>{{ tutor }}</h1>
 
   <dl>
+    {% comment %}
+      El RUT sale con puntos y guion, que es como se lee y como se dicta: lo
+      guardado es la forma de corrido, que no la reconoce nadie de un vistazo.
+    {% endcomment %}
+    <dt>{% translate "RUT" %}</dt>
+    <dd>{{ tutor.rut_a_la_chilena|default:"—" }}</dd>
+
     <dt>{% translate "Teléfono" %}</dt>
     <dd>{{ tutor.telefono|default:"—" }}</dd>
 

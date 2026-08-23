@@ -13,6 +13,21 @@
   </head>
   <body>
     <main>
+      {% comment %}
+        Los avisos que sobreviven a una redirección: el teléfono compartido al
+        guardar un Tutor, y lo que venga después. Van aquí, en la página entera y
+        no en cada plantilla, porque quien los deja escritos ya no sabe en qué
+        página se van a leer. Algunos llevan un enlace dentro, y por eso se
+        componen con `format_html` allí donde se escriben.
+      {% endcomment %}
+      {% if messages %}
+        <ul>
+          {% for aviso in messages %}
+            <li class="{{ aviso.tags }}">{{ aviso }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
       {% block content %}{% endblock %}
     </main>
   </body>

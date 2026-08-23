@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 00:50-0400\n"
+"POT-Creation-Date: 2026-08-23 01:14-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -146,7 +146,7 @@ msgid ""
 msgstr ""
 
 #: apps/tenancy/models.py:17 apps/tenancy/models.py:38
-#: apps/tenancy/models.py:90 apps/tutors/models.py:26
+#: apps/tenancy/models.py:90 apps/tutors/models.py:28
 msgid "nombre"
 msgstr ""
 
@@ -158,7 +158,7 @@ msgstr ""
 msgid "Clínicas"
 msgstr ""
 
-#: apps/tenancy/models.py:39 apps/tutors/models.py:30
+#: apps/tenancy/models.py:39 apps/tutors/models.py:42
 msgid "dirección"
 msgstr ""
 
@@ -187,11 +187,11 @@ msgstr ""
 msgid "Un Usuario necesita un correo para entrar."
 msgstr ""
 
-#: apps/tenancy/models.py:89 apps/tutors/models.py:29
+#: apps/tenancy/models.py:89 apps/tutors/models.py:41
 msgid "correo"
 msgstr ""
 
-#: apps/tenancy/models.py:91 apps/tutors/models.py:27
+#: apps/tenancy/models.py:91 apps/tutors/models.py:29
 msgid "apellidos"
 msgstr ""
 
@@ -219,41 +219,83 @@ msgstr ""
 msgid "Editar Usuario"
 msgstr ""
 
-#: apps/tutors/listado.py:83
+#: apps/tutors/forms.py:52
+#, python-brace-format
+msgid "Este RUT ya es el de {ficha}, en esta misma Clínica."
+msgstr ""
+
+#: apps/tutors/listado.py:94
 msgid "Apellidos"
 msgstr ""
 
-#: apps/tutors/listado.py:84 templates/tenancy/usuarios.html:14
+#: apps/tutors/listado.py:95 templates/tenancy/usuarios.html:14
 msgid "Nombre"
 msgstr ""
 
-#: apps/tutors/listado.py:85 templates/tutors/ficha.html:10
+#: apps/tutors/listado.py:96 apps/tutors/models.py:36
+#: templates/tutors/ficha.html:15
+msgid "RUT"
+msgstr ""
+
+#: apps/tutors/listado.py:97 templates/tutors/ficha.html:18
 msgid "Teléfono"
 msgstr ""
 
-#: apps/tutors/listado.py:86 templates/tenancy/usuarios.html:15
-#: templates/tutors/ficha.html:13
+#: apps/tutors/listado.py:98 templates/tenancy/usuarios.html:15
+#: templates/tutors/ficha.html:21
 msgid "Correo"
 msgstr ""
 
-#: apps/tutors/models.py:28
+#: apps/tutors/models.py:40
 msgid "teléfono"
 msgstr ""
 
-#: apps/tutors/models.py:39
+#: apps/tutors/models.py:51
 msgid "Tutor"
 msgstr ""
 
-#: apps/tutors/models.py:40 templates/tenancy/base_panel.html:29
+#: apps/tutors/models.py:52 templates/tenancy/base_panel.html:29
 #: templates/tutors/lista.html:4 templates/tutors/lista.html:7
 msgid "Tutores"
 msgstr ""
 
-#: apps/tutors/views.py:70 templates/tutors/lista.html:9
+#: apps/tutors/rut.py:92
+msgid "El RUT se escribe con números y, al final, su dígito verificador."
+msgstr ""
+
+#: apps/tutors/rut.py:97
+#, python-format
+msgid ""
+"Un RUT lleva entre %(minimo)s y %(maximo)s dígitos antes del verificador."
+msgstr ""
+
+#: apps/tutors/rut.py:107
+#, python-format
+msgid ""
+"El dígito verificador no corresponde: para %(cuerpo)s tendría que ser "
+"%(cual)s."
+msgstr ""
+
+#: apps/tutors/telefono.py:50
+msgid ""
+"No se entiende como un teléfono. Escríbelo con sus nueve dígitos —«9 1234 "
+"5678»— o, si es de otro país, con su + y su código."
+msgstr ""
+
+#: apps/tutors/telefono.py:87
+msgid "Un teléfono se escribe con números."
+msgstr ""
+
+#: apps/tutors/views.py:72
+#, python-brace-format
+msgid "Este teléfono es también el de {ficha}."
+msgstr ""
+
+#: apps/tutors/views.py:108 templates/tutors/lista.html:9
 msgid "Registrar Tutor"
 msgstr ""
 
-#: apps/tutors/views.py:85 templates/tutors/ficha.html:20
+#: apps/tutors/views.py:128 templates/tutors/ficha.html:28
 msgid "Corregir la ficha"
 msgstr ""
 
@@ -378,11 +420,11 @@ msgstr ""
 msgid "Desactivar"
 msgstr ""
 
-#: templates/tutors/ficha.html:16
+#: templates/tutors/ficha.html:24
 msgid "Dirección"
 msgstr ""
 
-#: templates/tutors/ficha.html:22 templates/tutors/formulario.html:18
+#: templates/tutors/ficha.html:30 templates/tutors/formulario.html:18
 msgid "Volver a Tutores"
 msgstr ""
 
@@ -391,7 +433,7 @@ msgid "Volver a la ficha"
 msgstr ""
 
 #: templates/tutors/listado.html:18
-msgid "Buscar por nombre, apellidos, teléfono o correo"
+msgid "Buscar por nombre, apellidos, RUT, teléfono o correo"
 msgstr ""
 
 #: templates/tutors/listado.html:21

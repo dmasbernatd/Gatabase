@@ -12,6 +12,7 @@ from django.contrib.auth import get_user_model
 from apps.audit.models import Accion, RegistroDeAcceso
 from apps.tenancy.models import Clinica, Rol, Sede
 from apps.tutors.models import Tutor
+from apps.tutors.rut import digito_verificador
 
 CONTRASENA_DE_PRUEBA = "gatabase-de-prueba-2026"
 
@@ -84,6 +85,13 @@ class FabricaDeLaClinica(factory.django.DjangoModelFactory):
         return model_class.de_todas_las_clinicas
 
 
+def rut_de_prueba(numero):
+    """Un RUT que cuadra de verdad, para que las fábricas no tengan que inventarse
+    uno: el campo valida el dígito verificador pase por donde pase el dato."""
+    cuerpo = str(10_000_000 + numero)
+    return cuerpo + digito_verificador(cuerpo)
+
+
 class TutorFactory(FabricaDeLaClinica):
     """Persona responsable de un Paciente ante la clínica y ante la ley."""
 
@@ -91,6 +99,7 @@ class TutorFactory(FabricaDeLaClinica):
         model = Tutor
 
     nombre = factory.Sequence(lambda n: f"Tutor de prueba {n}")
+    rut = factory.Sequence(rut_de_prueba)
     apellidos = factory.Sequence(lambda n: f"Apellidos de prueba {n}")
     telefono = "+56912345678"
     email = factory.Sequence(lambda n: f"tutor{n}@correo.example")

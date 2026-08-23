@@ -92,6 +92,21 @@ class FormularioDeLaClinica(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.clinica = clinica
 
+    def los_demas(self):
+        """Los objetos de este modelo que ya hay en la Clínica, menos el editado.
+
+        Es a quienes se parece lo que se está guardando: el Tutor que ya tiene
+        ese RUT, el Paciente que ya tiene ese microchip. Sale de la Clínica del
+        formulario y no de la Clínica activa —un formulario puede rellenarse
+        fuera de una petición, en un importador— y por eso cruza a mano la
+        frontera, que es el único uso legítimo de `de_todas_las_clinicas`.
+
+        Se excluye el editado porque un objeto nunca se duplica a sí mismo:
+        corregir el apellido de un Tutor no puede chocar con su propio RUT.
+        """
+        otros = self._meta.model.de_todas_las_clinicas.filter(clinic=self.clinica)
+        return otros.exclude(pk=self.instance.pk) if self.instance.pk else otros
+
     def save(self, commit=True):
         objeto = super().save(commit=False)
         objeto.clinic = self.clinica

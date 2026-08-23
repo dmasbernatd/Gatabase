@@ -15,7 +15,7 @@
   `{% include %}` aparte, que es quien sabe que llevan `href` y `hx-get`.
 {% endcomment %}
 <form method="get" action="{% url 'tutors:lista' %}" hx-get="{% url 'tutors:lista' %}">
-  <label for="{{ listado.CAMPO_DE_BUSQUEDA }}">{% translate "Buscar por nombre, apellidos, teléfono o correo" %}</label>
+  <label for="{{ listado.CAMPO_DE_BUSQUEDA }}">{% translate "Buscar por nombre, apellidos, RUT, teléfono o correo" %}</label>
   <input type="search" id="{{ listado.CAMPO_DE_BUSQUEDA }}" name="{{ listado.CAMPO_DE_BUSQUEDA }}" value="{{ listado.buscado }}">
   <input type="hidden" name="{{ listado.CAMPO_DE_ORDEN }}" value="{{ listado.orden }}">
   <button type="submit">{% translate "Buscar" %}</button>

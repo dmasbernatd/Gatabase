@@ -7,14 +7,18 @@ orden ni la búsqueda. La vista se limita a construir un `ListadoDeTutores` y
 pasárselo a la plantilla.
 
 Esta búsqueda es la del fichero de Tutores: sirve para encontrar a alguien por su
-nombre, su apellido, su teléfono o su correo. La caja única que además busca
-Pacientes y microchips, tolerante a tildes, es del ticket 11.
+nombre, su apellido, su RUT, su teléfono o su correo. La caja única que además
+busca Pacientes y microchips, tolerante a tildes, es del ticket 11.
 """
 
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
+
+from apps.tutors.rut import como_se_busca as rut_como_se_busca
+from apps.tutors.rut import formateado
+from apps.tutors.telefono import digitos_del_telefono
 
 TUTORES_POR_PAGINA = 25
 
@@ -38,16 +42,23 @@ class Columna:
     salir dos veces o ninguna.
     """
 
-    def __init__(self, clave, etiqueta, desempata_por=(), enlaza_a_la_ficha=False):
+    def __init__(self, clave, etiqueta, desempata_por=(), enlaza_a_la_ficha=False, presenta=str):
         self.clave = clave
         self.etiqueta = etiqueta
         # La columna ordena primero por su propio campo; lo demás es desempate.
         self.campos = [clave, *desempata_por, "pk"]
         self.enlaza_a_la_ficha = enlaza_a_la_ficha
+        # Cómo se lee lo guardado. Casi siempre tal cual; el RUT, no: se guarda
+        # de corrido y se lee con puntos y guion.
+        self.presenta = presenta
 
     def celda_de(self, tutor):
         """La celda de este Tutor en esta columna."""
-        return Celda(getattr(tutor, self.clave), tutor.pk if self.enlaza_a_la_ficha else None)
+        valor = getattr(tutor, self.clave)
+        return Celda(
+            self.presenta(valor) if valor else valor,
+            tutor.pk if self.enlaza_a_la_ficha else None,
+        )
 
     def sentido_en(self, orden):
         """El valor de `aria-sort` de su cabecera, que es lo que anuncia un
@@ -82,6 +93,7 @@ class Celda:
 COLUMNAS = (
     Columna("apellidos", _("Apellidos"), desempata_por=["nombre"]),
     Columna("nombre", _("Nombre"), desempata_por=["apellidos"], enlaza_a_la_ficha=True),
+    Columna("rut", _("RUT"), desempata_por=["apellidos", "nombre"], presenta=formateado),
     Columna("telefono", _("Teléfono"), desempata_por=["apellidos", "nombre"]),
     Columna("email", _("Correo"), desempata_por=["apellidos", "nombre"]),
 )
@@ -89,10 +101,29 @@ COLUMNAS_POR_CLAVE = {columna.clave: columna for columna in COLUMNAS}
 
 ORDEN_POR_DEFECTO = COLUMNAS_POR_CLAVE["apellidos"]
 
-# Por dónde se busca a un Tutor: cómo se llama y por dónde se le contacta. La
-# dirección queda fuera a propósito — nadie llama preguntando por una calle — y
-# meterla solo traería coincidencias que estorban.
-CAMPOS_BUSCABLES = ("nombre", "apellidos", "telefono", "email")
+
+def tal_cual(palabra):
+    """Lo escrito, sin tocar: lo que vale para los campos que se guardan como se
+    escriben."""
+    return palabra
+
+
+# Por dónde se busca a un Tutor: cómo se llama, cómo se identifica y por dónde se
+# le contacta. La dirección queda fuera a propósito — nadie llama preguntando por
+# una calle — y meterla solo traería coincidencias que estorban.
+#
+# Cada campo dice además cómo hay que leer lo escrito para buscar en él. El RUT y
+# el teléfono se guardan normalizados y nadie los teclea así: quien busca escribe
+# «12.345.678» o «9 1234 5678», y sin quitarles antes la puntuación no
+# encontrarían nunca al Tutor que sí está. Los dos devuelven nada cuando lo
+# escrito no se les parece, y entonces ese campo no entra en la búsqueda.
+CAMPOS_BUSCABLES = {
+    "nombre": tal_cual,
+    "apellidos": tal_cual,
+    "rut": rut_como_se_busca,
+    "telefono": digitos_del_telefono,
+    "email": tal_cual,
+}
 
 
 class Orden:
@@ -148,11 +179,16 @@ def buscar(tutores, buscado):
     Cada palabra tiene que aparecer en alguno de los campos, no todas en el
     mismo: así «camila rojas» encuentra a quien tiene el nombre en un campo y el
     apellido en otro, que es como recepción escribe un nombre.
+
+    Un campo se salta cuando la palabra, leída a su manera, se queda en nada:
+    de «camila» no quedan dígitos, y buscarla en el teléfono como cadena vacía
+    haría coincidir a toda la Clínica.
     """
     for palabra in buscado.split():
         coincide = Q()
-        for campo in CAMPOS_BUSCABLES:
-            coincide |= Q(**{f"{campo}__icontains": palabra})
+        for campo, como_se_lee in CAMPOS_BUSCABLES.items():
+            if buscada := como_se_lee(palabra):
+                coincide |= Q(**{f"{campo}__icontains": buscada})
         tutores = tutores.filter(coincide)
     return tutores
 

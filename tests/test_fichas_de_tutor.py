@@ -452,3 +452,219 @@ def test_los_datos_personales_del_tutor_viven_todos_en_su_modelo():
     }
 
     assert campos == {"id", "clinic"} | set(Tutor.DATOS_PERSONALES)
+
+
+# --- RUT ------------------------------------------------------------------
+#
+# Cómo se lee un RUT escrito de cualquier manera se prueba en
+# `test_rut_y_telefono.py`. Aquí se prueba lo que la Clínica hace con él:
+# guardarlo de una sola forma, presentarlo de otra, y no dejar que dos fichas
+# sean la misma persona.
+
+RUT_ESCRITO = "12.345.678-5"
+RUT_GUARDADO = "123456785"
+
+
+def test_el_rut_se_guarda_normalizado_y_se_presenta_a_la_chilena(client):
+    usuario = recepcion(client)
+
+    client.post(reverse("tutors:crear"), DATOS_DE_CONTACTO | {"rut": RUT_ESCRITO})
+
+    tutor = Tutor.de_todas_las_clinicas.get()
+    assert tutor.rut == RUT_GUARDADO
+    contenido = client.get(reverse("tutors:ficha", args=[tutor.pk])).content.decode()
+    assert RUT_ESCRITO in contenido
+    assert RUT_GUARDADO not in contenido
+
+
+def test_el_formulario_de_correccion_trae_el_rut_a_la_chilena(client):
+    """Quien va a corregir una ficha tiene que reconocer el RUT que ve: de
+    corrido, como se guarda, no lo reconoce nadie de un vistazo."""
+    usuario = recepcion(client)
+    tutor = TutorFactory(clinic=usuario.clinic, rut=RUT_GUARDADO)
+
+    contenido = client.get(reverse("tutors:editar", args=[tutor.pk])).content.decode()
+
+    assert f'value="{RUT_ESCRITO}"' in contenido
+
+
+def test_un_rut_con_el_digito_verificador_cambiado_no_se_guarda(client):
+    recepcion(client)
+
+    respuesta = client.post(reverse("tutors:crear"), DATOS_DE_CONTACTO | {"rut": "12.345.678-4"})
+
+    assert respuesta.status_code == 200
+    assert not Tutor.de_todas_las_clinicas.exists()
+    # El aviso dice cuál tendría que ser: el error casi nunca está en el
+    # verificador, sino en un dígito del cuerpo.
+    assert "12.345.678-4" in respuesta.content.decode()
+    assert "dígito verificador" in respuesta.content.decode()
+
+
+def test_un_tutor_sin_rut_se_registra_igual(client):
+    """Un Tutor extranjero no tiene, y quien no lo quiera dar tiene derecho a
+    que se le atienda igual."""
+    recepcion(client)
+
+    client.post(reverse("tutors:crear"), DATOS_DE_CONTACTO | {"rut": ""})
+
+    assert Tutor.de_todas_las_clinicas.get().rut == ""
+
+
+def test_dos_tutores_sin_rut_no_son_el_mismo_tutor(client):
+    """El hueco se guarda como cadena vacía, y la restricción de unicidad lo
+    deja fuera: si no, la segunda ficha sin RUT sería imposible de crear."""
+    recepcion(client)
+
+    client.post(reverse("tutors:crear"), {"nombre": "Camila"})
+    client.post(reverse("tutors:crear"), {"nombre": "Ignacio"})
+
+    assert Tutor.de_todas_las_clinicas.count() == 2
+
+
+def test_un_rut_que_ya_esta_en_la_clinica_no_se_guarda_y_lleva_a_la_ficha(client):
+    usuario = recepcion(client)
+    ya_registrada = TutorFactory(
+        clinic=usuario.clinic, nombre="Camila", apellidos="Rojas Pizarro", rut=RUT_GUARDADO
+    )
+
+    respuesta = client.post(
+        reverse("tutors:crear"),
+        {"nombre": "Camila", "apellidos": "Rojas", "rut": RUT_ESCRITO},
+    )
+
+    assert respuesta.status_code == 200
+    assert Tutor.de_todas_las_clinicas.count() == 1
+    # El enlace se sigue, no se compone: lo que importa es que lleve de verdad
+    # a la ficha que ya existe, que es a lo que recepción venía.
+    destino = enlace(respuesta.content.decode(), "Camila Rojas Pizarro")
+    assert destino == reverse("tutors:ficha", args=[ya_registrada.pk])
+
+
+def test_avisar_de_un_rut_repetido_deja_constancia_de_la_lectura(client):
+    """El aviso dice el nombre del otro Tutor y enlaza a su ficha: quien lo lee
+    ha visto un dato personal suyo sin haber abierto nada (ADR-0004)."""
+    usuario = recepcion(client)
+    ya_registrada = TutorFactory(clinic=usuario.clinic, rut=RUT_GUARDADO)
+
+    client.post(reverse("tutors:crear"), {"nombre": "Camila", "rut": RUT_ESCRITO})
+
+    assert anotaciones_sobre(ya_registrada, Accion.LECTURA).get().usuario == usuario
+
+
+def test_el_mismo_rut_en_otra_clinica_no_estorba(client):
+    """El RUT es único dentro de la Clínica, nunca a nivel global: dos Clínicas
+    atienden a la misma persona sin saber la una de la otra (ADR-0003)."""
+    usuario = recepcion(client)
+    TutorFactory(clinic=ClinicaFactory(), rut=RUT_GUARDADO)
+
+    client.post(reverse("tutors:crear"), DATOS_DE_CONTACTO | {"rut": RUT_ESCRITO})
+
+    assert Tutor.de_todas_las_clinicas.filter(clinic=usuario.clinic).get().rut == RUT_GUARDADO
+
+
+def test_corregir_una_ficha_no_choca_con_su_propio_rut(client):
+    """Un Tutor no se duplica a sí mismo: corregirle el apellido no puede
+    tropezar con el RUT que ya tenía."""
+    usuario = recepcion(client)
+    tutor = TutorFactory(clinic=usuario.clinic, rut=RUT_GUARDADO)
+
+    respuesta = client.post(
+        reverse("tutors:editar", args=[tutor.pk]),
+        {"nombre": "Camila", "apellidos": "Rojas Pizarro", "rut": RUT_ESCRITO},
+    )
+
+    tutor.refresh_from_db()
+    assert respuesta.status_code == 302
+    assert tutor.apellidos == "Rojas Pizarro"
+    assert tutor.rut == RUT_GUARDADO
+
+
+def test_el_listado_enseña_el_rut_a_la_chilena_y_se_busca_por_el(client):
+    usuario = recepcion(client)
+    TutorFactory(clinic=usuario.clinic, apellidos="Rojas Pizarro", rut=RUT_GUARDADO)
+    # Con otro teléfono: el de la fábrica lleva los mismos ocho dígitos que este
+    # RUT, y saldría en la búsqueda por el campo que no se está probando.
+    TutorFactory(clinic=usuario.clinic, apellidos="Fuentes", telefono="+56987654321")
+
+    contenido = client.get(reverse("tutors:lista"), {"q": "12.345.678"}).content.decode()
+
+    assert RUT_ESCRITO in contenido
+    assert "Rojas Pizarro" in contenido
+    assert "Fuentes" not in contenido
+
+
+def test_buscar_un_nombre_no_lo_busca_entre_los_rut(client):
+    """La «k» de «Karla» traería a todos los Tutores cuyo RUT acaba en K."""
+    usuario = recepcion(client)
+    TutorFactory(clinic=usuario.clinic, nombre="Karla", apellidos="Soto", rut="12000008K")
+    TutorFactory(clinic=usuario.clinic, nombre="Ignacio", apellidos="Fuentes", rut="12000011K")
+
+    contenido = client.get(reverse("tutors:lista"), {"q": "Karla"}).content.decode()
+
+    assert "Soto" in contenido
+    assert "Fuentes" not in contenido
+
+
+# --- Teléfono -------------------------------------------------------------
+
+
+def test_el_telefono_se_guarda_en_e164_se_dicte_como_se_dicte(client):
+    recepcion(client)
+
+    client.post(reverse("tutors:crear"), {"nombre": "Camila", "telefono": "9 1234 5678"})
+
+    assert Tutor.de_todas_las_clinicas.get().telefono == "+56912345678"
+
+
+def test_un_telefono_que_no_se_entiende_no_se_guarda(client):
+    recepcion(client)
+
+    respuesta = client.post(reverse("tutors:crear"), {"nombre": "Camila", "telefono": "1234"})
+
+    assert respuesta.status_code == 200
+    assert not Tutor.de_todas_las_clinicas.exists()
+    assert "9 1234 5678" in respuesta.content.decode()
+
+
+def test_dos_tutores_pueden_compartir_el_telefono_y_se_avisa(client):
+    """Una familia comparte número: impedirlo obligaría a recepción a
+    inventarse un teléfono falso para el segundo Tutor."""
+    usuario = recepcion(client)
+    hermana = TutorFactory(
+        clinic=usuario.clinic, nombre="Camila", apellidos="Rojas", telefono="+56912345678"
+    )
+
+    respuesta = client.post(
+        reverse("tutors:crear"),
+        {"nombre": "Ignacio", "apellidos": "Rojas", "telefono": "9 1234 5678"},
+        follow=True,
+    )
+
+    assert Tutor.de_todas_las_clinicas.count() == 2
+    destino = enlace(respuesta.content.decode(), "Camila Rojas")
+    assert destino == reverse("tutors:ficha", args=[hermana.pk])
+
+
+def test_avisar_de_un_telefono_compartido_deja_constancia_de_la_lectura(client):
+    usuario = recepcion(client)
+    hermana = TutorFactory(clinic=usuario.clinic, telefono="+56912345678")
+
+    client.post(
+        reverse("tutors:crear"), {"nombre": "Ignacio", "telefono": "+56912345678"}, follow=True
+    )
+
+    assert anotaciones_sobre(hermana, Accion.LECTURA).get().usuario == usuario
+
+
+def test_un_telefono_que_no_tiene_nadie_mas_no_avisa_de_nada(client):
+    usuario = recepcion(client)
+    TutorFactory(clinic=usuario.clinic, telefono="+56911111111")
+
+    respuesta = client.post(
+        reverse("tutors:crear"),
+        {"nombre": "Ignacio", "telefono": "+56922222222"},
+        follow=True,
+    )
+
+    assert "es también el de" not in respuesta.content.decode()

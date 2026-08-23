@@ -17,6 +17,11 @@ lo puede saber desde fuera. Anotan igualmente después de tener la respuesta
 compuesta, que es la regla que sostiene al Registro: lo que no se llegó a servir
 no se anota.
 
+Al guardar, el formulario puede haber tropezado con otro Tutor: el que ya tenía
+ese RUT, o los que comparten ese teléfono. Los dos avisos dicen de quién se
+trata, y decirlo es enseñar un dato personal, así que los dos dejan constancia
+igual que si se hubiera abierto su ficha (ADR-0004).
+
 El listado también responde a HTMX: la búsqueda, el orden y el paginado
 devuelven solo la tabla de resultados. Se dispara al enviar la búsqueda y al
 pulsar una cabecera o una página, nunca a cada tecla: cada una de esas
@@ -24,8 +29,10 @@ peticiones sirve datos personales y se anota, y una búsqueda por tecla llenarí
 de ruido justo la tabla que tiene que valer como prueba.
 """
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from apps.audit.models import Accion
@@ -36,6 +43,37 @@ from apps.tutors.models import Tutor
 
 # Lo que htmx pone en toda petición suya; Django lo entrega como cabecera.
 PETICION_DE_HTMX = "HX-Request"
+
+
+def constancia_del_rut_repetido(request, formulario):
+    """Anota la lectura del Tutor cuyo nombre trae el aviso de RUT repetido.
+
+    El formulario rechazado no guardó nada, pero la página que vuelve dice a
+    quién pertenece ya ese RUT y enlaza a su ficha: recepción ha visto un dato
+    personal suyo sin haber abierto nada.
+    """
+    otro = formulario.tutor_con_el_mismo_rut
+    if otro:
+        anotar(request.user, Accion.LECTURA, otro)
+
+
+def avisar_del_telefono_compartido(request, formulario):
+    """Avisa de los Tutores que ya tenían el teléfono que se acaba de guardar.
+
+    No impide nada: una familia comparte número, y bloquearlo obligaría a
+    recepción a inventarse un teléfono falso para el segundo Tutor. Solo lo pone
+    delante, por si eran la misma persona registrada dos veces. Cada aviso dice
+    un nombre, así que cada aviso es una lectura y consta como tal.
+    """
+    for otro in formulario.quienes_comparten_el_telefono():
+        messages.warning(
+            request,
+            format_html(
+                _("Este teléfono es también el de {ficha}."),
+                ficha=formulario.enlace_a(otro),
+            ),
+        )
+        anotar(request.user, Accion.LECTURA, otro)
 
 
 @login_required
@@ -62,13 +100,17 @@ def crear(request):
     if request.method == "POST" and formulario.is_valid():
         tutor = formulario.save()
         anotar(request.user, Accion.CREACION, tutor)
+        avisar_del_telefono_compartido(request, formulario)
         return redirect("tutors:ficha", pk=tutor.pk)
-    # Un formulario vacío no enseña datos de nadie: no hay nada que anotar.
-    return render(
+    respuesta = render(
         request,
         "tutors/formulario.html",
         {"formulario": formulario, "titulo": _("Registrar Tutor")},
     )
+    # Un formulario vacío no enseña datos de nadie, y uno rechazado tampoco
+    # salvo cuando el RUT ya era de otro: entonces la página trae su nombre.
+    constancia_del_rut_repetido(request, formulario)
+    return respuesta
 
 
 @login_required
@@ -78,6 +120,7 @@ def editar(request, pk):
     if request.method == "POST" and formulario.is_valid():
         formulario.save()
         anotar(request.user, Accion.MODIFICACION, tutor)
+        avisar_del_telefono_compartido(request, formulario)
         return redirect("tutors:ficha", pk=tutor.pk)
     respuesta = render(
         request,
@@ -90,4 +133,5 @@ def editar(request, pk):
     # con la respuesta ya compuesta, no antes: una página que no se llegó a
     # componer no la vio nadie.
     anotar(request.user, Accion.LECTURA, tutor)
+    constancia_del_rut_repetido(request, formulario)
     return respuesta
