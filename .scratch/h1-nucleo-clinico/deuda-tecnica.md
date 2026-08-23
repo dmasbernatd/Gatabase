@@ -54,12 +54,20 @@ del ticket 05 que se dio por cumplida porque el listado pagina, y paginar no es
 lo mismo que aguantar. Debajo hay tres cosas que nadie mide:
 
 - El único índice del Tutor (`tutor_por_apellidos`: `clinic`, `apellidos`,
-  `nombre`) sirve al orden por defecto. Ordenar por nombre, teléfono o correo
-  —las otras tres cabeceras que el listado ofrece— es recorrer y ordenar en
-  memoria toda la Clínica.
+  `nombre`) sirve al orden por defecto. Ordenar por nombre, RUT, teléfono o
+  correo —las otras cuatro cabeceras que el listado ofrece— es recorrer y ordenar
+  en memoria toda la Clínica.
 - La búsqueda es `icontains`, o sea un `LIKE '%…%'` por cada palabra y cada uno
-  de los cuatro campos buscables. Con comodín delante, ningún índice normal
+  de los cinco campos buscables. Con comodín delante, ningún índice normal
   entra: es lectura secuencial de la tabla.
+  _Al día del 06_: el RUT es el quinto, y es el único que **sí** tendría índice
+  fácil: se guarda normalizado y se busca casi siempre entero, así que un
+  `LIKE 'x%'` sobre `(clinic, rut)` bastaría. La restricción de unicidad ya crea
+  un índice sobre esa pareja, aunque parcial y con la ordenación de la base: que
+  sirva tal cual para un prefijo hay que medirlo, no darlo por hecho. Lo que
+  falta en todo caso es que la búsqueda distinga un RUT completo del resto, en
+  vez de meterlo en el mismo `%…%` que los demás campos. Se decide en el **11**,
+  con el volumen del **16** delante.
 - El `Paginator` hace su `COUNT(*)` de la consulta completa en cada petición,
   incluida cada búsqueda.
 
@@ -120,6 +128,10 @@ ahora sería inventar una abstracción con un solo ejemplo.
 _Cuándo se paga_: en el **07**, cuando el Paciente traiga el tercer y el cuarto
 caso. Si entonces se sigue pareciendo, ahí ya hay algo que extraer.
 _Sigue pendiente a propósito_: no se tocó al pagar el resto de esta sección.
+_Creció en el 06_: las dos vistas llaman ahora además a
+`avisar_del_telefono_compartido` y a `constancia_del_rut_repetido`, en el mismo
+sitio y por el mismo motivo. Son dos líneas más de lo mismo en cada una: no
+cambia la decisión, pero sube el precio de seguir esperando al 07.
 
 ## Pagado
 
@@ -130,3 +142,19 @@ de la aplicación si su rol podría modificar el Registro de acceso: `audit.E001
 si es superusuario, `audit.E002` si conserva los permisos, `audit.W001` si la
 base no responde. Verificado a mano contra un rol no superusuario, con y sin los
 permisos retirados. Tests en `tests/test_condicion_de_despliegue.py`.
+
+## Coincidencias entre fichas
+
+**El 06 dejó media detección de duplicados, y el ticket propio es el 12.** Lo que
+hay ahora mira un campo exacto cada vez: el RUT idéntico impide guardar, el
+teléfono idéntico avisa. No mira nombres parecidos, ni un RUT tecleado con un
+dígito de menos, ni un correo repetido, que es de lo que trata el **12**.
+_Por qué importa ahora_: los dos avisos viven repartidos entre `TutorForm`
+(quién se parece) y las vistas (qué se hace al respecto). Es poco código y está
+en su sitio, pero el 12 traerá la tercera y la cuarta comparación, y ese es el
+momento de decidir si «a quién se parece esta ficha» merece un módulo propio en
+vez de un método por campo.
+_Cuándo se paga_: en el **12**. El **08** traerá antes el microchip, que es el
+mismo patrón exacto que el RUT y que ya puede apoyarse en
+`FormularioDeLaClinica.los_demas()`; si al escribirlo hay que copiar `clean_rut`
+casi entero, eso ya es el segundo ejemplo y conviene extraer entonces.
