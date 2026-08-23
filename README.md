@@ -158,6 +158,7 @@ Solo el nombre es obligatorio. En el mostrador a veces no hay más que un nombre
 Buscar, ordenar y paginar el listado es `apps/tutors/listado.py`, fuera de la vista porque es lo que tiene reglas:
 
 - **Se ordena solo por las columnas que el listado enseña** (`COLUMNAS`). Un `orden` que no se reconoce cae en el de siempre en vez de convertirse en un `ORDER BY` cualquiera escrito desde la URL. Cada columna trae su desempate: sin él, dos Tutores del mismo apellido pueden cambiar de sitio entre una página y la siguiente y salir dos veces o ninguna.
+- **Una columna del listado es una `Columna` y una sola edición** (`COLUMNAS`). El mismo objeto sabe su rótulo, por qué campos ordena, qué `aria-sort` anuncia su cabecera y qué celda pinta en cada fila; la plantilla recorre la lista para las cabeceras y para el cuerpo, y el `colspan` de la fila vacía las cuenta. Añadir el RUT (ticket 06) al listado es tocar `COLUMNAS` y nada más.
 - **La búsqueda reparte lo escrito entre los campos**: cada palabra tiene que aparecer en alguno, no todas en el mismo, así que «camila rojas» encuentra a quien tiene el nombre en un campo y el apellido en otro. Es la búsqueda del fichero de Tutores; la caja única que además busca Pacientes y microchips, tolerante a tildes, es del ticket 11.
 - **El orden y la búsqueda viajan en los enlaces** del paginador y de las cabeceras, y cambiar de orden vuelve a la primera página.
 
@@ -171,7 +172,7 @@ La caja de búsqueda viaja **dentro** de ese trozo, y no fuera junto al título,
 
 Dos reglas que conviene no perder:
 
-- **Todo sigue funcionando sin JavaScript.** El formulario es un `GET` normal y cada enlace lleva su `href`; htmx solo evita recargar la página entera. Los tests comprueban las dos formas de servir el listado.
+- **Todo sigue funcionando sin JavaScript.** El formulario es un `GET` normal y cada enlace lleva su `href`; htmx solo evita recargar la página entera. Los tests comprueban las dos formas de servir el listado. Que cada enlace lleve a la vez `href` y `hx-get` lo sabe un solo sitio: `templates/tutors/_enlace_del_listado.html`, que usan las cabeceras, Anterior y Siguiente.
 - **No se busca a cada tecla.** Cada una de esas peticiones sirve datos personales y por tanto se anota en el Registro de acceso: una búsqueda por pulsación llenaría de ruido justo la tabla que tiene que valer como prueba. Se dispara al enviar la búsqueda y al pulsar una cabecera o una página. La búsqueda incremental del ticket 11 llega junto con la regla que la hace admisible: registrar el acceso al abrir la ficha, no al listar.
 
 ## Estructura

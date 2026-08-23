@@ -24,18 +24,70 @@ PARAMETRO_DE_PAGINA = "pagina"
 
 DESCENDENTE = "-"
 
+
+class Columna:
+    """Una columna del listado: cómo se rotula, por qué campos ordena y qué
+    celda pinta en cada fila.
+
+    Existe para que añadir una columna sea una sola edición. Antes la cabecera
+    salía de aquí y la celda estaba escrita a mano en la plantilla, así que
+    olvidarse de la segunda no rompía nada: dejaba la tabla descuadrada.
+
+    Cada una trae ya decidido su desempate hasta el `pk`: sin él, dos Tutores
+    del mismo apellido pueden cambiar de sitio entre una página y la siguiente y
+    salir dos veces o ninguna.
+    """
+
+    def __init__(self, clave, etiqueta, desempata_por=(), enlaza_a_la_ficha=False):
+        self.clave = clave
+        self.etiqueta = etiqueta
+        # La columna ordena primero por su propio campo; lo demás es desempate.
+        self.campos = [clave, *desempata_por, "pk"]
+        self.enlaza_a_la_ficha = enlaza_a_la_ficha
+
+    def celda_de(self, tutor):
+        """La celda de este Tutor en esta columna."""
+        return Celda(getattr(tutor, self.clave), tutor.pk if self.enlaza_a_la_ficha else None)
+
+    def sentido_en(self, orden):
+        """El valor de `aria-sort` de su cabecera, que es lo que anuncia un
+        lector de pantalla. Va en inglés porque es vocabulario de HTML, no
+        texto de la interfaz."""
+        if orden.columna is not self:
+            return "none"
+        return "descending" if orden.descendente else "ascending"
+
+
+class Celda:
+    """Lo que una columna enseña de un Tutor: un texto, y si lleva a su ficha.
+
+    El guion del hueco vive aquí y no en la plantilla porque es la misma
+    respuesta para toda columna vacía, y la plantilla ya no sabe cuáles hay.
+    """
+
+    HUECO = "—"
+
+    def __init__(self, valor, ficha=None):
+        self.texto = str(valor) if valor else self.HUECO
+        self.ficha = ficha
+
+
 # Ordenar por lo que traiga la URL sería dejar que quien la escribe elija el
 # `ORDER BY`. Se ordena solo por estas columnas, que son las que el listado
-# enseña, y cada una trae ya decidido su desempate hasta el `pk`: sin él, dos
-# Tutores del mismo apellido pueden cambiar de sitio entre una página y la
-# siguiente y salir dos veces o ninguna.
-COLUMNAS = {
-    "apellidos": {"etiqueta": _("Apellidos"), "campos": ["apellidos", "nombre", "pk"]},
-    "nombre": {"etiqueta": _("Nombre"), "campos": ["nombre", "apellidos", "pk"]},
-    "telefono": {"etiqueta": _("Teléfono"), "campos": ["telefono", "apellidos", "nombre", "pk"]},
-    "email": {"etiqueta": _("Correo"), "campos": ["email", "apellidos", "nombre", "pk"]},
-}
-ORDEN_POR_DEFECTO = "apellidos"
+# enseña, y en este orden salen en la tabla.
+#
+# El enlace a la ficha va en el nombre, que es el único dato obligatorio: un
+# Tutor registrado con las prisas del mostrador, sin apellidos, tiene que poder
+# abrirse igual.
+COLUMNAS = (
+    Columna("apellidos", _("Apellidos"), desempata_por=["nombre"]),
+    Columna("nombre", _("Nombre"), desempata_por=["apellidos"], enlaza_a_la_ficha=True),
+    Columna("telefono", _("Teléfono"), desempata_por=["apellidos", "nombre"]),
+    Columna("email", _("Correo"), desempata_por=["apellidos", "nombre"]),
+)
+COLUMNAS_POR_CLAVE = {columna.clave: columna for columna in COLUMNAS}
+
+ORDEN_POR_DEFECTO = COLUMNAS_POR_CLAVE["apellidos"]
 
 # Por dónde se busca a un Tutor: cómo se llama y por dónde se le contacta. La
 # dirección queda fuera a propósito — nadie llama preguntando por una calle — y
@@ -44,13 +96,13 @@ CAMPOS_BUSCABLES = ("nombre", "apellidos", "telefono", "email")
 
 
 class Orden:
-    """Por qué columna y en qué sentido se ordena el listado.
+    """Por qué Columna y en qué sentido se ordena el listado.
 
     Es un tipo y no el string de la URL porque el string hay que interpretarlo
     —el `-` de delante— y se interpretaba en tres sitios. Aquí se interpreta una
-    vez, al entrar, y lo que circula ya sabe responder por sus campos y por la
-    cabecera que lo invierte. Se escribe de vuelta como vino (`-apellidos`), así
-    que sigue valiendo tal cual en una URL o en un campo de formulario.
+    vez, al entrar, y lo que circula ya es la Columna misma. Se escribe de vuelta
+    como vino (`-apellidos`), así que sigue valiendo tal cual en una URL o en un
+    campo de formulario.
     """
 
     def __init__(self, columna, descendente=False):
@@ -65,37 +117,29 @@ class Orden:
         se ordena por lo de siempre, que es lo que el Usuario esperaba ver.
         """
         descendente = parametro.startswith(DESCENDENTE)
-        columna = parametro[1:] if descendente else parametro
-        if columna not in COLUMNAS:
+        clave = parametro[1:] if descendente else parametro
+        if clave not in COLUMNAS_POR_CLAVE:
             return cls(ORDEN_POR_DEFECTO)
-        return cls(columna, descendente)
+        return cls(COLUMNAS_POR_CLAVE[clave], descendente)
 
     def __str__(self):
-        return (DESCENDENTE if self.descendente else "") + self.columna
+        return (DESCENDENTE if self.descendente else "") + self.columna.clave
 
     @property
     def campos(self):
         """Los campos del `order_by` que le corresponden."""
-        campos = COLUMNAS[self.columna]["campos"]
+        campos = self.columna.campos
         return [DESCENDENTE + campo for campo in campos] if self.descendente else campos
 
     def al_pulsar(self, columna):
         """El orden al que lleva pulsar esa cabecera.
 
-        La de la columna por la que ya se ordena lleva al orden contrario; la de
+        La de la Columna por la que ya se ordena lleva al orden contrario; la de
         cualquier otra, a ordenar por ella de la A a la Z.
         """
-        if columna == self.columna:
+        if columna is self.columna:
             return Orden(columna, not self.descendente)
         return Orden(columna)
-
-    def sentido_de(self, columna):
-        """El valor de `aria-sort` de esa cabecera, que es lo que anuncia un
-        lector de pantalla. Va en inglés porque es vocabulario de HTML, no
-        texto de la interfaz."""
-        if columna != self.columna:
-            return "none"
-        return "descending" if self.descendente else "ascending"
 
 
 def buscar(tutores, buscado):
@@ -119,6 +163,12 @@ class ListadoDeTutores:
     Recibe los Tutores ya acotados a la Clínica —de eso se encarga el manager
     por defecto (ADR-0003)— y los parámetros de la URL.
     """
+
+    # Con qué nombre viajan los campos del formulario de búsqueda. La plantilla
+    # los lee de aquí: escribir "q" a mano allí dejaba la constante sin
+    # proteger nada, y renombrar el parámetro rompía la búsqueda en silencio.
+    CAMPO_DE_BUSQUEDA = PARAMETRO_DE_BUSQUEDA
+    CAMPO_DE_ORDEN = PARAMETRO_DE_ORDEN
 
     def __init__(self, tutores, parametros):
         self.buscado = parametros.get(PARAMETRO_DE_BUSQUEDA, "").strip()
@@ -145,17 +195,27 @@ class ListadoDeTutores:
     def columnas(self):
         """Las cabeceras ordenables: su rótulo, adónde lleva y cómo está ordenada.
 
-        La plantilla las recorre en este orden, y las celdas de cada fila van en
-        el mismo: una columna nueva aquí es una celda nueva allí.
+        Salen de `COLUMNAS` y en su orden, igual que las celdas de cada fila: no
+        hay forma de que una tabla tenga más cabeceras que celdas.
         """
         return [
             {
-                "etiqueta": columna["etiqueta"],
-                "enlace": self._consulta(orden=self.orden.al_pulsar(clave)),
-                "aria": self.orden.sentido_de(clave),
+                "etiqueta": columna.etiqueta,
+                "enlace": self._consulta(orden=self.orden.al_pulsar(columna)),
+                "aria": columna.sentido_en(self.orden),
             }
-            for clave, columna in COLUMNAS.items()
+            for columna in COLUMNAS
         ]
+
+    @property
+    def filas(self):
+        """Los Tutores de la página, ya repartidos en celdas."""
+        return [[columna.celda_de(tutor) for columna in COLUMNAS] for tutor in self.pagina]
+
+    @property
+    def ancho(self):
+        """Cuántas columnas tiene la tabla, para el `colspan` de la fila vacía."""
+        return len(COLUMNAS)
 
     @property
     def enlace_anterior(self):

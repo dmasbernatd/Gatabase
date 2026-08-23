@@ -9,15 +9,15 @@
   sustituye, seguiría llevando el orden de antes y la siguiente búsqueda
   desharía la ordenación que el Usuario acaba de pedir.
 
-  Los enlaces solo llevan `hx-get`: el destino del intercambio lo heredan del
-  contenedor que los envuelve, que sigue en su sitio después de cada
-  intercambio. Y todos llevan además su `href`, así que sin JavaScript siguen
-  funcionando pulsados; htmx solo evita recargar la página entera.
+  Ni las cabeceras ni las celdas están escritas aquí: salen de `COLUMNAS`
+  (`apps/tutors/listado.py`) y en su orden, así que una columna nueva es una
+  sola edición y no tres. Los enlaces que recargan el listado son un
+  `{% include %}` aparte, que es quien sabe que llevan `href` y `hx-get`.
 {% endcomment %}
 <form method="get" action="{% url 'tutors:lista' %}" hx-get="{% url 'tutors:lista' %}">
-  <label for="q">{% translate "Buscar por nombre, apellidos, teléfono o correo" %}</label>
-  <input type="search" id="q" name="q" value="{{ listado.buscado }}">
-  <input type="hidden" name="orden" value="{{ listado.orden }}">
+  <label for="{{ listado.CAMPO_DE_BUSQUEDA }}">{% translate "Buscar por nombre, apellidos, teléfono o correo" %}</label>
+  <input type="search" id="{{ listado.CAMPO_DE_BUSQUEDA }}" name="{{ listado.CAMPO_DE_BUSQUEDA }}" value="{{ listado.buscado }}">
+  <input type="hidden" name="{{ listado.CAMPO_DE_ORDEN }}" value="{{ listado.orden }}">
   <button type="submit">{% translate "Buscar" %}</button>
 </form>
 
@@ -26,28 +26,32 @@
     <tr>
       {% for columna in listado.columnas %}
         <th aria-sort="{{ columna.aria }}">
-          <a href="{% url 'tutors:lista' %}?{{ columna.enlace }}"
-             hx-get="{% url 'tutors:lista' %}?{{ columna.enlace }}">{{ columna.etiqueta }}</a>
+          {% include "tutors/_enlace_del_listado.html" with consulta=columna.enlace texto=columna.etiqueta %}
         </th>
       {% endfor %}
     </tr>
   </thead>
   <tbody>
-    {% for tutor in listado.pagina %}
+    {% for fila in listado.filas %}
       <tr>
-        <td>{{ tutor.apellidos|default:"—" }}</td>
-        {% comment %}
-          El enlace a la ficha va en el nombre, que es el único dato obligatorio:
-          un Tutor registrado con las prisas del mostrador, sin apellidos, tiene
-          que poder abrirse igual.
-        {% endcomment %}
-        <td><a href="{% url 'tutors:ficha' tutor.pk %}">{{ tutor.nombre }}</a></td>
-        <td>{{ tutor.telefono|default:"—" }}</td>
-        <td>{{ tutor.email|default:"—" }}</td>
+        {% for celda in fila %}
+          {% comment %}
+            La celda que lleva a la ficha es la del nombre, y de eso decide la
+            Columna: es el único dato obligatorio, y un Tutor registrado con las
+            prisas del mostrador, sin apellidos, tiene que poder abrirse igual.
+          {% endcomment %}
+          <td>
+            {% if celda.ficha %}
+              <a href="{% url 'tutors:ficha' celda.ficha %}">{{ celda.texto }}</a>
+            {% else %}
+              {{ celda.texto }}
+            {% endif %}
+          </td>
+        {% endfor %}
       </tr>
     {% empty %}
       <tr>
-        <td colspan="4">
+        <td colspan="{{ listado.ancho }}">
           {% if listado.buscado %}
             {% translate "Ningún Tutor de la Clínica coincide con la búsqueda." %}
           {% else %}
@@ -62,13 +66,11 @@
 {% if listado.pagina.has_other_pages %}
   <nav>
     {% if listado.enlace_anterior %}
-      <a href="{% url 'tutors:lista' %}?{{ listado.enlace_anterior }}"
-         hx-get="{% url 'tutors:lista' %}?{{ listado.enlace_anterior }}">{% translate "Anterior" %}</a>
+      {% include "tutors/_enlace_del_listado.html" with consulta=listado.enlace_anterior texto=_("Anterior") %}
     {% endif %}
     <span>{% blocktranslate with actual=listado.pagina.number total=listado.pagina.paginator.num_pages %}Página {{ actual }} de {{ total }}{% endblocktranslate %}</span>
     {% if listado.enlace_siguiente %}
-      <a href="{% url 'tutors:lista' %}?{{ listado.enlace_siguiente }}"
-         hx-get="{% url 'tutors:lista' %}?{{ listado.enlace_siguiente }}">{% translate "Siguiente" %}</a>
+      {% include "tutors/_enlace_del_listado.html" with consulta=listado.enlace_siguiente texto=_("Siguiente") %}
     {% endif %}
   </nav>
 {% endif %}

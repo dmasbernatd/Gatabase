@@ -1,0 +1,14 @@
+{% comment %}
+  Un enlace que recarga solo el listado: cabeceras, Anterior y Siguiente.
+
+  Existe porque cada uno de esos enlaces escribe su URL dos veces —en `href` y
+  en `hx-get`— y eran cuatro sitios que había que cambiar a la vez al renombrar
+  la ruta. El `href` no sobra: sin JavaScript el enlace sigue funcionando
+  pulsado, y htmx solo evita recargar la página entera. El destino del
+  intercambio lo hereda del contenedor que los envuelve, que sigue en su sitio
+  después de cada intercambio.
+
+  Recibe `consulta` (la parte de la URL después del `?`) y `texto`.
+{% endcomment %}
+<a href="{% url 'tutors:lista' %}?{{ consulta }}"
+   hx-get="{% url 'tutors:lista' %}?{{ consulta }}">{{ texto }}</a>

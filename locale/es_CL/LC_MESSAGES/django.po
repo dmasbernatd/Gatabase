@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 23:21-0400\n"
+"POT-Creation-Date: 2026-08-23 00:50-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -219,19 +219,19 @@ msgstr ""
 msgid "Editar Usuario"
 msgstr ""
 
-#: apps/tutors/listado.py:33
+#: apps/tutors/listado.py:83
 msgid "Apellidos"
 msgstr ""
 
-#: apps/tutors/listado.py:34 templates/tenancy/usuarios.html:14
+#: apps/tutors/listado.py:84 templates/tenancy/usuarios.html:14
 msgid "Nombre"
 msgstr ""
 
-#: apps/tutors/listado.py:35 templates/tutors/ficha.html:10
+#: apps/tutors/listado.py:85 templates/tutors/ficha.html:10
 msgid "Teléfono"
 msgstr ""
 
-#: apps/tutors/listado.py:36 templates/tenancy/usuarios.html:15
+#: apps/tutors/listado.py:86 templates/tenancy/usuarios.html:15
 #: templates/tutors/ficha.html:13
 msgid "Correo"
 msgstr ""
@@ -297,16 +297,16 @@ msgstr ""
 msgid "No hay accesos registrados que cumplan el filtro."
 msgstr ""
 
-#: templates/audit/registro.html:53 templates/tutors/listado.html:67
+#: templates/audit/registro.html:53 templates/tutors/listado.html:70
 msgid "Anterior"
 msgstr ""
 
-#: templates/audit/registro.html:55 templates/tutors/listado.html:69
+#: templates/audit/registro.html:55 templates/tutors/listado.html:72
 #, python-format
 msgid "Página %(actual)s de %(total)s"
 msgstr ""
 
-#: templates/audit/registro.html:57 templates/tutors/listado.html:72
+#: templates/audit/registro.html:57 templates/tutors/listado.html:74
 msgid "Siguiente"
 msgstr ""
 
@@ -398,10 +398,10 @@ msgstr ""
 msgid "Buscar"
 msgstr ""
 
-#: templates/tutors/listado.html:53
+#: templates/tutors/listado.html:57
 msgid "Ningún Tutor de la Clínica coincide con la búsqueda."
 msgstr ""
 
-#: templates/tutors/listado.html:55
+#: templates/tutors/listado.html:59
 msgid "Todavía no hay Tutores registrados."
 msgstr ""

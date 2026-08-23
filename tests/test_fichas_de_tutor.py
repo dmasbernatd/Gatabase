@@ -16,7 +16,7 @@ import pytest
 from django.urls import reverse
 
 from apps.audit.models import Accion, RegistroDeAcceso
-from apps.tutors.listado import TUTORES_POR_PAGINA
+from apps.tutors.listado import COLUMNAS, TUTORES_POR_PAGINA
 from apps.tutors.models import Tutor
 from tests.factories import ClinicaFactory, TutorFactory, UsuarioFactory
 
@@ -280,6 +280,39 @@ def test_la_cabecera_de_la_columna_ordenada_lleva_al_orden_contrario(client):
     assert "orden=-apellidos" in contenido
     assert 'aria-sort="ascending"' in contenido
     assert "orden=nombre" in contenido
+
+
+def celdas_de_las_filas(contenido):
+    """Cuántas celdas trae cada fila del cuerpo de la tabla."""
+    cuerpo = re.search(r"<tbody>(.*?)</tbody>", contenido, re.S)
+    assert cuerpo, "El listado no sirve ninguna tabla"
+    filas = re.findall(r"<tr>(.*?)</tr>", cuerpo.group(1), re.S)
+    return [len(re.findall(r"<td\b", fila)) for fila in filas]
+
+
+def test_cada_fila_trae_una_celda_por_cabecera(client):
+    """Cabeceras y celdas salen las dos de `COLUMNAS`, y este test es lo que lo
+    sostiene: escribir las celdas a mano en la plantilla dejaba que una columna
+    nueva descuadrara la tabla sin que fallara nada."""
+    usuario = recepcion(client)
+    TutorFactory(clinic=usuario.clinic, **DATOS_DE_CONTACTO)
+
+    contenido = client.get(reverse("tutors:lista")).content.decode()
+
+    cabeceras = len(re.findall(r"<th\b", contenido))
+    assert cabeceras == len(COLUMNAS)
+    assert celdas_de_las_filas(contenido) == [cabeceras]
+
+
+def test_la_fila_de_sin_resultados_ocupa_toda_la_tabla(client):
+    """El `colspan` se cuenta, no se escribe: si no, una columna nueva deja el
+    aviso de «no hay nada» a media tabla."""
+    recepcion(client)
+
+    contenido = client.get(reverse("tutors:lista")).content.decode()
+
+    assert f'colspan="{len(COLUMNAS)}"' in contenido
+    assert "Todavía no hay Tutores registrados." in contenido
 
 
 def test_el_orden_y_la_busqueda_sobreviven_al_cambio_de_pagina(client):
