@@ -18,11 +18,11 @@ _Pagado el 23 de agosto de 2026_ en lo que quedaba pendiente: el commit del 05
 se rebasó sobre `main`, se integró en avance rápido, y el worktree y su rama
 local se liberaron. La regla sigue en pie para el próximo ticket.
 
-**`main` local va por delante de `origin`** en la integración del 04 y del 05,
-sin empujar, y `origin/worktree-04-registro-de-acceso` sigue apuntando al commit
-de antes del rebase.
-_Cuándo se paga_: en cuanto se decida empujar. Es un `push` de avance rápido; la
-rama remota ya no aporta nada que no esté en `main`.
+**`main` local iba por delante de `origin`**, y la rama remota del worktree
+seguía apuntando al commit de antes del rebase.
+_Pagado el 23 de agosto de 2026_: `main` empujado en avance rápido y
+`origin/worktree-04-registro-de-acceso` borrada, porque ya no tenía nada que no
+estuviera en `main`.
 
 ## Documentación
 
