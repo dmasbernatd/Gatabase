@@ -170,17 +170,24 @@ def test_borrar_al_usuario_no_borra_su_rastro():
 
 # --- Lo que el admin consulta ---------------------------------------------
 
+# Dos anotaciones que se distinguen de un vistazo dentro de la página entera.
+# Llevan prefijo a propósito: buscar «111» a secas también encontraría el número
+# de la Clínica o de la Sede que fabrica el escenario, y el test pasaría o
+# fallaría según cuántos tests se hubieran ejecutado antes.
+UNO = "pk-111"
+OTRO = "pk-999"
+
 
 def test_el_registro_esta_aislado_por_clinica(client):
     clinica = ClinicaFactory()
-    propia = RegistroDeAccesoFactory(usuario__clinic=clinica, identificador="111")
-    RegistroDeAccesoFactory(identificador="999")
+    propia = RegistroDeAccesoFactory(usuario__clinic=clinica, identificador=UNO)
+    RegistroDeAccesoFactory(identificador=OTRO)
     admin_de(clinica, client)
 
     contenido = client.get(reverse("audit:registro")).content.decode()
 
     assert propia.usuario.email in contenido
-    assert "999" not in contenido
+    assert OTRO not in contenido
 
 
 def test_recepcion_no_puede_consultar_el_registro(client):
@@ -204,23 +211,23 @@ def test_consultar_el_registro_no_se_anota_a_si_mismo(client):
 def test_el_admin_filtra_por_usuario(client):
     clinica = ClinicaFactory()
     veterinaria = UsuarioFactory(clinic=clinica, email="vet@clinica.example")
-    RegistroDeAccesoFactory(usuario=veterinaria, identificador="111")
-    RegistroDeAccesoFactory(usuario__clinic=clinica, identificador="999")
+    RegistroDeAccesoFactory(usuario=veterinaria, identificador=UNO)
+    RegistroDeAccesoFactory(usuario__clinic=clinica, identificador=OTRO)
     admin_de(clinica, client)
 
     contenido = client.get(reverse("audit:registro"), {"usuario": veterinaria.pk}).content.decode()
 
-    assert "111" in contenido
-    assert "999" not in contenido
+    assert UNO in contenido
+    assert OTRO not in contenido
 
 
 def test_el_admin_filtra_por_objeto(client):
     clinica = ClinicaFactory()
     RegistroDeAccesoFactory(
-        usuario__clinic=clinica, tipo_de_objeto="tutors.Tutor", identificador="111"
+        usuario__clinic=clinica, tipo_de_objeto="tutors.Tutor", identificador=UNO
     )
     RegistroDeAccesoFactory(
-        usuario__clinic=clinica, tipo_de_objeto="patients.Paciente", identificador="999"
+        usuario__clinic=clinica, tipo_de_objeto="patients.Paciente", identificador=OTRO
     )
     admin_de(clinica, client)
 
@@ -228,32 +235,32 @@ def test_el_admin_filtra_por_objeto(client):
         reverse("audit:registro"), {"tipo_de_objeto": "tutors.Tutor"}
     ).content.decode()
 
-    assert "111" in contenido
-    assert "999" not in contenido
+    assert UNO in contenido
+    assert OTRO not in contenido
 
 
 def test_el_admin_filtra_por_un_objeto_concreto(client):
     clinica = ClinicaFactory()
-    RegistroDeAccesoFactory(usuario__clinic=clinica, identificador="111")
-    RegistroDeAccesoFactory(usuario__clinic=clinica, identificador="999")
+    RegistroDeAccesoFactory(usuario__clinic=clinica, identificador=UNO)
+    RegistroDeAccesoFactory(usuario__clinic=clinica, identificador=OTRO)
     admin_de(clinica, client)
 
-    contenido = client.get(reverse("audit:registro"), {"identificador": "111"}).content.decode()
+    contenido = client.get(reverse("audit:registro"), {"identificador": UNO}).content.decode()
 
-    assert "111" in contenido
-    assert "999" not in contenido
+    assert UNO in contenido
+    assert OTRO not in contenido
 
 
 def test_el_admin_filtra_por_rango_de_fechas(client):
     clinica = ClinicaFactory()
     RegistroDeAccesoFactory(
         usuario__clinic=clinica,
-        identificador="111",
+        identificador=UNO,
         momento=CASI_MEDIANOCHE_EN_SANTIAGO,
     )
     RegistroDeAccesoFactory(
         usuario__clinic=clinica,
-        identificador="999",
+        identificador=OTRO,
         momento=CASI_MEDIANOCHE_EN_SANTIAGO + dt.timedelta(days=5),
     )
     admin_de(clinica, client)
@@ -264,8 +271,8 @@ def test_el_admin_filtra_por_rango_de_fechas(client):
 
     # El rango son días de Santiago: las 23:30 del 20 en Chile entran, aunque
     # en UTC ya sea el 21.
-    assert "111" in contenido
-    assert "999" not in contenido
+    assert UNO in contenido
+    assert OTRO not in contenido
 
 
 def test_el_rango_cuadra_el_dia_en_que_cambia_la_hora_de_verano(client):
@@ -276,13 +283,13 @@ def test_el_rango_cuadra_el_dia_en_que_cambia_la_hora_de_verano(client):
     # 23:00 del sábado 5 en Santiago (aún UTC-4) → 03:00 UTC del domingo.
     RegistroDeAccesoFactory(
         usuario__clinic=clinica,
-        identificador="999",
+        identificador=OTRO,
         momento=dt.datetime(2026, 9, 6, 3, 0, tzinfo=dt.timezone.utc),
     )
     # 10:00 del domingo 6 en Santiago (ya UTC-3) → 13:00 UTC.
     RegistroDeAccesoFactory(
         usuario__clinic=clinica,
-        identificador="111",
+        identificador=UNO,
         momento=dt.datetime(2026, 9, 6, 13, 0, tzinfo=dt.timezone.utc),
     )
     admin_de(clinica, client)
@@ -291,26 +298,26 @@ def test_el_rango_cuadra_el_dia_en_que_cambia_la_hora_de_verano(client):
         reverse("audit:registro"), {"desde": "2026-09-06", "hasta": "2026-09-06"}
     ).content.decode()
 
-    assert "111" in contenido
-    assert "999" not in contenido
+    assert UNO in contenido
+    assert OTRO not in contenido
 
 
 def test_un_filtro_que_no_se_entiende_no_devuelve_nada(client):
     """Fallar abierto sería entregar el Registro entero a quien pidió una
     búsqueda concreta."""
     clinica = ClinicaFactory()
-    RegistroDeAccesoFactory(usuario__clinic=clinica, identificador="111")
+    RegistroDeAccesoFactory(usuario__clinic=clinica, identificador=UNO)
     admin_de(clinica, client)
 
     respuesta = client.get(reverse("audit:registro"), {"desde": "el martes pasado"})
 
     assert respuesta.status_code == 200
-    assert "111" not in respuesta.content.decode()
+    assert UNO not in respuesta.content.decode()
 
 
 def test_un_rango_de_fechas_al_reves_no_devuelve_nada_ni_revienta(client):
     clinica = ClinicaFactory()
-    RegistroDeAccesoFactory(usuario__clinic=clinica, identificador="111")
+    RegistroDeAccesoFactory(usuario__clinic=clinica, identificador=UNO)
     admin_de(clinica, client)
 
     respuesta = client.get(
@@ -318,4 +325,4 @@ def test_un_rango_de_fechas_al_reves_no_devuelve_nada_ni_revienta(client):
     )
 
     assert respuesta.status_code == 200
-    assert "111" not in respuesta.content.decode()
+    assert UNO not in respuesta.content.decode()
