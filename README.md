@@ -14,12 +14,12 @@ En desarrollo activo, con el hito **H1 — Núcleo clínico** en curso.
 
 - **Aislamiento multi-clínica por defecto.** Los modelos de dominio heredan el filtro por Clínica y un `check` de Django falla al arrancar si alguno no lo cumple ([ADR-0003](docs/adr/0003-tenancy-por-clave-ajena-y-manager.md)). La garantía no depende de acordarse de filtrar.
 - **Autenticación y roles.** Login por correo, roles `veterinario` / `recepcion` / `admin`, cambio de Sede en sesión, y administración de Usuarios desde el panel. Sin registro abierto: la primera Clínica se crea por comando.
-- **Fichas de Tutor**, con RUT y datos de contacto.
-- **Registro de acceso** a datos personales (rama `worktree-04-registro-de-acceso`, pendiente de integrar).
+- **Registro de acceso** a datos personales, inalterable y escrito desde las vistas, con consulta filtrable para el admin ([ADR-0004](docs/adr/0004-registro-de-acceso-propio-para-registrar-lecturas.md)).
+- **Tutor en su forma mínima** — nombre y teléfono —, con listado, búsqueda y ficha. La ficha completa es del ticket 05.
 - **i18n es-CL** con un test que falla si aparece texto visible fuera de `gettext`.
 - **Fechas en UTC** con presentación en `America/Santiago`, verificado en verano e invierno austral.
 
-**Calidad:** 50 tests (`pytest` + `pytest-django` + `factory_boy`) que entran por la petición HTTP y comprueban lo que el Usuario observa. 5 decisiones estructurales registradas en [`docs/adr/`](docs/adr/).
+**Calidad:** 75 tests (`pytest` + `pytest-django` + `factory_boy`) que entran por la petición HTTP y comprueban lo que el Usuario observa. 5 decisiones estructurales registradas en [`docs/adr/`](docs/adr/).
 
 **Hoja de ruta:**
 
