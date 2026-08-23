@@ -14,42 +14,45 @@ hecho. El coste no es el retraso: es que cada día que pasa, la rama y `main`
 divergen y la integración deja de ser un `cherry-pick` limpio.
 _Cuándo se paga_: al terminar un ticket en un worktree, integrarlo en `main` en
 la misma sesión y liberar el worktree.
+_Pagado el 23 de agosto de 2026_ en lo que quedaba pendiente: el commit del 05
+se rebasó sobre `main`, se integró en avance rápido, y el worktree y su rama
+local se liberaron. La regla sigue en pie para el próximo ticket.
 
-**El ticket 05 cuelga de un commit huérfano.** `cbe66c2` (fichas de Tutor con
-listado paginado, ordenable y buscable) está sobre `177eaa3`, que se integró en
-`main` como `74214d9` — otro commit, otro sha. Cherry-pickear `cbe66c2` a ciegas
-volvería a aplicar cosas que ya están.
-_Cuándo se paga_: al empezar el 05. Se **rebasa** la rama sobre `main`, no se
-cherry-pickea. El worktree está `locked`; hay que desbloquearlo antes.
-
-**`main` local va por delante de `origin`** en los dos commits de la integración
-del 04, sin empujar. La rama del worktree sí está en `origin`.
+**`main` local va por delante de `origin`** en la integración del 04 y del 05,
+sin empujar, y `origin/worktree-04-registro-de-acceso` sigue apuntando al commit
+de antes del rebase.
+_Cuándo se paga_: en cuanto se decida empujar. Es un `push` de avance rápido; la
+rama remota ya no aporta nada que no esté en `main`.
 
 ## Documentación
 
-**La sección de Estado del README se escribe a mano y envejece sola.** Ya trajo
-tres errores en un solo commit: un contador de tests obsoleto (50 cuando eran
-75), un enlace a un ADR con nombre de archivo inventado, y una descripción del
-Tutor con RUT y datos de contacto que corresponde a los tickets 05 y 06 y no
-estaba en `main`.
-_Cuándo se paga_: o se revisa en cada integración, o el README deja de prometer
-números y listas de campos y remite al tracker. Lo segundo es más barato.
+**La sección de Estado del README se escribía a mano y envejecía sola.** Trajo
+tres errores en un solo commit: un contador de tests obsoleto, un enlace a un
+ADR con nombre de archivo inventado, y una descripción del Tutor que
+correspondía a tickets aún sin integrar.
+_Pagado el 23 de agosto de 2026_: la sección ya no promete contadores ni listas
+de campos y remite al tracker, que es lo que se actualiza al trabajar.
+_Lo que queda vivo_: el resto del README sí describe mecanismos con nombres de
+archivo y de función. Eso envejece igual, pero se nota al leer el código; los
+números no.
 
 ## Operación
 
-**La condición de despliegue de ADR-0004 no la comprueba nadie.** La
-inalterabilidad del Registro de acceso depende de que la aplicación se conecte
-con un rol que **no** sea superusuario de Postgres, y de que, si un despliegue
-migra con un rol distinto del de la aplicación, se le retiren a ese otro los
-mismos `UPDATE`, `DELETE` y `TRUNCATE`. Hoy eso solo está escrito en el README y
-en la migración `audit/0002`. En una máquina de desarrollo el disparador tapa el
-agujero; en producción, si el rol es superusuario, la garantía es de papel.
-_Cuándo se paga_: cuando exista despliegue. Lo natural es un `check` de Django
-que falle con `DEBUG=False` si el rol de la conexión es superusuario.
+**Borrar una Clínica no es posible** mientras tenga accesos anotados: la cascada
+tropieza con el disparador de `audit`. Es la consecuencia buscada, pero
+condiciona dos tickets.
+_Pagado a medias el 23 de agosto de 2026_: la consecuencia está anotada como
+casilla en el **16** (limpiar es rehacer la base, no borrar la Clínica) y en el
+**19** (una Clínica que se va se exporta y se cierra). Lo que falta es decidir
+**qué significa cerrar una Clínica** — desactivar a sus Usuarios, dejarla sin
+acceso, algo más —, y eso se decide al hacer el 19.
 
-**Borrar una Clínica ya no es posible** mientras tenga accesos anotados: la
-cascada tropieza con el disparador de `audit`. Es la consecuencia buscada, pero
-condiciona dos tickets que aún no se han escrito pensando en ella.
-_Cuándo se paga_: en el **16** (datos mock: se rehace la base, no se borra la
-Clínica por debajo) y en el **19** (una Clínica que se va se exporta y se
-cierra, no se borra).
+## Pagado
+
+**La condición de despliegue de ADR-0004 ya la comprueba alguien.**
+`apps/audit/comprobaciones.py` registra un `check` de Django que, con `DEBUG`
+apagado y fuera de la batería de tests, le pregunta a Postgres por la conexión
+de la aplicación si su rol podría modificar el Registro de acceso: `audit.E001`
+si es superusuario, `audit.E002` si conserva los permisos, `audit.W001` si la
+base no responde. Verificado a mano contra un rol no superusuario, con y sin los
+permisos retirados. Tests en `tests/test_condicion_de_despliegue.py`.

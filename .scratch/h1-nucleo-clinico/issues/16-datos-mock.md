@@ -12,5 +12,5 @@
 - [ ] Nombres, teléfonos y RUT verosímiles para Chile, con dígito verificador válido
 - [ ] Mezcla realista de especies con predominio de caninos y felinos, razas del catálogo con mayoría de `mestizo`, y algunos exóticos
 - [ ] Casos límite incluidos a propósito: Paciente sin chip, Paciente fallecido, Tutor sin RUT, Tutor extranjero, dos Tutores con el mismo teléfono, Paciente con dos Tutores
-- [ ] El comando es idempotente o limpia lo anterior, para poder ejecutarlo repetidamente
+- [ ] El comando es idempotente o limpia lo anterior, para poder ejecutarlo repetidamente. **Limpiar no es borrar la Clínica**: el Registro de acceso no admite `DELETE`, así que el borrado en cascada de una Clínica con accesos anotados falla (ADR-0004, migración `audit/0002`). Se rehace la base — `dropdb`/`migrate`, o el contenedor de `scripts/db.sh` de nuevo — y se vuelve a poblar.
 - [ ] El comando se niega a ejecutarse contra una base de producción

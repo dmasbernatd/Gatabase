@@ -13,3 +13,4 @@
 - [ ] La exportación queda en el Registro de acceso, porque es el acceso masivo a datos personales que más importa poder demostrar
 - [ ] La descarga no queda accesible por una dirección adivinable ni permanente
 - [ ] Funciona con el volumen de datos mock sin agotar la memoria del proceso
+- [ ] Una Clínica que se va **se exporta y se cierra, no se borra**: su Registro de acceso no admite `DELETE` y el borrado en cascada falla (ADR-0004). Lo que hay que definir aquí es qué significa cerrarla — desactivar a sus Usuarios, dejarla sin acceso — y que el sistema lo ofrezca, en vez de que el admin descubra el `IntegrityError`.

@@ -15,11 +15,13 @@ En desarrollo activo, con el hito **H1 — Núcleo clínico** en curso.
 - **Aislamiento multi-clínica por defecto.** Los modelos de dominio heredan el filtro por Clínica y un `check` de Django falla al arrancar si alguno no lo cumple ([ADR-0003](docs/adr/0003-tenancy-por-clave-ajena-y-manager.md)). La garantía no depende de acordarse de filtrar.
 - **Autenticación y roles.** Login por correo, roles `veterinario` / `recepcion` / `admin`, cambio de Sede en sesión, y administración de Usuarios desde el panel. Sin registro abierto: la primera Clínica se crea por comando.
 - **Registro de acceso** a datos personales, inalterable y escrito desde las vistas, con consulta filtrable para el admin ([ADR-0004](docs/adr/0004-registro-de-acceso-propio-para-registrar-lecturas.md)).
-- **Tutor en su forma mínima** — nombre y teléfono —, con listado, búsqueda y ficha. La ficha completa es del ticket 05.
+- **Fichero de Tutores.** Alta, ficha y corrección, con listado buscable, ordenable y paginado, y cada acceso anotado.
 - **i18n es-CL** con un test que falla si aparece texto visible fuera de `gettext`.
 - **Fechas en UTC** con presentación en `America/Santiago`, verificado en verano e invierno austral.
 
-**Calidad:** 75 tests (`pytest` + `pytest-django` + `factory_boy`) que entran por la petición HTTP y comprueban lo que el Usuario observa. 5 decisiones estructurales registradas en [`docs/adr/`](docs/adr/).
+**Calidad:** la batería de tests (`pytest` + `pytest-django` + `factory_boy`) entra por la petición HTTP y comprueba lo que el Usuario observa; `make test` dice cuántos son. Las decisiones estructurales están en [`docs/adr/`](docs/adr/).
+
+Esta sección resume lo que hay, no lo que falta: el detalle ticket a ticket vive en el tracker (`.scratch/<hito>/issues/`), que es lo que se actualiza al trabajar. Aquí no se prometen contadores ni listas de campos, porque envejecen sin que nadie se entere.
 
 **Hoja de ruta:**
 
@@ -140,6 +142,8 @@ El decorador anota **después** de que la vista responda, y solo si respondió: 
 Una anotación no cambia nunca, y eso lo impone Postgres, no la aplicación (ver `apps/audit/migrations/0002_registro_inalterable.py`): se le retiran `UPDATE`, `DELETE` y `TRUNCATE` sobre la tabla al rol de la aplicación, **y** un disparador hace reventar el `UPDATE` y el `DELETE`. Las dos cosas, porque un rol superusuario —el de una máquina de desarrollo— se salta los permisos pero no el disparador. Consecuencia buscada: borrar una Clínica con accesos anotados falla, porque el borrado en cascada tropieza con el disparador; una Clínica que se va se exporta y se cierra, no se borra por debajo, y los datos de desarrollo se rehacen recreando la base.
 
 **Condición de despliegue**: en producción la aplicación se conecta con un rol que **no** es superusuario —si no, se salta los permisos igual que en desarrollo— y, si las migraciones se aplican con un rol distinto del de la aplicación, hay que retirarle a ese otro rol los mismos tres permisos: `REVOKE` los concede por nombre, y la migración solo alcanza al rol que la ejecuta.
+
+Eso no se queda en una nota: `apps/audit/comprobaciones.py` registra un `check` de Django que, con `DEBUG` apagado y fuera de la batería de tests, le pregunta a Postgres por la conexión de la aplicación si ese rol podría tocar la tabla. Un rol superusuario es `audit.E001`; un rol al que nadie le retiró los permisos, `audit.E002`; y si la base no responde, `audit.W001` avisa en vez de reventar. Con `DEBUG=False` la aplicación no arranca hasta que la condición se cumple, así que la garantía deja de depender de que alguien leyera este párrafo.
 
 El admin de la Clínica lo consulta en `/panel/registro/`, filtrando por Usuario, por objeto y por rango de fechas. El rango son días de **Santiago**, no instantes en UTC: quien pide "el 20 de junio" quiere los accesos de ese día en la clínica. Un filtro que no se entiende no devuelve nada, nunca el Registro entero. Esa página no se anota a sí misma —el Registro no contiene datos personales de Tutor ni de Paciente— y es de solo lectura, porque no podría ser otra cosa.
 
