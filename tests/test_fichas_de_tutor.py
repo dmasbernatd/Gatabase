@@ -49,6 +49,22 @@ def enlace(contenido, rotulo):
     return marcado.unescape(encontrado.group(1))
 
 
+def campos_del_formulario_de_busqueda(contenido):
+    """Lo que el navegador enviaría al buscar: los campos del formulario servido.
+
+    Componer los parámetros a mano comprobaría lo que el test cree que la página
+    lleva dentro; esto comprueba lo que lleva.
+    """
+    formulario = re.search(r"<form[^>]*>(.*?)</form>", contenido, re.S)
+    assert formulario, "El listado no ofrece ningún formulario de búsqueda"
+    return {
+        nombre: marcado.unescape(valor)
+        for nombre, valor in re.findall(
+            r'name="([^"]+)"[^>]*value="([^"]*)"', formulario.group(1)
+        )
+    }
+
+
 def anotaciones_sobre(tutor, accion):
     return RegistroDeAcceso.de_todas_las_clinicas.filter(
         tipo_de_objeto="tutors.Tutor", identificador=str(tutor.pk), accion=accion
@@ -286,15 +302,29 @@ def test_el_orden_y_la_busqueda_sobreviven_al_cambio_de_pagina(client):
 def test_buscar_despues_de_ordenar_conserva_el_orden(client):
     """La caja de búsqueda arrastra el orden actual en un campo oculto, y por eso
     viaja dentro del trozo que htmx sustituye: fuera de él seguiría llevando el
-    orden de antes, y la búsqueda siguiente desharía lo que se acaba de pedir."""
+    orden de antes, y la búsqueda siguiente desharía lo que se acaba de pedir.
+
+    Son dos peticiones porque el fallo eran dos: por separado, ordenar funciona
+    y buscar funciona. Se envía lo que el formulario ofrece de verdad, no unos
+    parámetros compuestos a mano, que es donde el fallo se escondía.
+    """
     usuario = recepcion(client)
-    TutorFactory(clinic=usuario.clinic, nombre="Camila", apellidos="Rojas Alvarez")
+    for apellidos in ("Alvarez", "Mora", "Zapata"):
+        TutorFactory(clinic=usuario.clinic, nombre="Camila", apellidos=apellidos)
 
     ordenado = client.get(
         reverse("tutors:lista"), {"orden": "-apellidos"}, headers={"hx-request": "true"}
     ).content.decode()
+    busqueda = campos_del_formulario_de_busqueda(ordenado)
+    busqueda["q"] = "Camila"
+    buscado = client.get(
+        reverse("tutors:lista"), busqueda, headers={"hx-request": "true"}
+    ).content.decode()
 
-    assert 'name="orden" value="-apellidos"' in ordenado
+    # De la Z a la A, como se acababa de pedir. Con el campo oculto rancio, la
+    # búsqueda volvería al orden de siempre y Alvarez saldría primero.
+    assert buscado.index("Zapata") < buscado.index("Alvarez")
+    assert busqueda["orden"] == "-apellidos"
 
 
 # --- Búsqueda -------------------------------------------------------------
@@ -380,6 +410,12 @@ def test_los_datos_personales_del_tutor_viven_todos_en_su_modelo():
     `DATOS_PERSONALES`, y desaparecerá al anonimizar— o no lo es. Este test es
     quien fuerza esa decisión el día que se escriba el campo.
     """
-    campos = {campo.name for campo in Tutor._meta.local_fields}
+    campos = {
+        campo.name
+        # Los dos: un `ManyToManyField` no está en `local_fields`, y es justo la
+        # forma que tendría un dato personal traído de otra tabla — un domicilio
+        # compartido, un contacto alternativo —, que es lo que este test vigila.
+        for campo in Tutor._meta.local_fields + Tutor._meta.local_many_to_many
+    }
 
     assert campos == {"id", "clinic"} | set(Tutor.DATOS_PERSONALES)
