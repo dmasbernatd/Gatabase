@@ -74,6 +74,48 @@ teatro y empieza a defender algo. La decisión sobre índices y sobre buscar en
 serio —tolerante a tildes, incremental— es del **11**, y conviene tomarla con
 el volumen del 16 delante y no antes.
 
+## Diseño del listado de Tutores
+
+Todo esto son juicios de la revisión del 05, no violaciones de ninguna regla
+escrita: nada está mal hoy y el ticket se dio por bueno con razón. Se anota
+porque el 06 añade el RUT, y el RUT es una columna más y un campo buscable más:
+es la primera vez que este diseño cobra su peaje, y conviene llegar sabiéndolo.
+
+**Añadir una columna al listado son tres ediciones y nada falla si te dejas
+una.** Las cabeceras salen de `COLUMNAS` (`apps/tutors/listado.py`) en un
+bucle, pero las celdas de `templates/tutors/listado.html` están escritas a mano,
+y el `colspan` de la fila de «no hay resultados» es un `4` literal. El propio
+comentario del código admite el acoplamiento. Con la columna del RUT delante, o
+se genera también el cuerpo de la tabla desde `COLUMNAS`, o al menos el
+`colspan` sale de contarlas.
+_Cuándo se paga_: en el **06**, al añadir el RUT, si es que va al listado.
+
+**Hay una `Columna` queriendo nacer.** `COLUMNAS` es un dict de dicts
+(`etiqueta`, `campos`) que `ListadoDeTutores.columnas` transforma en otro dict
+(`etiqueta`, `enlace`, `aria`). `Orden` ya se hizo así —un tipo que sabe
+responder por sus campos y por su cabecera— y salió bien; la columna se quedó a
+medias. De paso se lleva `Orden.sentido_de`, que devuelve un valor de
+`aria-sort`: presentación dentro del tipo que representa el orden.
+_Cuándo se paga_: junto con lo anterior, o cuando el listado del Paciente
+(ticket 07) pida lo mismo y haya que elegir entre copiarlo o compartirlo.
+
+**Cada enlace del listado repite su URL dos veces**, en `href` y en `hx-get`
+(cabeceras, Anterior, Siguiente y el formulario: cuatro sitios). Es el precio de
+que todo funcione sin JavaScript, y está bien pagado; pero renombrar la ruta o
+pasar a `hx-boost` obliga a tocar los cuatro. Un `{% include %}` de «enlace del
+listado» lo cerraría. En la misma plantilla, los `PARAMETRO_DE_BUSQUEDA`,
+`PARAMETRO_DE_ORDEN` y `PARAMETRO_DE_PAGINA` de `listado.py` se vuelven a
+escribir literales (`name="q"`, `name="orden"`): la constante no protege nada.
+_Cuándo se paga_: cuando haya un segundo listado con htmx —el del Paciente— y
+la forma se pueda extraer sabiendo ya qué se repite de verdad.
+
+**`crear` y `editar` (`apps/tutors/views.py`) tienen la misma forma**: construir
+el formulario, validar, guardar, anotar y redirigir; difieren en la `Accion` y en
+que la corrección anota además la lectura. A dos casos es tolerable y sacarlo
+ahora sería inventar una abstracción con un solo ejemplo.
+_Cuándo se paga_: en el **07**, cuando el Paciente traiga el tercer y el cuarto
+caso. Si entonces se sigue pareciendo, ahí ya hay algo que extraer.
+
 ## Pagado
 
 **La condición de despliegue de ADR-0004 ya la comprueba alguien.**
