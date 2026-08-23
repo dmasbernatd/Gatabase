@@ -47,6 +47,33 @@ casilla en el **16** (limpiar es rehacer la base, no borrar la Clínica) y en el
 **qué significa cerrar una Clínica** — desactivar a sus Usuarios, dejarla sin
 acceso, algo más —, y eso se decide al hacer el 19.
 
+## Rendimiento
+
+**«Usable con cientos de Tutores» está afirmado, no sostenido.** Es una casilla
+del ticket 05 que se dio por cumplida porque el listado pagina, y paginar no es
+lo mismo que aguantar. Debajo hay tres cosas que nadie mide:
+
+- El único índice del Tutor (`tutor_por_apellidos`: `clinic`, `apellidos`,
+  `nombre`) sirve al orden por defecto. Ordenar por nombre, teléfono o correo
+  —las otras tres cabeceras que el listado ofrece— es recorrer y ordenar en
+  memoria toda la Clínica.
+- La búsqueda es `icontains`, o sea un `LIKE '%…%'` por cada palabra y cada uno
+  de los cuatro campos buscables. Con comodín delante, ningún índice normal
+  entra: es lectura secuencial de la tabla.
+- El `Paginator` hace su `COUNT(*)` de la consulta completa en cada petición,
+  incluida cada búsqueda.
+
+A cientos de Tutores esto no se nota, y por eso no es un fallo hoy. Lo que falta
+no es optimizar a ciegas: es que **nada avise cuando deje de aguantar**. La
+batería entra por HTTP y comprueba lo que el Usuario observa, que es lo correcto,
+pero no cuenta consultas ni prueba a escala, así que una regresión de rendimiento
+—un `N+1` al pintar la tabla, pongamos— pasaría entera y en verde.
+_Cuándo se paga_: en el **16**, que es quien trae volumen de verdad. Con datos
+mock encima, un `assertNumQueries` sobre el listado y la búsqueda deja de ser
+teatro y empieza a defender algo. La decisión sobre índices y sobre buscar en
+serio —tolerante a tildes, incremental— es del **11**, y conviene tomarla con
+el volumen del 16 delante y no antes.
+
 ## Pagado
 
 **La condición de despliegue de ADR-0004 ya la comprueba alguien.**
