@@ -37,6 +37,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.audit.models import Accion
 from apps.audit.registro import anotando, anotar, deja_constancia
+from apps.patients.estados import FiltroPorEstado
 from apps.tutors.forms import TutorForm
 from apps.tutors.listado import ListadoDeTutores
 from apps.tutors.models import Tutor
@@ -92,8 +93,17 @@ def lista(request):
 @deja_constancia(Accion.LECTURA, sobre=Tutor)
 def ficha(request, pk):
     tutor = get_object_or_404(Tutor, pk=pk)
-    pacientes = list(tutor.de_quienes_se_hace_cargo)
-    respuesta = render(request, "tutors/ficha.html", {"tutor": tutor, "pacientes": pacientes})
+    # De qué animales se hace cargo **hoy**: los que dejaron de venir y los que
+    # murieron se piden. Quien abre esta ficha suele tener al Tutor al teléfono,
+    # y lo que necesita saber es a quién atiende; enseñar de entrada a los que
+    # ya no están es invitar a citar a un animal muerto.
+    filtro = FiltroPorEstado(request.GET)
+    pacientes = list(filtro.aplicado_a(tutor.de_quienes_se_hace_cargo))
+    respuesta = render(
+        request,
+        "tutors/ficha.html",
+        {"tutor": tutor, "pacientes": pacientes, "filtro": filtro},
+    )
     # El Tutor lo anota el decorador; sus Pacientes, no: la ficha los nombra uno
     # a uno, y la ley protege la ficha del animal igual que la de su Tutor,
     # porque por ella se llega a él (ADR-0004).

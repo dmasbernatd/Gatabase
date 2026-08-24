@@ -22,8 +22,13 @@ abierto (ADR-0004).
 Un Paciente nunca nace suelto: se registra desde la ficha del Tutor que lo trae,
 y ese Tutor queda como responsable. Es como llega un animal al mostrador — con
 alguien— y ahorra el estado intermedio de un Paciente del que nadie responde.
+
+Que el animal muriera o dejara de venir tiene vista propia (`estado`), y la de
+corregir la ficha se aparta cuando consta fallecido: entonces la ficha se
+conserva entera y en solo lectura, que es lo contrario de borrarla.
 """
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
@@ -32,7 +37,7 @@ from django.views.decorators.http import require_POST
 from apps.audit.models import Accion
 from apps.audit.registro import anotando, anotar, deja_constancia
 from apps.patients.catalogo import razas_de
-from apps.patients.forms import PacienteForm, VinculoForm
+from apps.patients.forms import EstadoDelPacienteForm, PacienteForm, VinculoForm
 from apps.patients.models import Paciente
 from apps.tutors.models import Tutor, Vinculo
 
@@ -92,6 +97,16 @@ def crear(request, tutor):
 @login_required
 def editar(request, pk):
     paciente = get_object_or_404(Paciente, pk=pk)
+    # La ficha de un Paciente fallecido se conserva entera y en solo lectura, y
+    # eso se impone aquí y no escondiendo el enlace: quien llegue con la URL en
+    # la mano o con una pestaña abierta de antes tampoco la corrige. No es un
+    # 403 ni un 404 —la ficha existe y se puede ver— sino un desvío a verla.
+    if not paciente.se_puede_corregir:
+        messages.info(
+            request,
+            _("La ficha de un Paciente fallecido no se corrige: queda tal como estaba."),
+        )
+        return redirect("patients:ficha", pk=paciente.pk)
     formulario = PacienteForm(request.POST or None, instance=paciente, clinica=request.user.clinic)
     if request.method == "POST" and formulario.is_valid():
         formulario.save()
@@ -148,6 +163,34 @@ def responsable(request, pk, vinculo):
     anotar(request.user, Accion.MODIFICACION, paciente)
     anotar(request.user, Accion.MODIFICACION, vinculo.tutor)
     return redirect("patients:ficha", pk=paciente.pk)
+
+
+@login_required
+def estado(request, pk):
+    """Deja constancia de que el Paciente murió o dejó de venir.
+
+    En página aparte de la ficha porque no es una corrección: el nombre estaba
+    mal escrito y se arregla, pero el animal murió y eso se registra. Y porque
+    la ficha de un fallecido ya no se corrige, así que este es el único cambio
+    que le queda — incluido el de deshacerlo. Marcar por error al animal que no
+    era es lo bastante fácil, y lo bastante grave, como para que volver atrás no
+    dependa de tocar la base de datos a mano.
+
+    El cambio es una modificación de la ficha y consta como tal (ADR-0004): a
+    quién se dio por muerto, quién lo hizo y cuándo es justamente lo que habrá
+    que poder demostrar si alguien reclama.
+    """
+    paciente = get_object_or_404(Paciente, pk=pk)
+    formulario = EstadoDelPacienteForm(request.POST or None, paciente=paciente)
+    if request.method == "POST" and formulario.is_valid():
+        formulario.guardar()
+        anotar(request.user, Accion.MODIFICACION, paciente)
+        return redirect("patients:ficha", pk=paciente.pk)
+    respuesta = render(
+        request, "patients/estado.html", {"formulario": formulario, "paciente": paciente}
+    )
+    # La página dice de qué animal se habla, con su nombre y su estado de ahora.
+    return anotando(respuesta, request.user, Accion.LECTURA, paciente)
 
 
 @login_required

@@ -28,6 +28,10 @@ _Avoid_: Mascota, animal, ficha
 Un encuentro clínico concreto entre un Paciente y un veterinario, en una fecha determinada.
 _Avoid_: Visita, atención, cita (una Cita es la reserva; la Consulta es el encuentro)
 
+**Estado del Paciente**:
+Situación del animal ante la clínica: `activo`, `inactivo` o `fallecido`, este último con la fecha si se sabe. Un Paciente nunca se borra: el fallecido conserva su ficha y su Historia clínica en solo lectura y no admite Citas; el `inactivo` —dejó de venir sin que se sepa qué pasó— se deshace con que vuelva.
+_Avoid_: Baja, eliminado, archivado, desactivado
+
 **Historia clínica**:
 La acumulación ordenada de todas las Consultas y registros sanitarios de un Paciente. Acompaña al Paciente aunque cambie de Tutor.
 _Avoid_: Ficha médica, expediente, historial

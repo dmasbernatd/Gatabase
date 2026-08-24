@@ -1,0 +1,27 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Estado del Paciente" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Estado del Paciente" %}</h1>
+
+  <p>{% blocktranslate with paciente=paciente %}Qué se sabe hoy de {{ paciente }}.{% endblocktranslate %}</p>
+
+  {% comment %}
+    Nada de esto borra: un Paciente que muere o que deja de venir conserva su
+    ficha y su Historia clínica enteras, y lo que cambia es lo que la clínica
+    puede hacer con él. Se dice aquí porque quien está en el mostrador tiene que
+    saberlo antes de pulsar, no después.
+  {% endcomment %}
+  <p>{% translate "Un Paciente nunca se borra: la ficha y la Historia clínica se conservan enteras." %}</p>
+  <p>{% translate "«Inactivo» es para el animal que dejó de venir sin que se sepa qué pasó, y se deshace con que vuelva. «Fallecido» cierra la ficha: se conserva en solo lectura y no admite Citas." %}</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ formulario.as_p }}
+    <button type="submit">{% translate "Guardar" %}</button>
+  </form>
+
+  <p><a href="{% url 'patients:ficha' paciente.pk %}">{% translate "Volver a la ficha" %}</a></p>
+{% endblock %}

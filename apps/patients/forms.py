@@ -1,4 +1,4 @@
-"""Formularios de la ficha de Paciente y del Vínculo con un Tutor.
+"""Formularios de la ficha de Paciente, del Vínculo con un Tutor y de su estado.
 
 La ficha ofrece los datos del animal y ninguno de su Tutor: quién responde por él
 es el Vínculo, y son dos cosas que se corrigen por separado porque cambian por
@@ -22,6 +22,10 @@ a lo que recepción venía casi siempre.
 Nombrar al otro Paciente es enseñar su ficha, así que quien lo enseñe —la vista—
 lo anota en el Registro de acceso (ADR-0004): la ley protege la ficha del animal
 igual que la de su Tutor, porque por ella se llega a él.
+
+Que el animal muriera o dejara de venir no se corrige aquí: tiene formulario
+propio (`EstadoDelPacienteForm`), porque no es un dato mal escrito sino un hecho
+que cambió.
 """
 
 from django import forms
@@ -31,6 +35,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from apps.patients.catalogo import Especie, canonica, razas_de
+from apps.patients.estados import EstadoDelPaciente
 from apps.patients.models import EstadoDeIdentificacion, Paciente, Sexo
 from apps.tenancy.aislamiento import FormularioDeLaClinica
 from apps.tutors.models import Tutor
@@ -39,6 +44,19 @@ from apps.tutors.models import Tutor
 # nombra en su atributo `list`— y la plantilla que la pinta, y por eso no se
 # escribe a mano en ninguno de los dos.
 SUGERENCIAS_DE_RAZA = "razas"
+
+
+def sin_fechas_futuras(fecha):
+    """Devuelve la fecha, o falla si todavía no ha llegado.
+
+    Lo comparten el nacimiento y el fallecimiento porque es el mismo error de
+    tecleo —el año en curso por el anterior— y el mismo remedio. Es además el
+    más difícil de ver después: lo único raro que deja en la ficha es una edad
+    imposible o un animal que murió el mes que viene.
+    """
+    if fecha and fecha > timezone.localdate():
+        raise forms.ValidationError(_("Esa fecha todavía no ha llegado."), code="fecha_futura")
+    return fecha
 
 
 class PacienteForm(FormularioDeLaClinica):
@@ -108,16 +126,8 @@ class PacienteForm(FormularioDeLaClinica):
         ]
 
     def clean_fecha_de_nacimiento(self):
-        """Un Paciente no puede haber nacido mañana.
-
-        Es el error de tecleo más fácil de cometer en una casilla de fecha —el
-        año en curso por el anterior— y el más difícil de ver después, cuando lo
-        único raro es una edad imposible en una ficha.
-        """
-        fecha = self.cleaned_data["fecha_de_nacimiento"]
-        if fecha and fecha > timezone.localdate():
-            raise forms.ValidationError(_("Esa fecha todavía no ha llegado."), code="fecha_futura")
-        return fecha
+        """Un Paciente no puede haber nacido mañana."""
+        return sin_fechas_futuras(self.cleaned_data["fecha_de_nacimiento"])
 
     def clean_microchip(self):
         """Rechaza un chip que ya es el de otro Paciente **de esta Clínica**.
@@ -224,4 +234,68 @@ class VinculoForm(forms.Form):
         """Deja constancia de que ese Tutor se hace cargo de este Paciente."""
         return self.cleaned_data["tutor"].se_hace_cargo_de(
             self.paciente, responsable=self.cleaned_data["responsable"]
+        )
+
+
+class EstadoDelPacienteForm(forms.Form):
+    """Dejar constancia de que un Paciente murió o dejó de venir.
+
+    Está fuera de la ficha, y esa es la decisión: la ficha son los datos del
+    animal y se corrigen porque estaban mal escritos; el estado es un hecho que
+    cambió en el mundo. Juntarlos pondría el fallecimiento a un descuido de
+    distancia dentro del mismo formulario que se abre para arreglar una letra
+    del nombre — y además la ficha de un fallecido ya no se corrige
+    (`Paciente.se_puede_corregir`), así que ahí no cabría.
+
+    No es un `ModelForm` por lo mismo que `VinculoForm` no lo es: no compone un
+    Paciente campo a campo. De dejarlo coherente —limpiar la fecha cuando el
+    animal no consta muerto— sabe el Paciente (`cambiar_de_estado`), que es
+    quien tiene que saberlo aunque el cambio no venga de esta pantalla.
+    """
+
+    estado = forms.ChoiceField(choices=EstadoDelPaciente, label=_("Estado"))
+    fecha_de_fallecimiento = forms.DateField(
+        label=_("Fecha de fallecimiento"),
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+        # Se pide, no se exige: el Tutor avisa a veces meses después y no
+        # siempre recuerda el día. Un hueco aquí es «murió, no consta cuándo»,
+        # que es verdad; una fecha inventada, no.
+        help_text=_("Si no se sabe, déjela en blanco."),
+    )
+
+    def __init__(self, *args, paciente, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.paciente = paciente
+        self.fields["estado"].initial = paciente.estado
+        self.fields["fecha_de_fallecimiento"].initial = paciente.fecha_de_fallecimiento
+
+    def clean_fecha_de_fallecimiento(self):
+        """Nadie muere mañana."""
+        return sin_fechas_futuras(self.cleaned_data["fecha_de_fallecimiento"])
+
+    def clean(self):
+        """Un Paciente no puede haber muerto antes de nacer.
+
+        Es la otra mitad del error de tecleo que `sin_fechas_futuras` no ve: el
+        año equivocado hacia atrás. Solo se comprueba cuando la ficha trae fecha
+        de nacimiento, que es opcional — de un animal recogido en la calle no se
+        sabe.
+        """
+        datos = super().clean()
+        fecha = datos.get("fecha_de_fallecimiento")
+        nacimiento = self.paciente.fecha_de_nacimiento
+        if fecha and nacimiento and fecha < nacimiento:
+            self.add_error(
+                "fecha_de_fallecimiento",
+                forms.ValidationError(
+                    _("Esa fecha es anterior a la de nacimiento."), code="antes_de_nacer"
+                ),
+            )
+        return datos
+
+    def guardar(self):
+        """Deja al Paciente en el estado elegido y lo devuelve."""
+        return self.paciente.cambiar_de_estado(
+            self.cleaned_data["estado"], self.cleaned_data["fecha_de_fallecimiento"]
         )

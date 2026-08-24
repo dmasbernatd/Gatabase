@@ -11,6 +11,9 @@ urlpatterns = [
     path("razas/", views.razas, name="razas"),
     path("<int:pk>/", views.ficha, name="ficha"),
     path("<int:pk>/corregir/", views.editar, name="editar"),
+    # Aparte de corregir la ficha: el animal murió o dejó de venir, que no es un
+    # dato mal escrito sino un hecho que cambió.
+    path("<int:pk>/estado/", views.estado, name="estado"),
     path("<int:pk>/tutores/nuevo/", views.vincular, name="vincular"),
     path("<int:pk>/tutores/<int:vinculo>/responsable/", views.responsable, name="responsable"),
 ]

@@ -31,15 +31,39 @@
   {% comment %}
     De qué animales se hace cargo. Es lo que recepción necesita saber cuando este
     Tutor llama por teléfono, y por eso está en su ficha y no a un clic.
+
+    Por defecto salen solo los activos: quien abre esta ficha está atendiendo, y
+    ver de entrada a los que ya no están invita a citar a un animal muerto. Los
+    demás se piden, y ninguno se ha borrado.
   {% endcomment %}
+  <ul>
+    {% for opcion in filtro.opciones %}
+      <li>
+        {% if opcion.actual %}
+          <strong>{{ opcion.etiqueta }}</strong>
+        {% else %}
+          <a href="?{{ opcion.consulta }}">{{ opcion.etiqueta }}</a>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+
   <ul>
     {% for paciente in pacientes %}
       <li>
         <a href="{% url 'patients:ficha' paciente.pk %}">{{ paciente }}</a>
         <span>{{ paciente.get_especie_display }}</span>
+        {% comment %}
+          El que ya no está viene marcado siempre, se haya pedido o no: la lista
+          de «Todos» los pone en la misma fila que los vivos, y ahí el nombre
+          solo no distingue a cuál se puede citar.
+        {% endcomment %}
+        {% if not paciente.esta_activo %}
+          <strong>{{ paciente.estado_a_la_vista }}</strong>
+        {% endif %}
       </li>
     {% empty %}
-      <li>{% translate "No se hace cargo de ningún Paciente todavía." %}</li>
+      <li>{% translate "No se hace cargo de ningún Paciente en esta lista." %}</li>
     {% endfor %}
   </ul>
 

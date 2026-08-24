@@ -13,15 +13,18 @@ propia: el Vínculo (`apps.tutors.models`). Un animal cambia de Tutor y sigue
 siendo el mismo Paciente con la misma Historia.
 
 Cómo se identifica al animal —el microchip y el estado de identificación— vive
-también aquí, y son dos campos y no uno a propósito: ver más abajo. Los estados
-`activo` / `inactivo` / `fallecido` llegan en el ticket 09.
+también aquí, y son dos campos y no uno a propósito: ver más abajo. En qué
+situación está ante la clínica —`activo`, `inactivo` o `fallecido`— lo decide
+`estados.py`, que es también quien sabe qué enseña una lista por defecto.
 """
 
 from django.db import models
+from django.utils.formats import date_format
 from django.utils.translation import gettext_lazy as _
 
 from apps.patients.campos import CampoDeMicrochip
 from apps.patients.catalogo import Especie, es_del_catalogo, la_ley_exige_identificar
+from apps.patients.estados import POR_DEFECTO, EstadoDelPaciente
 from apps.patients.microchip import formateado
 from apps.tenancy.aislamiento import ModeloDeLaClinica
 
@@ -95,6 +98,21 @@ class Paciente(ModeloDeLaClinica):
         blank=True,
     )
 
+    # En qué situación está ante la clínica (`estados.py`). No tiene hueco: un
+    # Paciente se registra porque está delante del mostrador, así que nace
+    # activo y deja de estarlo cuando alguien lo diga.
+    estado = models.CharField(
+        _("estado"), max_length=20, choices=EstadoDelPaciente, default=POR_DEFECTO
+    )
+    # La fecha es opcional aunque el estado sea `fallecido`: el Tutor avisa a
+    # veces meses después y no siempre recuerda el día, y exigirla ahí sería
+    # obligar a inventarse una. Lo que **no** puede pasar es lo contrario —una
+    # fecha de muerte en un animal que no consta muerto—, y eso no depende de
+    # que nadie se acuerde: lo rechaza la base de datos, más abajo.
+    fecha_de_fallecimiento = models.DateField(
+        _("fecha de fallecimiento"), null=True, blank=True
+    )
+
     class Meta:
         verbose_name = _("Paciente")
         verbose_name_plural = _("Pacientes")
@@ -110,7 +128,18 @@ class Paciente(ModeloDeLaClinica):
                 fields=["clinic", "microchip"],
                 condition=~models.Q(microchip=""),
                 name="microchip_unico_dentro_de_la_clinica",
-            )
+            ),
+            # La única combinación imposible de las dos casillas del estado, y
+            # solo esa: una fecha de fallecimiento en un Paciente que no consta
+            # fallecido. Sale de corregir una y olvidar la otra —de marcar por
+            # error a quien no era y volver atrás—, y dejaría una ficha que dice
+            # dos cosas a la vez. Al revés sí se puede: un fallecido sin fecha es
+            # lo corriente cuando el Tutor avisa tarde.
+            models.CheckConstraint(
+                condition=models.Q(fecha_de_fallecimiento__isnull=True)
+                | models.Q(estado=EstadoDelPaciente.FALLECIDO),
+                name="solo_un_paciente_fallecido_tiene_fecha_de_fallecimiento",
+            ),
         ]
 
     def __str__(self):
@@ -191,3 +220,89 @@ class Paciente(ModeloDeLaClinica):
         if self.estado_de_identificacion == EstadoDeIdentificacion.SIN_CHIP:
             return _("Falta implantarle el chip e inscribirlo en el Registro Nacional.")
         return _("Falta preguntar si está identificado e inscrito.")
+
+    # --- En qué situación está ante la clínica (`estados.py`) ---------------
+
+    @property
+    def esta_activo(self):
+        return self.estado == EstadoDelPaciente.ACTIVO
+
+    @property
+    def esta_fallecido(self):
+        return self.estado == EstadoDelPaciente.FALLECIDO
+
+    @property
+    def estado_a_la_vista(self):
+        """El estado tal y como se le dice al Tutor, con la fecha si la hay.
+
+        Con todas sus letras, y la ficha lo enseña aparte de los demás datos:
+        confundir a un animal muerto con uno vivo es el peor error que se puede
+        cometer en el mostrador, y no puede depender de que alguien repare en
+        una casilla más de una lista.
+        """
+        if not self.esta_fallecido:
+            return self.get_estado_display()
+        if not self.fecha_de_fallecimiento:
+            return _("Fallecido")
+        return _("Fallecido el %(fecha)s") % {
+            "fecha": date_format(self.fecha_de_fallecimiento, "DATE_FORMAT")
+        }
+
+    @property
+    def se_puede_corregir(self):
+        """Si su ficha admite todavía correcciones.
+
+        La de un Paciente fallecido no: se conserva entera y en solo lectura,
+        que es lo contrario de borrarla. Lo único que sigue pudiendo cambiar es
+        el estado mismo, porque marcar por error al animal que no era tiene que
+        poder deshacerse (`cambiar_de_estado`).
+        """
+        return not self.esta_fallecido
+
+    @property
+    def admite_citas(self):
+        """Si se le puede agendar una Cita.
+
+        Un animal muerto no vuelve, y citarlo es la llamada que ninguna clínica
+        quiere hacer. `inactivo` no lo impide: que un animal lleve dos años sin
+        venir es justamente la razón de citarlo.
+
+        La regla vive aquí y no en `scheduling` porque es un hecho del Paciente,
+        y porque `records` y la agenda no pueden preguntarle al revés
+        (`CLAUDE.md`). Quien la ejercita al dar una Cita de alta es H3.
+        """
+        return not self.esta_fallecido
+
+    @property
+    def por_que_no_admite_citas(self):
+        """Lo que hay que decirle a quien intenta citarlo, o `None` si se puede.
+
+        Se devuelve el motivo y no un `False` a secas porque quien tropiece con
+        la regla —la agenda del H3— tiene que poder decir qué pasa sin volver a
+        deducirlo.
+        """
+        if self.admite_citas:
+            return None
+        return _("%(paciente)s consta como fallecido: no se le pueden dar Citas.") % {
+            "paciente": self.nombre
+        }
+
+    def cambiar_de_estado(self, estado, fecha_de_fallecimiento=None):
+        """Deja al Paciente en ese estado, con la fecha si es que falleció.
+
+        La fecha se limpia sola al salir de `fallecido`, y eso vive aquí y no en
+        la vista por lo mismo que `hacer_responsable` vive en el Vínculo: es la
+        coherencia de la ficha, no el guion de una pantalla. Sin esto, deshacer
+        un fallecimiento marcado por error dejaría una fecha de muerte en un
+        animal vivo — y la base de datos, que no lo admite, lo diría con un
+        error de servidor en la cara de recepción.
+
+        Se guarda solo lo que cambia: una ficha de un fallecido no se toca, y un
+        `save()` entero reescribiría datos que nadie está corrigiendo.
+        """
+        self.estado = estado
+        self.fecha_de_fallecimiento = (
+            fecha_de_fallecimiento if estado == EstadoDelPaciente.FALLECIDO else None
+        )
+        self.save(update_fields=["estado", "fecha_de_fallecimiento"])
+        return self

@@ -6,6 +6,19 @@
 {% block panel %}
   <h1>{{ paciente }}</h1>
 
+  {% comment %}
+    El estado va arriba y con todas sus letras cuando el Paciente ya no está
+    activo: tratar como vivo a un animal que murió es el peor error posible de
+    cara al Tutor, y no puede depender de que alguien repare en una casilla más
+    de la lista. Un Paciente activo no dice nada aquí, que es lo normal.
+  {% endcomment %}
+  {% if not paciente.esta_activo %}
+    <p><strong>{{ paciente.estado_a_la_vista }}</strong></p>
+    {% if paciente.esta_fallecido %}
+      <p>{% translate "Su ficha y su Historia clínica se conservan enteras, en solo lectura, y no admite Citas." %}</p>
+    {% endif %}
+  {% endif %}
+
   <dl>
     <dt>{% translate "Especie" %}</dt>
     <dd>{{ paciente.get_especie_display }}</dd>
@@ -49,7 +62,11 @@
     <p><strong>{{ paciente.lo_que_le_falta_a_la_ley }}</strong></p>
   {% endif %}
 
-  <p><a href="{% url 'patients:editar' paciente.pk %}">{% translate "Corregir la ficha" %}</a></p>
+  {% if paciente.se_puede_corregir %}
+    <p><a href="{% url 'patients:editar' paciente.pk %}">{% translate "Corregir la ficha" %}</a></p>
+  {% endif %}
+
+  <p><a href="{% url 'patients:estado' paciente.pk %}">{% translate "Cambiar el estado" %}</a></p>
 
   <h2>{% translate "Tutores" %}</h2>
 
