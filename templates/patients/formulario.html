@@ -10,6 +10,33 @@
     <p>{% blocktranslate with responsable=tutor %}Responderá por él {{ responsable }}.{% endblocktranslate %}</p>
   {% endif %}
 
+  {% comment %}
+    De qué animales responde ya ese Tutor. Es la mitad de la detección de
+    duplicados que no espera a que se escriba nada: quien va a registrar al
+    segundo Rocco de la misma casa lo ve antes de empezar.
+
+    Con nombre y especie, que es lo que hace falta para reconocerlo, y con
+    enlace a su ficha, porque casi siempre a lo que se venía era a esa. Nunca
+    impide nada: dos animales de la misma familia se llaman parecido con toda
+    normalidad.
+  {% endcomment %}
+  {% if ya_registrados %}
+    <p>{% translate "Ya responde por estos Pacientes:" %}</p>
+    <ul>
+      {% for ya_registrado in ya_registrados %}
+        <li>
+          <a href="{{ ya_registrado.get_absolute_url }}">{{ ya_registrado.nombre }}</a>
+          ({{ ya_registrado.get_especie_display }})
+          {% comment %}
+            El que murió o dejó de venir sale marcado, no escondido: puede ser
+            justamente el que se está a punto de registrar otra vez.
+          {% endcomment %}
+          {% if not ya_registrado.esta_activo %}<strong>{{ ya_registrado.estado_a_la_vista }}</strong>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
   <form method="post">
     {% csrf_token %}
     {{ formulario.as_p }}
@@ -19,6 +46,12 @@
       apunta por su `id`.
     {% endcomment %}
     {% include "patients/_razas.html" with sugerencias=formulario.SUGERENCIAS_DE_RAZA razas=formulario.razas_sugeridas %}
+    {% comment %}
+      El hueco donde la detección deja los avisos mientras se escribe: de qué
+      animal es ya ese chip, con enlace a su ficha. Por qué llega vacío y por
+      qué lleva `aria-live`: lo mismo que en el formulario del Tutor.
+    {% endcomment %}
+    <div id="{{ formulario.CAJA }}" aria-live="polite"></div>
     <button type="submit">{% translate "Guardar" %}</button>
   </form>
 

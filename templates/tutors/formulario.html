@@ -9,6 +9,18 @@
   <form method="post">
     {% csrf_token %}
     {{ formulario.as_p }}
+    {% comment %}
+      El hueco donde la detección deja los avisos mientras se escribe: a quién
+      se parece esta ficha, con enlace a la que ya existe. Llega vacío y lo
+      llena htmx, porque una página recién abierta no se parece a nada
+      todavía; lo que sí trae ya escrito el formulario rechazado es el error
+      del RUT repetido, al lado de su campo, y pintarlo también aquí sería
+      decir dos veces lo mismo.
+
+      `aria-live` porque aparece sin que la página se recargue: sin él, un
+      lector de pantalla no anunciaría el aviso que acaba de salir.
+    {% endcomment %}
+    <div id="{{ formulario.CAJA }}" aria-live="polite"></div>
     <button type="submit">{% translate "Guardar" %}</button>
   </form>
 

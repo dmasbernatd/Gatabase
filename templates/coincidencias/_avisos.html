@@ -1,0 +1,15 @@
+{% comment %}
+  A quién se parece la ficha que se está escribiendo. Es lo que htmx pinta en el
+  hueco del formulario mientras recepción teclea, sin haber guardado nada.
+
+  Cada aviso llega ya compuesto —con el enlace a la ficha que ya existe dentro—
+  desde `apps/coincidencias.py`, que es el único sitio donde se decide cómo se
+  dice: el mismo texto vale para este hueco y para el error que se pone al lado
+  del campo cuando la ficha no se puede guardar.
+
+  Vacío no pinta nada, y esa es la respuesta normal: casi ninguna ficha nueva se
+  parece a una que ya está.
+{% endcomment %}
+{% for coincidencia in coincidencias %}
+  <p class="warning">{{ coincidencia.aviso }}</p>
+{% endfor %}

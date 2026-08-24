@@ -17,10 +17,13 @@ lo puede saber desde fuera. Anotan igualmente después de tener la respuesta
 compuesta, que es la regla que sostiene al Registro: lo que no se llegó a servir
 no se anota.
 
-Al guardar, el formulario puede haber tropezado con otro Tutor: el que ya tenía
-ese RUT, o los que comparten ese teléfono. Los dos avisos dicen de quién se
-trata, y decirlo es enseñar un dato personal, así que los dos dejan constancia
-igual que si se hubiera abierto su ficha (ADR-0004).
+La ficha que se está escribiendo puede ser una que ya existe: el Tutor que ya
+tenía ese RUT, o los que comparten ese teléfono. Se dice dos veces y en dos
+momentos distintos — mientras se teclea, en el hueco que repinta `coincidencias`,
+y al guardar, al lado del campo o como aviso —, y las dos veces se dice el mismo
+texto porque lo compone el mismo sitio (`apps/coincidencias.py`). Nombrar al otro
+Tutor es enseñar un dato personal suyo, así que las dos dejan constancia igual
+que si se hubiera abierto su ficha (ADR-0004).
 
 El listado también responde a HTMX: la búsqueda, el orden y el paginado
 devuelven solo la tabla de resultados. Se dispara al enviar la búsqueda y al
@@ -32,14 +35,17 @@ La caja del mostrador (`mostrador`) sí busca mientras se escribe, y por eso lo
 que anota es distinto: ver su docstring.
 """
 
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from apps.audit.models import Accion
 from apps.audit.registro import anotando, anotar, deja_constancia
+from apps.coincidencias import (
+    avisar_de_lo_que_no_impidio_guardar,
+    constancia_de_lo_que_impidio_guardar,
+    responde_a_quien_se_parece,
+)
 from apps.patients.estados import FiltroPorEstado
 from apps.patients.models import Paciente
 from apps.tutors.forms import TutorForm
@@ -51,35 +57,21 @@ from apps.tutors.mostrador import BusquedaDelMostrador
 PETICION_DE_HTMX = "HX-Request"
 
 
-def constancia_del_rut_repetido(request, formulario):
-    """Anota la lectura del Tutor cuyo nombre trae el aviso de RUT repetido.
+@login_required
+def coincidencias(request, pk=None):
+    """A qué Tutor se parece la ficha que se está escribiendo, mientras se escribe.
 
-    El formulario rechazado no guardó nada, pero la página que vuelve dice a
-    quién pertenece ya ese RUT y enlaza a su ficha: recepción ha visto un dato
-    personal suyo sin haber abierto nada.
+    El `pk` es el de la ficha que se está corrigiendo, si se está corrigiendo
+    alguna: sin él, un Tutor coincidiría consigo mismo en cuanto se le tocara
+    una letra al apellido.
+
+    De lo demás —qué se responde, qué se anota y por qué— sabe
+    `apps/coincidencias.py`, que es quien lo cuenta igual para las dos apps.
     """
-    otro = formulario.tutor_con_el_mismo_rut
-    if otro:
-        anotar(request.user, Accion.LECTURA, otro)
-
-
-def avisar_del_telefono_compartido(request, formulario):
-    """Avisa de los Tutores que ya tenían el teléfono que se acaba de guardar.
-
-    No impide nada: una familia comparte número, y bloquearlo obligaría a
-    recepción a inventarse un teléfono falso para el segundo Tutor. Solo lo pone
-    delante, por si eran la misma persona registrada dos veces. Cada aviso dice
-    un nombre, así que cada aviso es una lectura y consta como tal.
-    """
-    for otro in formulario.quienes_comparten_el_telefono():
-        messages.warning(
-            request,
-            format_html(
-                _("Este teléfono es también el de {ficha}."),
-                ficha=formulario.enlace_a(otro),
-            ),
-        )
-        anotar(request.user, Accion.LECTURA, otro)
+    ficha = get_object_or_404(Tutor, pk=pk) if pk else None
+    return responde_a_quien_se_parece(
+        request, TutorForm(request.GET, instance=ficha, clinica=request.user.clinic)
+    )
 
 
 @login_required
@@ -167,7 +159,7 @@ def crear(request):
     if request.method == "POST" and formulario.is_valid():
         tutor = formulario.save()
         anotar(request.user, Accion.CREACION, tutor)
-        avisar_del_telefono_compartido(request, formulario)
+        avisar_de_lo_que_no_impidio_guardar(request, formulario)
         return redirect("tutors:ficha", pk=tutor.pk)
     respuesta = render(
         request,
@@ -176,7 +168,7 @@ def crear(request):
     )
     # Un formulario vacío no enseña datos de nadie, y uno rechazado tampoco
     # salvo cuando el RUT ya era de otro: entonces la página trae su nombre.
-    constancia_del_rut_repetido(request, formulario)
+    constancia_de_lo_que_impidio_guardar(request, formulario)
     return respuesta
 
 
@@ -187,7 +179,7 @@ def editar(request, pk):
     if request.method == "POST" and formulario.is_valid():
         formulario.save()
         anotar(request.user, Accion.MODIFICACION, tutor)
-        avisar_del_telefono_compartido(request, formulario)
+        avisar_de_lo_que_no_impidio_guardar(request, formulario)
         return redirect("tutors:ficha", pk=tutor.pk)
     respuesta = render(
         request,
@@ -200,5 +192,5 @@ def editar(request, pk):
     # con la respuesta ya compuesta, no antes: una página que no se llegó a
     # componer no la vio nadie.
     anotar(request.user, Accion.LECTURA, tutor)
-    constancia_del_rut_repetido(request, formulario)
+    constancia_de_lo_que_impidio_guardar(request, formulario)
     return respuesta

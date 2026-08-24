@@ -14,10 +14,16 @@ después de tenerla compuesta. Y estas páginas enseñan más de una cosa: la fi
 del Paciente dice cómo se llaman sus Tutores, y el alta dice de quién es el
 animal que se está registrando. Cada nombre servido es una lectura.
 
-Al guardar, el formulario puede haber tropezado con otro Paciente: el que ya
-tenía ese microchip. El aviso dice de quién se trata y enlaza a su ficha, y
-decirlo es enseñar esa ficha, así que deja constancia igual que si se hubiera
-abierto (ADR-0004).
+La ficha que se está escribiendo puede ser una que ya existe: el Paciente que ya
+tenía ese microchip. Se dice mientras se teclea, en el hueco que repinta
+`coincidencias`, y otra vez al guardar, al lado del campo; el texto lo compone
+las dos veces `apps/coincidencias.py`. El aviso dice de qué animal se trata y
+enlaza a su ficha, y decirlo es enseñar esa ficha, así que deja constancia igual
+que si se hubiera abierto (ADR-0004).
+
+Y el alta enseña además de qué animales responde ya el Tutor que trae a este: es
+la mitad de la detección que no espera a que se escriba nada, y la que ve al
+segundo Rocco de la misma casa, que ningún campo exacto encontraría.
 
 Un Paciente nunca nace suelto: se registra desde la ficha del Tutor que lo trae,
 y ese Tutor queda como responsable. Es como llega un animal al mostrador — con
@@ -42,6 +48,7 @@ from django.views.decorators.http import require_POST
 
 from apps.audit.models import Accion
 from apps.audit.registro import anotando, anotar, deja_constancia
+from apps.coincidencias import constancia_de_lo_que_impidio_guardar, responde_a_quien_se_parece
 from apps.patients.catalogo import razas_de
 from apps.patients.forms import (
     CierreDeVinculoForm,
@@ -54,16 +61,22 @@ from apps.patients.models import Paciente
 from apps.tutors.models import Tutor, Vinculo
 
 
-def constancia_del_microchip_repetido(request, formulario):
-    """Anota la lectura del Paciente cuyo nombre trae el aviso de chip repetido.
+@login_required
+def coincidencias(request, pk=None):
+    """A qué Paciente se parece la ficha que se está escribiendo, mientras se escribe.
 
-    El formulario rechazado no guardó nada, pero la página que vuelve dice de
-    qué animal es ya ese chip y enlaza a su ficha: recepción la ha visto sin
-    haber abierto nada.
+    Enseña la ficha que ya lleva ese chip y enlaza a ella, para que recepción no
+    registre dos veces al mismo animal y le parta la Historia clínica en dos
+    (ADR-0001). El `pk` es el de la ficha que se corrige, para que no se avise de
+    que se parece a sí misma.
+
+    De lo demás —qué se responde, qué se anota y por qué— sabe
+    `apps/coincidencias.py`, que es quien lo cuenta igual para las dos apps.
     """
-    otro = formulario.paciente_con_el_mismo_microchip
-    if otro:
-        anotar(request.user, Accion.LECTURA, otro)
+    ficha = get_object_or_404(Paciente, pk=pk) if pk else None
+    return responde_a_quien_se_parece(
+        request, PacienteForm(request.GET, instance=ficha, clinica=request.user.clinic)
+    )
 
 
 @login_required
@@ -93,6 +106,19 @@ def ficha(request, pk):
 
 @login_required
 def crear(request, tutor):
+    """Registra un Paciente para el Tutor que lo trae.
+
+    La página enseña de entrada de qué animales responde ya ese Tutor, y esa es
+    la mitad de la detección de duplicados que no necesita que se escriba nada:
+    quien va a registrar al segundo Rocco de la misma casa lo ve antes de
+    empezar. No impide nada —dos animales de la misma familia se llaman parecido
+    con toda normalidad—, solo lo pone delante.
+
+    Se enseñan los de Vínculo abierto, incluidos los que murieron o dejaron de
+    venir: marcados y no escondidos, por lo mismo que en la caja del mostrador
+    (`apps/patients/estados.py`). El animal que se está a punto de registrar por
+    segunda vez puede ser justamente el que consta inactivo.
+    """
     tutor = get_object_or_404(Tutor, pk=tutor)
     formulario = PacienteForm(request.POST or None, clinica=request.user.clinic)
     if request.method == "POST" and formulario.is_valid():
@@ -102,18 +128,22 @@ def crear(request, tutor):
         # La ficha del Tutor cambió también: ahora tiene un Paciente más.
         anotar(request.user, Accion.MODIFICACION, tutor)
         return redirect("patients:ficha", pk=paciente.pk)
-    constancia_del_microchip_repetido(request, formulario)
+    constancia_de_lo_que_impidio_guardar(request, formulario)
+    ya_registrados = list(tutor.de_quienes_se_hace_cargo)
     respuesta = render(
         request,
         "patients/formulario.html",
         {
             "formulario": formulario,
             "tutor": tutor,
+            "ya_registrados": ya_registrados,
             "titulo": _("Registrar Paciente"),
         },
     )
-    # La página dice de quién va a ser el Paciente, con su nombre.
-    return anotando(respuesta, request.user, Accion.LECTURA, tutor)
+    # La página dice de quién va a ser el Paciente, con su nombre, y nombra uno a
+    # uno los animales de los que ya responde: cada nombre servido es una
+    # lectura, igual que en su propia ficha.
+    return anotando(respuesta, request.user, Accion.LECTURA, tutor, *ya_registrados)
 
 
 @login_required
@@ -134,7 +164,7 @@ def editar(request, pk):
         formulario.save()
         anotar(request.user, Accion.MODIFICACION, paciente)
         return redirect("patients:ficha", pk=paciente.pk)
-    constancia_del_microchip_repetido(request, formulario)
+    constancia_de_lo_que_impidio_guardar(request, formulario)
     respuesta = render(
         request,
         "patients/formulario.html",

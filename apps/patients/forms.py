@@ -12,12 +12,19 @@ catálogo **de la especie que se acaba de elegir**, así que se resuelve en el
 habla. Con el microchip y el estado de identificación pasa lo mismo, y por eso
 comparten `clean`: la única combinación imposible se ve mirando los dos.
 
-El microchip llega ya normalizado de su campo (`campos.py`), así que aquí se
-puede comparar con lo que ya hay en la Clínica sin volver a interpretar nada. Se
-compara como el RUT del Tutor y acaba igual: **repetido no deja guardar**, porque
-dos fichas con el mismo chip son el mismo animal registrado dos veces y un
-duplicado sale caro de deshacer. El aviso lleva a la ficha que ya existe, que es
-a lo que recepción venía casi siempre.
+A quién se parece la ficha que se está escribiendo lo resuelve
+`apps/coincidencias.py`; aquí solo se dice **por dónde** se puede confundir a un
+Paciente con otro, que es el microchip y nada más. El nombre no entra a
+propósito: dos animales de la misma familia se llaman parecido con toda
+normalidad, y de los que su Tutor ya tiene se encarga la página del alta, que
+los enseña enteros porque los tiene a mano sin buscar nada.
+
+El chip llega ya normalizado de su campo (`campos.py`), así que se compara con lo
+que ya hay en la Clínica sin volver a interpretar nada. Se compara como el RUT
+del Tutor y acaba igual: **repetido no deja guardar**, porque dos fichas con el
+mismo chip son el mismo animal registrado dos veces —y porque la base de datos no
+las admite (ADR-0001)—. El aviso lleva a la ficha que ya existe, que es a lo que
+recepción venía casi siempre.
 
 Nombrar al otro Paciente es enseñar su ficha, así que quien lo enseñe —la vista—
 lo anota en el Registro de acceso (ADR-0004): la ley protege la ficha del animal
@@ -32,15 +39,14 @@ quién responde por él.
 """
 
 from django import forms
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 from django.utils import timezone
-from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
+from apps.coincidencias import FormularioQueSeParece, Parecido
 from apps.patients.catalogo import Especie, canonica, razas_de
 from apps.patients.estados import EstadoDelPaciente
 from apps.patients.models import EstadoDeIdentificacion, Paciente, Sexo
-from apps.tenancy.aislamiento import FormularioDeLaClinica
 from apps.tutors.models import Tutor
 from apps.tutors.traspaso import traspasar
 
@@ -63,7 +69,7 @@ def sin_fechas_futuras(fecha):
     return fecha
 
 
-class PacienteForm(FormularioDeLaClinica):
+class PacienteForm(FormularioQueSeParece):
     """Alta y corrección de la ficha de un Paciente."""
 
     # La plantilla lo lee de aquí en vez de escribir "razas" a mano: el campo de
@@ -107,10 +113,21 @@ class PacienteForm(FormularioDeLaClinica):
             "microchip": forms.TextInput(attrs={"autocomplete": "off", "inputmode": "numeric"}),
         }
 
-    # El Paciente que ya tenía el microchip que se acaba de escribir, si lo hay.
-    # La vista lo mira para dejar constancia de que recepción acaba de ver su
-    # ficha sin haberla abierto.
-    paciente_con_el_mismo_microchip = None
+    # Por dónde se confunde a un Paciente con otro que ya está en la Clínica.
+    # Solo dentro de ella: el número identifica al animal en todo Chile, pero
+    # cada Clínica tiene su propio Paciente con su propia Historia clínica
+    # (ADR-0001). Que el mismo chip exista en otra Clínica es correcto y no se
+    # detecta —detectarlo sería cruzar datos entre tenants—, y eso lo garantiza
+    # `los_demas()`, que nunca sale de la Clínica del formulario.
+    PARECIDOS = (
+        Parecido(
+            "microchip",
+            _("Este microchip ya es el de {ficha}, en esta misma Clínica."),
+            codigo="microchip_repetido",
+        ),
+    )
+
+    DETECCION = "patients:coincidencias"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -132,31 +149,6 @@ class PacienteForm(FormularioDeLaClinica):
     def clean_fecha_de_nacimiento(self):
         """Un Paciente no puede haber nacido mañana."""
         return sin_fechas_futuras(self.cleaned_data["fecha_de_nacimiento"])
-
-    def clean_microchip(self):
-        """Rechaza un chip que ya es el de otro Paciente **de esta Clínica**.
-
-        Solo de esta: el número identifica al animal en todo Chile, pero cada
-        Clínica tiene su propio Paciente con su propia Historia clínica
-        (ADR-0001). Que el mismo chip exista en otra Clínica es correcto y no se
-        detecta — detectarlo sería cruzar datos entre tenants, que es lo que el
-        ADR prohíbe—, y eso lo garantiza `los_demas()`, que nunca sale de la
-        Clínica del formulario.
-        """
-        microchip = self.cleaned_data["microchip"]
-        if not microchip:
-            return microchip
-
-        self.paciente_con_el_mismo_microchip = self.los_demas().filter(microchip=microchip).first()
-        if self.paciente_con_el_mismo_microchip:
-            raise forms.ValidationError(
-                format_html(
-                    _("Este microchip ya es el de {ficha}, en esta misma Clínica."),
-                    ficha=self.enlace_a(self.paciente_con_el_mismo_microchip),
-                ),
-                code="microchip_repetido",
-            )
-        return microchip
 
     def clean(self):
         """Deja la raza con la ortografía del catálogo cuando se le parece, y no
@@ -186,13 +178,6 @@ class PacienteForm(FormularioDeLaClinica):
                 ),
             )
         return datos
-
-    @staticmethod
-    def enlace_a(paciente):
-        """El nombre del Paciente, enlazado a su ficha."""
-        return format_html(
-            '<a href="{}">{}</a>', reverse("patients:ficha", args=[paciente.pk]), str(paciente)
-        )
 
     @property
     def razas_sugeridas(self):

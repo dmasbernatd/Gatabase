@@ -212,6 +212,23 @@ _Cuándo se paga_: en el **12**.
 _El 07 no lo movió_: `PacienteForm` no compara con nada — el Paciente todavía no
 tiene ningún dato que identifique a otro. El primero será el microchip, en el
 **08**.
+_Pagado el 24 de agosto de 2026, en el **12**._ «A quién se parece esta ficha»
+tiene módulo propio: `apps/coincidencias.py`, fuera de las dos apps por lo mismo
+que `busqueda.py`. Un `Parecido` dice por qué campo se confunde una ficha con
+otra, qué se le dice a quien escribe y si además la base la va a rechazar; cada
+formulario declara los suyos (`PARECIDOS`), al lado de `POR_DONDE_SE_BUSCA` y por
+el mismo motivo. Lo que el 08 temía —«un módulo cuya única razón de ser es un
+parámetro»— dejó de ser el caso cuando el mismo aviso tuvo que decirse en tres
+sitios: el hueco que repinta htmx, el error al lado del campo y el aviso que
+sobrevive a guardar. Se llevó por delante los dos `enlace_a` copiados y las dos
+mitades de `constancia`/`avisar` repetidas en las dos apps.
+_Lo que sigue sin haber_: comparaciones que no sean de campo exacto —nombres
+parecidos, un RUT con un dígito de menos—. La detección compara por igualdad
+sobre el dato ya normalizado, así que el segundo «Rocco» de una casa se
+encuentra por la lista de Pacientes de su Tutor y no por parecido. Cuando haga
+falta de verdad, entra por `Parecido`: es el único sitio donde hoy se decide qué
+significa parecerse.
+
 _El 08 lo miró y decidió no extraerlo todavía_ (23 de agosto de 2026). Ya hay
 tres comparaciones —RUT, teléfono y microchip— y `clean_microchip` se parece a
 `clean_rut` como se esperaba: los dos preguntan a `los_demas()` por un campo
@@ -278,3 +295,40 @@ buena— y la de `catalogo` pliega más, que para su trabajo está bien.
 _Cuándo se paga_: si aparece una tercera. Con dos que no se contradicen y cuyos
 motivos están escritos, juntarlas sería obligar a una a hacer el trabajo de la
 otra.
+
+
+## La detección de coincidencias
+
+Lo que el **12** dejó decidido a medias, y por qué se dejó así.
+
+**La detección en vivo anota una fila del Registro por petición.** Cada respuesta
+nombra de verdad la ficha que enseña, así que anotarla es lo que ADR-0004 pide y
+no hay dónde recortar sin dejar de registrar una lectura real. Pero el hueco se
+repinta a cada pocas teclas y la petición lleva la ficha entera (`hx-include`),
+así que teclear el teléfono después de haber escrito un RUT que ya existe repite
+la misma anotación una vez por tecla larga. No es ruido de otra clase que el ya
+anotado más arriba —el Registro crece con las visitas, no con los datos—, pero
+aquí el multiplicador vuelve a ser el teclado, como en la caja del mostrador.
+Deduplicar exigiría preguntarle al Registro en cada tecla qué se anotó ya, que es
+cambiar una escritura barata por una lectura en el camino crítico.
+_Cuándo se paga_: con el volumen del **16**, midiendo cuánto ocupa un día de
+mostrador de verdad. Si molesta, lo que se toca es el retardo o el alcance del
+`hx-include`, no la regla.
+
+**Sin JavaScript no hay detección hasta guardar.** El hueco de los avisos llega
+vacío y lo llena htmx; quien navegue sin él sigue teniendo la red de siempre —el
+RUT y el chip repetidos no se guardan, y el teléfono compartido avisa después de
+guardar—, pero pierde justo lo que el 12 venía a dar: enterarse antes. Servir los
+avisos ya pintados en la página completa no vale como remedio: en el alta no hay
+nada escrito todavía, y en el formulario rechazado diría dos veces lo mismo que
+ya está al lado del campo.
+_Cuándo se paga_: si aparece un mostrador sin JavaScript. Hoy la caja del **11**
+depende de htmx exactamente igual.
+
+**La coincidencia del microchip no mira el estado de identificación.** Un chip
+repetido avisa aunque la ficha que ya lo tiene conste `sin chip`, que es una
+contradicción que el **08** dejó fuera de la base a propósito. No puede darse hoy
+—el formulario no deja guardar esa combinación—, y comprobarlo sería defenderse
+de un dato que solo podría entrar por el importador del **18**.
+_Cuándo se paga_: en el **18**, si el importador acaba pudiendo escribir fichas
+que el formulario no dejaría escribir.

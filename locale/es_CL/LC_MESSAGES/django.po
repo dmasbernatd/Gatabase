@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-24 16:10-0400\n"
+"POT-Creation-Date: 2026-08-24 17:03-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -38,7 +38,7 @@ msgstr ""
 msgid "Desde"
 msgstr ""
 
-#: apps/audit/forms.py:44 apps/patients/forms.py:335
+#: apps/audit/forms.py:44 apps/patients/forms.py:320
 msgid "Hasta"
 msgstr ""
 
@@ -140,66 +140,66 @@ msgstr ""
 msgid "Todos"
 msgstr ""
 
-#: apps/patients/forms.py:62
+#: apps/patients/forms.py:68
 msgid "Esa fecha todavía no ha llegado."
 msgstr ""
 
-#: apps/patients/forms.py:122
-msgid "Elija una especie"
-msgstr ""
-
-#: apps/patients/forms.py:123
-msgid "Todavía no se sabe"
-msgstr ""
-
-#: apps/patients/forms.py:128
-msgid "Todavía no se ha preguntado"
-msgstr ""
-
-#: apps/patients/forms.py:154
+#: apps/patients/forms.py:125
 #, python-brace-format
 msgid "Este microchip ya es el de {ficha}, en esta misma Clínica."
 msgstr ""
 
-#: apps/patients/forms.py:184
+#: apps/patients/forms.py:139
+msgid "Elija una especie"
+msgstr ""
+
+#: apps/patients/forms.py:140
+msgid "Todavía no se sabe"
+msgstr ""
+
+#: apps/patients/forms.py:145
+msgid "Todavía no se ha preguntado"
+msgstr ""
+
+#: apps/patients/forms.py:176
 msgid "Tiene un microchip apuntado: no puede estar «sin chip»."
 msgstr ""
 
-#: apps/patients/forms.py:225 apps/tutors/models.py:98
-#: apps/tutors/models.py:203
+#: apps/patients/forms.py:210 apps/tutors/models.py:99
+#: apps/tutors/models.py:213
 msgid "Tutor"
 msgstr ""
 
-#: apps/patients/forms.py:226 apps/patients/forms.py:391
+#: apps/patients/forms.py:211 apps/patients/forms.py:376
 msgid "Elija un Tutor"
 msgstr ""
 
-#: apps/patients/forms.py:228
+#: apps/patients/forms.py:213
 msgid "Es el responsable"
 msgstr ""
 
-#: apps/patients/forms.py:260 templates/patients/ficha.html:56
+#: apps/patients/forms.py:245 templates/patients/ficha.html:56
 #: templates/tenancy/usuarios.html:18
 msgid "Estado"
 msgstr ""
 
-#: apps/patients/forms.py:262
+#: apps/patients/forms.py:247
 msgid "Fecha de fallecimiento"
 msgstr ""
 
-#: apps/patients/forms.py:268
+#: apps/patients/forms.py:253
 msgid "Si no se sabe, déjela en blanco."
 msgstr ""
 
-#: apps/patients/forms.py:303
+#: apps/patients/forms.py:288
 msgid "Nadie responde por él: súmele antes el Tutor que lo trae."
 msgstr ""
 
-#: apps/patients/forms.py:313
+#: apps/patients/forms.py:298
 msgid "Esa fecha es anterior a la de nacimiento."
 msgstr ""
 
-#: apps/patients/forms.py:390
+#: apps/patients/forms.py:375
 msgid "Ahora responde"
 msgstr ""
 
@@ -213,120 +213,120 @@ msgstr ""
 msgid "Un microchip lleva %(cuantos)s dígitos, y ese lleva %(cuantos_hay)s."
 msgstr ""
 
-#: apps/patients/models.py:39
+#: apps/patients/models.py:40
 msgid "macho"
 msgstr ""
 
-#: apps/patients/models.py:40
+#: apps/patients/models.py:41
 msgid "hembra"
 msgstr ""
 
-#: apps/patients/models.py:61
+#: apps/patients/models.py:62
 msgid "sin chip"
 msgstr ""
 
-#: apps/patients/models.py:62
+#: apps/patients/models.py:63
 msgid "chip implantado"
 msgstr ""
 
-#: apps/patients/models.py:63
+#: apps/patients/models.py:64
 msgid "inscrito en el Registro Nacional"
 msgstr ""
 
-#: apps/patients/models.py:69
+#: apps/patients/models.py:70
 msgid "todavía no se ha preguntado"
 msgstr ""
 
-#: apps/patients/models.py:78 apps/tenancy/models.py:17
-#: apps/tenancy/models.py:38 apps/tenancy/models.py:90 apps/tutors/models.py:40
+#: apps/patients/models.py:79 apps/tenancy/models.py:17
+#: apps/tenancy/models.py:38 apps/tenancy/models.py:90 apps/tutors/models.py:41
 msgid "nombre"
 msgstr ""
 
-#: apps/patients/models.py:79
+#: apps/patients/models.py:80
 msgid "especie"
 msgstr ""
 
-#: apps/patients/models.py:84
+#: apps/patients/models.py:85
 msgid "raza"
 msgstr ""
 
-#: apps/patients/models.py:85
+#: apps/patients/models.py:86
 msgid "sexo"
 msgstr ""
 
-#: apps/patients/models.py:86
+#: apps/patients/models.py:87
 msgid "fecha de nacimiento"
 msgstr ""
 
-#: apps/patients/models.py:87
+#: apps/patients/models.py:88
 msgid "color"
 msgstr ""
 
-#: apps/patients/models.py:88
+#: apps/patients/models.py:89
 msgid "observaciones"
 msgstr ""
 
-#: apps/patients/models.py:95
+#: apps/patients/models.py:96
 msgid "microchip"
 msgstr ""
 
-#: apps/patients/models.py:97
+#: apps/patients/models.py:98
 msgid "estado de identificación"
 msgstr ""
 
-#: apps/patients/models.py:107
+#: apps/patients/models.py:108
 msgid "estado"
 msgstr ""
 
-#: apps/patients/models.py:115
+#: apps/patients/models.py:116
 msgid "fecha de fallecimiento"
 msgstr ""
 
-#: apps/patients/models.py:129 apps/tutors/models.py:209
+#: apps/patients/models.py:130 apps/tutors/models.py:219
 #: templates/mostrador/_resultados.html:14
 msgid "Paciente"
 msgstr ""
 
-#: apps/patients/models.py:130 apps/tutors/models.py:64
+#: apps/patients/models.py:131 apps/tutors/models.py:65
 #: templates/tutors/ficha.html:30
 msgid "Pacientes"
 msgstr ""
 
-#: apps/patients/models.py:282
+#: apps/patients/models.py:287
 msgid "Falta inscribirlo en el Registro Nacional de Mascotas."
 msgstr ""
 
-#: apps/patients/models.py:284
+#: apps/patients/models.py:289
 msgid "Falta implantarle el chip e inscribirlo en el Registro Nacional."
 msgstr ""
 
-#: apps/patients/models.py:285
+#: apps/patients/models.py:290
 msgid "Falta preguntar si está identificado e inscrito."
 msgstr ""
 
-#: apps/patients/models.py:309
+#: apps/patients/models.py:314
 msgid "Fallecido"
 msgstr ""
 
-#: apps/patients/models.py:310
+#: apps/patients/models.py:315
 #, python-format
 msgid "Fallecido el %(fecha)s"
 msgstr ""
 
-#: apps/patients/models.py:349
+#: apps/patients/models.py:354
 #, python-format
 msgid "%(paciente)s consta como fallecido: no se le pueden dar Citas."
 msgstr ""
 
-#: apps/patients/views.py:112 templates/tutors/ficha.html:73
+#: apps/patients/views.py:140 templates/tutors/ficha.html:73
 msgid "Registrar Paciente"
 msgstr ""
 
-#: apps/patients/views.py:129
+#: apps/patients/views.py:159
 msgid "La ficha de un Paciente fallecido no se corrige: queda tal como estaba."
 msgstr ""
 
-#: apps/patients/views.py:141 apps/tutors/views.py:195
+#: apps/patients/views.py:171 apps/tutors/views.py:187
 #: templates/patients/ficha.html:68 templates/tutors/ficha.html:28
 msgid "Corregir la ficha"
 msgstr ""
@@ -401,7 +401,7 @@ msgstr ""
 msgid "Clínicas"
 msgstr ""
 
-#: apps/tenancy/models.py:39 apps/tutors/models.py:54
+#: apps/tenancy/models.py:39 apps/tutors/models.py:55
 msgid "dirección"
 msgstr ""
 
@@ -430,11 +430,11 @@ msgstr ""
 msgid "Un Usuario necesita un correo para entrar."
 msgstr ""
 
-#: apps/tenancy/models.py:89 apps/tutors/models.py:53
+#: apps/tenancy/models.py:89 apps/tutors/models.py:54
 msgid "correo"
 msgstr ""
 
-#: apps/tenancy/models.py:91 apps/tutors/models.py:41
+#: apps/tenancy/models.py:91 apps/tutors/models.py:42
 msgid "apellidos"
 msgstr ""
 
@@ -458,9 +458,14 @@ msgstr ""
 msgid "Editar Usuario"
 msgstr ""
 
-#: apps/tutors/forms.py:52
+#: apps/tutors/forms.py:43
 #, python-brace-format
 msgid "Este RUT ya es el de {ficha}, en esta misma Clínica."
+msgstr ""
+
+#: apps/tutors/forms.py:46
+#, python-brace-format
+msgid "Este teléfono es también el de {ficha}."
 msgstr ""
 
 #: apps/tutors/listado.py:96
@@ -471,7 +476,7 @@ msgstr ""
 msgid "Nombre"
 msgstr ""
 
-#: apps/tutors/listado.py:98 apps/tutors/models.py:48
+#: apps/tutors/listado.py:98 apps/tutors/models.py:49
 #: templates/tutors/ficha.html:15
 msgid "RUT"
 msgstr ""
@@ -486,33 +491,33 @@ msgstr ""
 msgid "Correo"
 msgstr ""
 
-#: apps/tutors/models.py:52
+#: apps/tutors/models.py:53
 msgid "teléfono"
 msgstr ""
 
-#: apps/tutors/models.py:99 templates/patients/ficha.html:73
+#: apps/tutors/models.py:100 templates/patients/ficha.html:73
 #: templates/tenancy/base_panel.html:30 templates/tutors/lista.html:4
 #: templates/tutors/lista.html:7
 msgid "Tutores"
 msgstr ""
 
-#: apps/tutors/models.py:211
+#: apps/tutors/models.py:221
 msgid "es el responsable"
 msgstr ""
 
-#: apps/tutors/models.py:217
+#: apps/tutors/models.py:227
 msgid "hasta"
 msgstr ""
 
-#: apps/tutors/models.py:220
+#: apps/tutors/models.py:230
 msgid "Vínculo"
 msgstr ""
 
-#: apps/tutors/models.py:221
+#: apps/tutors/models.py:231
 msgid "Vínculos"
 msgstr ""
 
-#: apps/tutors/models.py:282
+#: apps/tutors/models.py:292
 #, python-format
 msgid ""
 "%(paciente)s se quedaría sin nadie que responda por él: diga antes quién lo "
@@ -555,12 +560,7 @@ msgstr ""
 msgid "%(tutor)s ya responde por %(paciente)s."
 msgstr ""
 
-#: apps/tutors/views.py:78
-#, python-brace-format
-msgid "Este teléfono es también el de {ficha}."
-msgstr ""
-
-#: apps/tutors/views.py:175 templates/tutors/lista.html:9
+#: apps/tutors/views.py:167 templates/tutors/lista.html:9
 msgid "Registrar Tutor"
 msgstr ""
 
@@ -664,16 +664,16 @@ msgid ""
 msgstr ""
 
 #: templates/patients/cerrar_vinculo.html:22 templates/patients/estado.html:24
-#: templates/patients/formulario.html:23 templates/patients/traspaso.html:28
+#: templates/patients/formulario.html:59 templates/patients/traspaso.html:28
 #: templates/patients/vincular.html:14
 #: templates/tenancy/formulario_de_usuario.html:12
-#: templates/tutors/formulario.html:12
+#: templates/tutors/formulario.html:25
 msgid "Guardar"
 msgstr ""
 
 #: templates/patients/cerrar_vinculo.html:25 templates/patients/estado.html:27
-#: templates/patients/formulario.html:27 templates/patients/traspaso.html:31
-#: templates/patients/vincular.html:17 templates/tutors/formulario.html:16
+#: templates/patients/formulario.html:63 templates/patients/traspaso.html:31
+#: templates/patients/vincular.html:17 templates/tutors/formulario.html:29
 msgid "Volver a la ficha"
 msgstr ""
 
@@ -777,7 +777,11 @@ msgstr ""
 msgid "Responderá por él %(responsable)s."
 msgstr ""
 
-#: templates/patients/formulario.html:29
+#: templates/patients/formulario.html:25
+msgid "Ya responde por estos Pacientes:"
+msgstr ""
+
+#: templates/patients/formulario.html:65
 msgid "Volver a la ficha del Tutor"
 msgstr ""
 
@@ -861,7 +865,7 @@ msgstr ""
 msgid "Fueron suyos"
 msgstr ""
 
-#: templates/tutors/ficha.html:96 templates/tutors/formulario.html:18
+#: templates/tutors/ficha.html:96 templates/tutors/formulario.html:31
 msgid "Volver a Tutores"
 msgstr ""
 

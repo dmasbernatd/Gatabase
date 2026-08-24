@@ -19,6 +19,7 @@ vínculo es una tabla aparte y no una columna del Paciente.
 
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -112,6 +113,15 @@ class Tutor(ModeloDeLaClinica):
 
     def __str__(self):
         return f"{self.nombre} {self.apellidos}".strip()
+
+    def get_absolute_url(self):
+        """Dónde vive su ficha.
+
+        Lo sabe el Tutor y no cada pantalla que lo enlaza: el aviso de
+        coincidencia (`apps/coincidencias.py`) lleva a la ficha que ya existe, y
+        el enlace tenía que componerse una sola vez para los dos modelos.
+        """
+        return reverse("tutors:ficha", args=[self.pk])
 
     @property
     def rut_a_la_chilena(self):

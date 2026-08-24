@@ -19,6 +19,7 @@ situación está ante la clínica —`activo`, `inactivo` o `fallecido`— lo de
 """
 
 from django.db import models
+from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.translation import gettext_lazy as _
 
@@ -156,6 +157,10 @@ class Paciente(ModeloDeLaClinica):
 
     def __str__(self):
         return self.nombre
+
+    def get_absolute_url(self):
+        """Dónde vive su ficha. Lo sabe el Paciente, por lo mismo que el Tutor."""
+        return reverse("patients:ficha", args=[self.pk])
 
     @property
     def raza_del_catalogo(self):
