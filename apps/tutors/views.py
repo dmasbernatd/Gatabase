@@ -99,15 +99,27 @@ def ficha(request, pk):
     # ya no están es invitar a citar a un animal muerto.
     filtro = FiltroPorEstado(request.GET)
     pacientes = list(filtro.aplicado_a(tutor.de_quienes_se_hace_cargo))
+    # Y de cuáles se hizo cargo antes, con la fecha hasta la que respondió por
+    # ellos: el animal cambió de manos y sigue constando que fue suyo, que es lo
+    # que se mira cuando llama preguntando por lo que se le hizo mientras lo
+    # tuvo. Sin filtro de estado, porque es historia y no una lista de trabajo.
+    cerrados = list(tutor.de_quienes_se_hizo_cargo)
     respuesta = render(
         request,
         "tutors/ficha.html",
-        {"tutor": tutor, "pacientes": pacientes, "filtro": filtro},
+        {"tutor": tutor, "pacientes": pacientes, "filtro": filtro, "cerrados": cerrados},
     )
     # El Tutor lo anota el decorador; sus Pacientes, no: la ficha los nombra uno
     # a uno, y la ley protege la ficha del animal igual que la de su Tutor,
-    # porque por ella se llega a él (ADR-0004).
-    return anotando(respuesta, request.user, Accion.LECTURA, *pacientes)
+    # porque por ella se llega a él (ADR-0004). Los que fueron suyos también
+    # salen nombrados, y un nombre servido es una lectura.
+    return anotando(
+        respuesta,
+        request.user,
+        Accion.LECTURA,
+        *pacientes,
+        *(vinculo.paciente for vinculo in cerrados),
+    )
 
 
 @login_required

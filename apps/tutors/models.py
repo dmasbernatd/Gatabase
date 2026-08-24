@@ -17,7 +17,9 @@ mismo Paciente con la misma Historia clínica, y eso solo se sostiene si el
 vínculo es una tabla aparte y no una columna del Paciente.
 """
 
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.tenancy.aislamiento import ModeloDeLaClinica
@@ -93,14 +95,38 @@ class Tutor(ModeloDeLaClinica):
 
     @property
     def de_quienes_se_hace_cargo(self):
-        """Los Pacientes de este Tutor.
+        """Los Pacientes de los que responde **hoy**: los de Vínculo abierto.
 
         Por el manager sin filtro, por lo mismo que `Paciente.quienes_responden`:
         un Vínculo nunca cruza la frontera de la Clínica, así que volver a
         filtrar por la Clínica activa no protege nada y sí deja la ficha en
         blanco fuera de una petición HTTP.
+
+        Las dos condiciones van en el mismo `filter` y la del Tutor se repite a
+        propósito: así Django resuelve el Vínculo en **una sola** unión con la
+        que ya trae la relación, y un Paciente que fue suyo, dejó de serlo y
+        volvió —dos Vínculos con el mismo animal— sale una vez y no dos.
         """
-        return self.pacientes(manager="de_todas_las_clinicas").all()
+        return self.pacientes(manager="de_todas_las_clinicas").filter(
+            vinculos__tutor=self, vinculos__fecha_de_cierre__isnull=True
+        )
+
+    @property
+    def de_quienes_se_hizo_cargo(self):
+        """Los Vínculos que ya cerró, el último cambio de manos primero.
+
+        Son Vínculos y no Pacientes porque de estos hay algo más que decir: hasta
+        cuándo fue suyo. Que el Tutor anterior siga viendo qué animal fue suyo y
+        hasta qué día es media casilla del ticket 10 —la otra media la enseña la
+        ficha del Paciente—, y es lo que se mira cuando llama preguntando por
+        una cuenta o por lo que se le hizo al animal mientras lo tuvo.
+        """
+        return (
+            self.vinculos(manager="de_todas_las_clinicas")
+            .filter(fecha_de_cierre__isnull=False)
+            .select_related("paciente")
+            .order_by("-fecha_de_cierre", "-pk")
+        )
 
     def se_hace_cargo_de(self, paciente, responsable=False):
         """Vincula a este Tutor con ese Paciente y devuelve el Vínculo.
@@ -110,12 +136,18 @@ class Tutor(ModeloDeLaClinica):
         que aparece se queda con el cargo aunque nadie lo haya pedido. Después
         habrá que decir explícitamente que otro lo releva.
 
+        Se busca antes de crear, y solo entre los Vínculos **abiertos**: volver a
+        vincular a quien ya responde por el animal no es un Vínculo más, y
+        volver a vincular a quien lo tuvo antes sí lo es. Un animal que vuelve a
+        su Tutor de siempre son dos tramos con sus dos fechas, no una corrección
+        del primero.
+
         La Clínica sale del Tutor, que es de donde tiene que salir: un Vínculo
         entre Clínicas no significaría nada, y por eso lo escribe el manager que
         cruza la frontera a la vista de todos (ADR-0003).
         """
-        vinculo = Vinculo.de_todas_las_clinicas.create(
-            clinic=self.clinic, tutor=self, paciente=paciente
+        vinculo, _ = Vinculo.de_todas_las_clinicas.get_or_create(
+            clinic=self.clinic, tutor=self, paciente=paciente, fecha_de_cierre=None
         )
         if responsable or not paciente.vinculo_responsable:
             vinculo.hacer_responsable()
@@ -133,8 +165,13 @@ class Vinculo(ModeloDeLaClinica):
     cobra. Que sea uno solo lo garantiza la base de datos, no el cuidado de quien
     escribe la vista.
 
-    El cierre del Vínculo con fecha —el Paciente cambió de dueño y hay que
-    conservar quién lo trajo antes— es del ticket 10.
+    Un Vínculo **se cierra con fecha, nunca se borra**. El animal cambia de manos
+    y lo que hay que conservar es quién lo trajo antes y hasta cuándo: borrar la
+    fila dejaría una Historia clínica sin nadie detrás de la mitad de sus
+    Consultas, y la Historia es del animal (ADR-0001). Cerrado es exactamente
+    eso: fue verdad hasta ese día. Por eso un Vínculo cerrado no puede ser el
+    responsable, y por eso el mismo Tutor puede volver a vincularse con el mismo
+    Paciente: son dos tramos con sus dos fechas.
     """
 
     tutor = models.ForeignKey(
@@ -147,6 +184,12 @@ class Vinculo(ModeloDeLaClinica):
         verbose_name=_("Paciente"),
     )
     responsable = models.BooleanField(_("es el responsable"), default=False)
+    # Hasta cuándo respondió por él. En blanco es el Vínculo vivo, que es lo
+    # normal; con fecha es el Tutor anterior, que se conserva entero. Es una
+    # fecha y no una marca de sí o no porque lo que hace falta después es
+    # justamente el día: a quién se le pregunta por lo que se le hizo al animal
+    # en marzo depende de quién lo tenía en marzo.
+    fecha_de_cierre = models.DateField(_("hasta"), null=True, blank=True)
 
     class Meta:
         verbose_name = _("Vínculo")
@@ -155,8 +198,13 @@ class Vinculo(ModeloDeLaClinica):
         # se llama». El resto por como se busca a alguien en un fichero.
         ordering = ["-responsable", "tutor__apellidos", "tutor__nombre", "pk"]
         constraints = [
+            # Uno solo **abierto**: volver a vincular a quien ya responde por el
+            # animal sería un duplicado, pero el Tutor que lo tuvo y lo recupera
+            # años después es otro tramo, con su fecha, y los dos hacen falta.
             models.UniqueConstraint(
-                fields=["tutor", "paciente"], name="un_solo_vinculo_por_tutor_y_paciente"
+                fields=["tutor", "paciente"],
+                condition=models.Q(fecha_de_cierre__isnull=True),
+                name="un_solo_vinculo_abierto_por_tutor_y_paciente",
             ),
             # Que el responsable sea uno solo se impone aquí y no en la vista:
             # una ficha con dos responsables no dice a quién llamar, y eso no
@@ -166,10 +214,65 @@ class Vinculo(ModeloDeLaClinica):
                 condition=models.Q(responsable=True),
                 name="un_solo_tutor_responsable_por_paciente",
             ),
+            # Quien dejó de responder por el animal no puede seguir siendo a
+            # quien se llama. Es lo que separa el cierre de un adorno: sin esto,
+            # cerrar un Vínculo y olvidar el cargo dejaría a la clínica llamando
+            # a quien ya no tiene al animal.
+            models.CheckConstraint(
+                condition=models.Q(responsable=False)
+                | models.Q(fecha_de_cierre__isnull=True),
+                name="un_vinculo_cerrado_no_es_responsable",
+            ),
         ]
 
     def __str__(self):
         return f"{self.tutor} — {self.paciente}"
+
+    @property
+    def esta_abierto(self):
+        """Si este Tutor responde todavía por el Paciente."""
+        return self.fecha_de_cierre is None
+
+    @property
+    def por_que_no_se_puede_cerrar(self):
+        """Lo que hay que decirle a quien intente cerrarlo, o `None` si se puede.
+
+        Un Paciente activo no puede quedarse sin nadie que responda por él: su
+        ficha no diría a quién llamar ni a quién cobrar. Así que el Vínculo del
+        responsable no se cierra a secas — se traspasa el Paciente, que es cerrar
+        uno y abrir otro a la vez (`traspaso.py`).
+
+        Uno inactivo o fallecido sí puede quedarse sin responsable: el animal
+        cambió de manos o ya no está, nadie va a llamar a nadie, y exigir aquí un
+        responsable obligaría a dejar puesto a un Tutor que no tiene nada que
+        ver.
+
+        Se devuelve el motivo y no un `False` a secas por lo mismo que en
+        `Paciente.por_que_no_admite_citas`: quien tropiece con la regla —el
+        formulario, la plantilla que decide si ofrece el enlace— tiene que poder
+        decir qué pasa sin volver a deducirlo.
+        """
+        if self.responsable and self.paciente.necesita_responsable:
+            return _(
+                "%(paciente)s se quedaría sin nadie que responda por él: "
+                "diga antes quién lo releva."
+            ) % {"paciente": self.paciente.nombre}
+        return None
+
+    def cerrar(self, fecha=None):
+        """Deja constancia de que este Tutor dejó de responder por el Paciente.
+
+        No borra: la fila se queda con la fecha, que es lo que hace falta
+        después. Sin fecha se toma la de hoy, que es cuando se dice en el
+        mostrador; se admite una anterior porque el Tutor avisa a veces tarde.
+        """
+        motivo = self.por_que_no_se_puede_cerrar
+        if motivo:
+            raise ValidationError(motivo, code="sin_responsable")
+        self.responsable = False
+        self.fecha_de_cierre = fecha or timezone.localdate()
+        self.save(update_fields=["responsable", "fecha_de_cierre"])
+        return self
 
     def hacer_responsable(self):
         """Deja a este Tutor como el responsable del Paciente, y solo a él.

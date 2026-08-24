@@ -25,7 +25,10 @@ igual que la de su Tutor, porque por ella se llega a él.
 
 Que el animal muriera o dejara de venir no se corrige aquí: tiene formulario
 propio (`EstadoDelPacienteForm`), porque no es un dato mal escrito sino un hecho
-que cambió.
+que cambió. Y que cambiara de manos, otro (`TraspasoForm`): tampoco es un dato
+mal escrito, y además no toca la ficha del animal en absoluto — el Paciente
+sigue siendo el mismo con la misma Historia clínica, y lo único que cambia es
+quién responde por él.
 """
 
 from django import forms
@@ -39,6 +42,7 @@ from apps.patients.estados import EstadoDelPaciente
 from apps.patients.models import EstadoDeIdentificacion, Paciente, Sexo
 from apps.tenancy.aislamiento import FormularioDeLaClinica
 from apps.tutors.models import Tutor
+from apps.tutors.traspaso import traspasar
 
 # El `id` de la lista de sugerencias de razas. Lo comparten el campo —que la
 # nombra en su atributo `list`— y la plantilla que la pinta, y por eso no se
@@ -283,6 +287,23 @@ class EstadoDelPacienteForm(forms.Form):
         sabe.
         """
         datos = super().clean()
+        # Volver a activo a un Paciente del que ya no responde nadie dejaría una
+        # ficha de trabajo sin teléfono al que llamar: es la misma regla que
+        # impide cerrar el Vínculo del responsable, por el otro lado. Se llega
+        # aquí cuando el animal se traspasó estando inactivo y después vuelve, y
+        # el remedio es vincularle antes a quien lo trae ahora.
+        if (
+            not self.paciente.esta_activo
+            and datos.get("estado") == EstadoDelPaciente.ACTIVO
+            and self.paciente.vinculo_responsable is None
+        ):
+            self.add_error(
+                "estado",
+                forms.ValidationError(
+                    _("Nadie responde por él: súmele antes el Tutor que lo trae."),
+                    code="sin_responsable",
+                ),
+            )
         fecha = datos.get("fecha_de_fallecimiento")
         nacimiento = self.paciente.fecha_de_nacimiento
         if fecha and nacimiento and fecha < nacimiento:
@@ -299,3 +320,87 @@ class EstadoDelPacienteForm(forms.Form):
         return self.paciente.cambiar_de_estado(
             self.cleaned_data["estado"], self.cleaned_data["fecha_de_fallecimiento"]
         )
+
+
+class FechaDelCambioForm(forms.Form):
+    """Lo que comparten cerrar un Vínculo y traspasar al Paciente: cuándo fue.
+
+    La fecha se exige, al revés que la de fallecimiento: el cambio de manos se
+    dice en el mostrador el día que pasa, y viene puesta la de hoy. Sin ella, un
+    Vínculo cerrado no serviría para lo que se cierra —saber quién tenía al
+    animal en marzo—, y un «hasta que se cerró» no es una respuesta.
+    """
+
+    fecha = forms.DateField(
+        label=_("Hasta"),
+        widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+        initial=timezone.localdate,
+    )
+
+    def clean_fecha(self):
+        """Un animal no cambia de manos la semana que viene."""
+        return sin_fechas_futuras(self.cleaned_data["fecha"])
+
+
+class CierreDeVinculoForm(FechaDelCambioForm):
+    """Que un Tutor dejó de responder por el Paciente.
+
+    Cerrar y no borrar, que es de lo que va el ticket: quién lo trajo antes y
+    hasta cuándo se conserva entero. De eso sabe el Vínculo (`cerrar`).
+
+    El responsable de un Paciente activo no se cierra por aquí: dejaría una
+    ficha que no dice a quién llamar. La regla la contesta el Vínculo, y el
+    formulario solo la trae a la pantalla — así el motivo se escribe una vez y
+    lo dicen igual la plantilla que esconde el enlace y el error de quien llegó
+    con la URL en la mano.
+    """
+
+    def __init__(self, *args, vinculo, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.vinculo = vinculo
+
+    def clean(self):
+        datos = super().clean()
+        motivo = self.vinculo.por_que_no_se_puede_cerrar
+        if motivo:
+            raise forms.ValidationError(motivo, code="sin_responsable")
+        return datos
+
+    def guardar(self):
+        """Cierra el Vínculo y lo devuelve."""
+        return self.vinculo.cerrar(self.cleaned_data["fecha"])
+
+
+class TraspasoForm(FechaDelCambioForm):
+    """El Paciente cambia de manos: quién responde por él a partir de esa fecha.
+
+    Es una sola pantalla y no dos porque es una sola operación (`traspaso.py`):
+    cerrar el Vínculo del Tutor de antes sin decir quién lo releva dejaría, entre
+    una cosa y la otra, un animal activo del que no responde nadie.
+
+    Se ofrecen los Tutores de la Clínica menos el que ya responde por él, que es
+    la única opción que no significaría nada. Los demás Tutores del Paciente sí
+    se ofrecen: una pareja que se separa y uno de los dos se queda con el animal
+    es exactamente esto, y ahí no se abre ningún Vínculo nuevo — se le pasa el
+    cargo al que ya tenía.
+    """
+
+    tutor = forms.ModelChoiceField(
+        queryset=Tutor.de_todas_las_clinicas.none(),
+        label=_("Ahora responde"),
+        empty_label=_("Elija un Tutor"),
+    )
+
+    # Primero a quién pasa el animal, que es la decisión; la fecha viene puesta.
+    field_order = ["tutor", "fecha"]
+
+    def __init__(self, *args, clinica, paciente, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.paciente = paciente
+        self.fields["tutor"].queryset = Tutor.de_todas_las_clinicas.filter(
+            clinic=clinica
+        ).exclude(pk__in=paciente.quienes_responden.filter(responsable=True).values("tutor"))
+
+    def guardar(self):
+        """Deja al Paciente en manos del Tutor elegido y devuelve su Vínculo."""
+        return traspasar(self.paciente, self.cleaned_data["tutor"], self.cleaned_data["fecha"])

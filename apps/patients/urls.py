@@ -15,5 +15,9 @@ urlpatterns = [
     # dato mal escrito sino un hecho que cambió.
     path("<int:pk>/estado/", views.estado, name="estado"),
     path("<int:pk>/tutores/nuevo/", views.vincular, name="vincular"),
+    # El animal cambió de manos: cerrar el Vínculo de quien lo tenía y abrir el
+    # de quien lo tiene es una sola operación, y por eso una sola página.
+    path("<int:pk>/tutores/traspaso/", views.traspasar, name="traspasar"),
+    path("<int:pk>/tutores/<int:vinculo>/cierre/", views.cerrar_vinculo, name="cerrar_vinculo"),
     path("<int:pk>/tutores/<int:vinculo>/responsable/", views.responsable, name="responsable"),
 ]

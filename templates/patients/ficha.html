@@ -71,8 +71,12 @@
   <h2>{% translate "Tutores" %}</h2>
 
   {% comment %}
-    Quién responde por el Paciente, el responsable primero. El cargo se pasa por
-    POST y no por un enlace: cambia a quién se llama y a quién se cobra.
+    Quién responde por el Paciente **hoy**, el responsable primero. El cargo se
+    pasa por POST y no por un enlace: cambia a quién se llama y a quién se cobra.
+
+    El Vínculo del responsable de un Paciente activo no ofrece cerrarse: dejaría
+    una ficha que no dice a quién llamar, y para eso está el cambio de Tutor, que
+    cierra uno y abre otro a la vez.
   {% endcomment %}
   <ul>
     {% for vinculo in vinculos %}
@@ -86,11 +90,41 @@
             <button type="submit">{% translate "Hacer responsable" %}</button>
           </form>
         {% endif %}
+        {% if not vinculo.por_que_no_se_puede_cerrar %}
+          <a href="{% url 'patients:cerrar_vinculo' paciente.pk vinculo.pk %}">{% translate "Cerrar el Vínculo" %}</a>
+        {% endif %}
       </li>
     {% empty %}
-      <li>{% translate "Nadie responde por este Paciente todavía." %}</li>
+      <li>{% translate "Nadie responde por este Paciente." %}</li>
     {% endfor %}
   </ul>
 
+  {% comment %}
+    Un Paciente activo del que no responde nadie es una ficha de trabajo sin
+    teléfono al que llamar. No debería pasar y se dice cuando pasa.
+  {% endcomment %}
+  {% if paciente.le_falta_responsable %}
+    <p><strong>{% translate "Nadie responde por él: súmele el Tutor que lo trae ahora." %}</strong></p>
+  {% endif %}
+
   <p><a href="{% url 'patients:vincular' paciente.pk %}">{% translate "Sumar un Tutor" %}</a></p>
+
+  <p><a href="{% url 'patients:traspasar' paciente.pk %}">{% translate "Cambio de Tutor" %}</a></p>
+
+  {% comment %}
+    Quiénes respondieron antes, y hasta cuándo. Es lo que hace del cierre algo
+    distinto de un borrado: el animal cambió de manos y sigue constando quién lo
+    trajo, que es a quien se le pregunta por lo que se le hizo mientras lo tuvo.
+  {% endcomment %}
+  {% if cerrados %}
+    <h3>{% translate "Antes respondían por él" %}</h3>
+    <ul>
+      {% for vinculo in cerrados %}
+        <li>
+          <a href="{% url 'tutors:ficha' vinculo.tutor.pk %}">{{ vinculo.tutor }}</a>
+          <span>{% blocktranslate with fecha=vinculo.fecha_de_cierre %}hasta el {{ fecha }}{% endblocktranslate %}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
 {% endblock %}

@@ -241,6 +241,11 @@ def test_marcar_por_error_a_quien_no_era_se_puede_deshacer(client):
     paciente = PacienteFactory(
         clinic=usuario.clinic, estado=EstadoDelPaciente.FALLECIDO, fecha_de_fallecimiento=AYER
     )
+    # Con su Tutor, que es como es un fallecido de verdad: marcar la muerte no
+    # cierra ningún Vínculo. Un Paciente sin nadie que responda por él no vuelve
+    # a activo —es la regla del ticket 10— y sin esta línea el escenario probaría
+    # otra cosa.
+    TutorFactory(clinic=usuario.clinic).se_hace_cargo_de(paciente, responsable=True)
 
     cambiar_el_estado(client, paciente, EstadoDelPaciente.ACTIVO)
 

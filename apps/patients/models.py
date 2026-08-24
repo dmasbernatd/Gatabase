@@ -157,7 +157,11 @@ class Paciente(ModeloDeLaClinica):
 
     @property
     def quienes_responden(self):
-        """Los Vínculos de este Paciente, con el responsable primero.
+        """Los Vínculos **abiertos** de este Paciente, con el responsable primero.
+
+        En presente: quién responde por él ahora. Los que se cerraron cuando el
+        animal cambió de manos están en `quienes_respondieron`, y siguen ahí
+        enteros — un Vínculo no se borra nunca.
 
         Se pide por el manager sin filtro a propósito, y aquí no abre ninguna
         puerta: los Vínculos de un Paciente son de su Clínica por construcción
@@ -167,14 +171,36 @@ class Paciente(ModeloDeLaClinica):
         quién responde por el animal fuera de una petición HTTP, que es donde
         van a trabajar el importador del 18 y los datos mock del 16.
         """
-        return self.vinculos(manager="de_todas_las_clinicas").select_related("tutor")
+        return (
+            self.vinculos(manager="de_todas_las_clinicas")
+            .filter(fecha_de_cierre__isnull=True)
+            .select_related("tutor")
+        )
+
+    @property
+    def quienes_respondieron(self):
+        """Los Vínculos ya cerrados, el último cambio de manos primero.
+
+        Es de quién fue el animal antes, y hasta cuándo. Hace falta después de
+        todo: el Tutor de antes llama preguntando por lo que se le hizo, o hay
+        que saber a quién se le cobró una Consulta de hace dos años. La Historia
+        clínica es del animal (ADR-0001), pero quién lo trajo cada vez es parte
+        de ella.
+        """
+        return (
+            self.vinculos(manager="de_todas_las_clinicas")
+            .filter(fecha_de_cierre__isnull=False)
+            .select_related("tutor")
+            .order_by("-fecha_de_cierre", "-pk")
+        )
 
     @property
     def vinculo_responsable(self):
         """El Vínculo con el Tutor que responde por él, si lo hay.
 
-        Puede no haberlo mientras dure un cambio de Tutor (ticket 10), y por eso
-        la ficha pregunta en vez de dar por hecho.
+        Un Paciente activo siempre tiene uno (`necesita_responsable`); uno
+        inactivo o fallecido puede no tenerlo, y por eso la ficha pregunta en
+        vez de dar por hecho.
         """
         return self.quienes_responden.filter(responsable=True).first()
 
@@ -183,6 +209,31 @@ class Paciente(ModeloDeLaClinica):
         """El Tutor que responde por él ante la clínica y ante la ley."""
         vinculo = self.vinculo_responsable
         return vinculo.tutor if vinculo else None
+
+    @property
+    def necesita_responsable(self):
+        """Si tiene que haber alguien que responda por él ahora mismo.
+
+        Un Paciente activo, sí: es a quien se llama, a quien se cobra y quien
+        firma un consentimiento, y una ficha activa que no dice a quién llamar no
+        sirve para atender. Uno inactivo o fallecido, no: el animal cambió de
+        manos o ya no está, nadie va a llamar a nadie, y exigir un responsable
+        obligaría a dejar puesto a un Tutor que no tiene nada que ver — que es
+        justo el dato falso que no se distingue de uno bueno.
+
+        Lo pregunta el Vínculo antes de cerrarse (`Vinculo.cerrar`).
+        """
+        return self.esta_activo
+
+    @property
+    def le_falta_responsable(self):
+        """Si está activo y no hay quien responda por él.
+
+        No debería pasar y la ficha lo dice cuando pasa: se llega por un camino
+        largo —el animal se traspasó estando inactivo y después volvió— y en
+        silencio dejaría una ficha de trabajo sin teléfono al que llamar.
+        """
+        return self.necesita_responsable and self.vinculo_responsable is None
 
     @property
     def microchip_como_se_dicta(self):

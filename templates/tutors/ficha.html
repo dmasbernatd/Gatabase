@@ -69,5 +69,25 @@
 
   <p><a href="{% url 'patients:crear' tutor.pk %}">{% translate "Registrar Paciente" %}</a></p>
 
+  {% comment %}
+    Los que fueron suyos, y hasta cuándo. No se esconden ni se mezclan con los de
+    ahora: quien llama preguntando por lo que se le hizo a un animal que ya
+    entregó tiene derecho a que conste que fue suyo, y quien atiende necesita ver
+    de un vistazo que ya no lo es. Van sin filtro de estado: es historia, y el
+    que además murió lo dice él mismo al lado.
+  {% endcomment %}
+  {% if cerrados %}
+    <h3>{% translate "Fueron suyos" %}</h3>
+    <ul>
+      {% for vinculo in cerrados %}
+        <li>
+          <a href="{% url 'patients:ficha' vinculo.paciente.pk %}">{{ vinculo.paciente }}</a>
+          <span>{{ vinculo.paciente.get_especie_display }}</span>
+          <span>{% blocktranslate with fecha=vinculo.fecha_de_cierre %}hasta el {{ fecha }}{% endblocktranslate %}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
   <p><a href="{% url 'tutors:lista' %}">{% translate "Volver a Tutores" %}</a></p>
 {% endblock %}

@@ -1,0 +1,25 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Cerrar el Vínculo" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Cerrar el Vínculo" %}</h1>
+
+  {% comment %}
+    Cerrar no es borrar, y la página lo dice: el Tutor y el Paciente siguen
+    enteros, y lo que se guarda es hasta cuándo respondió por él. Sin esta frase
+    la pantalla se lee como una de borrado, y quien la lea así no la usará.
+  {% endcomment %}
+  <p>
+    {% blocktranslate with tutor=vinculo.tutor paciente=paciente %}{{ tutor }} deja de responder por {{ paciente }}. Consta que fue suyo hasta la fecha que se indique, y no se borra nada.{% endblocktranslate %}
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ formulario.as_p }}
+    <button type="submit">{% translate "Guardar" %}</button>
+  </form>
+
+  <p><a href="{% url 'patients:ficha' paciente.pk %}">{% translate "Volver a la ficha" %}</a></p>
+{% endblock %}

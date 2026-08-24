@@ -26,6 +26,12 @@ alguien— y ahorra el estado intermedio de un Paciente del que nadie responde.
 Que el animal muriera o dejara de venir tiene vista propia (`estado`), y la de
 corregir la ficha se aparta cuando consta fallecido: entonces la ficha se
 conserva entera y en solo lectura, que es lo contrario de borrarla.
+
+Que cambiara de manos tiene otras dos (`traspasar` y `cerrar_vinculo`), y las dos
+escriben en Vínculos y no en la ficha del animal: el Paciente sigue siendo el
+mismo, con la misma Historia clínica (ADR-0001). Las dos tocan además datos de
+dos personas —quien lo tenía y quien lo tiene—, así que las dos dejan constancia
+sobre cada una de ellas.
 """
 
 from django.contrib import messages
@@ -37,7 +43,13 @@ from django.views.decorators.http import require_POST
 from apps.audit.models import Accion
 from apps.audit.registro import anotando, anotar, deja_constancia
 from apps.patients.catalogo import razas_de
-from apps.patients.forms import EstadoDelPacienteForm, PacienteForm, VinculoForm
+from apps.patients.forms import (
+    CierreDeVinculoForm,
+    EstadoDelPacienteForm,
+    PacienteForm,
+    TraspasoForm,
+    VinculoForm,
+)
 from apps.patients.models import Paciente
 from apps.tutors.models import Tutor, Vinculo
 
@@ -59,13 +71,23 @@ def constancia_del_microchip_repetido(request, formulario):
 def ficha(request, pk):
     paciente = get_object_or_404(Paciente, pk=pk)
     vinculos = list(paciente.quienes_responden)
+    # Los de antes se enseñan también, con la fecha hasta la que respondieron:
+    # es lo que hace del cierre algo distinto de un borrado.
+    cerrados = list(paciente.quienes_respondieron)
     respuesta = render(
-        request, "patients/ficha.html", {"paciente": paciente, "vinculos": vinculos}
+        request,
+        "patients/ficha.html",
+        {"paciente": paciente, "vinculos": vinculos, "cerrados": cerrados},
     )
     # El Paciente lo anota el decorador; sus Tutores, no: la página los nombra
-    # uno a uno, y nombrar a alguien es enseñar un dato personal suyo.
+    # uno a uno, y nombrar a alguien es enseñar un dato personal suyo. Los de
+    # antes también salen nombrados, y un nombre servido es una lectura aunque
+    # el Vínculo esté cerrado.
     return anotando(
-        respuesta, request.user, Accion.LECTURA, *(vinculo.tutor for vinculo in vinculos)
+        respuesta,
+        request.user,
+        Accion.LECTURA,
+        *(vinculo.tutor for vinculo in vinculos + cerrados),
     )
 
 
@@ -163,6 +185,69 @@ def responsable(request, pk, vinculo):
     anotar(request.user, Accion.MODIFICACION, paciente)
     anotar(request.user, Accion.MODIFICACION, vinculo.tutor)
     return redirect("patients:ficha", pk=paciente.pk)
+
+
+@login_required
+def traspasar(request, pk):
+    """El Paciente cambia de manos: otro Tutor responde por él a partir de hoy.
+
+    En página aparte de «Sumar un Tutor» porque no es sumar: alguien deja de
+    responder por el animal el mismo día en que otro empieza, y las dos mitades
+    van juntas. Y aparte de corregir la ficha porque la ficha no cambia — el
+    animal es el mismo, con su Historia clínica entera.
+
+    Consta como modificación de los dos Tutores y del Paciente: a quién se le
+    dejó de cobrar y a quién se le empezó a cobrar es justo lo que habrá que
+    poder demostrar si alguien reclama (ADR-0004).
+    """
+    paciente = get_object_or_404(Paciente, pk=pk)
+    anterior = paciente.responsable
+    formulario = TraspasoForm(request.POST or None, clinica=request.user.clinic, paciente=paciente)
+    if request.method == "POST" and formulario.is_valid():
+        vinculo = formulario.guardar()
+        anotar(request.user, Accion.MODIFICACION, paciente)
+        anotar(request.user, Accion.MODIFICACION, vinculo.tutor)
+        if anterior:
+            anotar(request.user, Accion.MODIFICACION, anterior)
+        return redirect("patients:ficha", pk=paciente.pk)
+    respuesta = render(
+        request,
+        "patients/traspaso.html",
+        {"formulario": formulario, "paciente": paciente, "anterior": anterior},
+    )
+    # La página enseña la ficha del Paciente, el nombre de quien responde ahora
+    # por él y, en el desplegable, el de todos los Tutores de la Clínica.
+    objetos = [paciente, *([anterior] if anterior else []), Tutor]
+    return anotando(respuesta, request.user, Accion.LECTURA, *objetos)
+
+
+@login_required
+def cerrar_vinculo(request, pk, vinculo):
+    """Que un Tutor dejó de responder por el Paciente, con la fecha.
+
+    Cerrar y no borrar: quién lo trajo antes y hasta cuándo se conserva entero,
+    porque la Historia clínica es del animal pero quién lo traía cada vez es
+    parte de ella (ADR-0001).
+
+    El del responsable de un Paciente activo no se cierra aquí —dejaría una ficha
+    que no dice a quién llamar—, y el formulario lo dice en la cara: esconder el
+    enlace no basta para quien llega con la URL en la mano.
+    """
+    paciente = get_object_or_404(Paciente, pk=pk)
+    vinculo = get_object_or_404(Vinculo, pk=vinculo, paciente=paciente, fecha_de_cierre=None)
+    formulario = CierreDeVinculoForm(request.POST or None, vinculo=vinculo)
+    if request.method == "POST" and formulario.is_valid():
+        formulario.guardar()
+        anotar(request.user, Accion.MODIFICACION, paciente)
+        anotar(request.user, Accion.MODIFICACION, vinculo.tutor)
+        return redirect("patients:ficha", pk=paciente.pk)
+    respuesta = render(
+        request,
+        "patients/cerrar_vinculo.html",
+        {"formulario": formulario, "paciente": paciente, "vinculo": vinculo},
+    )
+    # La página dice de qué animal y de qué persona se habla, con sus nombres.
+    return anotando(respuesta, request.user, Accion.LECTURA, paciente, vinculo.tutor)
 
 
 @login_required
