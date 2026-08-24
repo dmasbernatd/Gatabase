@@ -12,14 +12,17 @@ Quién responde por el Paciente es un hecho aparte, con tabla propia y vida
 propia: el Vínculo (`apps.tutors.models`). Un animal cambia de Tutor y sigue
 siendo el mismo Paciente con la misma Historia.
 
-El microchip y el estado de identificación llegan en el ticket 08, y los estados
-`activo` / `inactivo` / `fallecido` en el 09.
+Cómo se identifica al animal —el microchip y el estado de identificación— vive
+también aquí, y son dos campos y no uno a propósito: ver más abajo. Los estados
+`activo` / `inactivo` / `fallecido` llegan en el ticket 09.
 """
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.patients.catalogo import Especie, es_del_catalogo
+from apps.patients.campos import CampoDeMicrochip
+from apps.patients.catalogo import Especie, es_del_catalogo, la_ley_exige_identificar
+from apps.patients.microchip import formateado
 from apps.tenancy.aislamiento import ModeloDeLaClinica
 
 
@@ -30,6 +33,35 @@ class Sexo(models.TextChoices):
 
     MACHO = "macho", _("macho")
     HEMBRA = "hembra", _("hembra")
+
+
+class EstadoDeIdentificacion(models.TextChoices):
+    """En qué punto de la Ley 21.020 está el Paciente.
+
+    Es un campo propio y **no** se deduce del microchip, que es lo que este
+    catálogo viene a decir: tener el número apuntado no es estar inscrito. La ley
+    se cumple con las dos cosas —el chip puesto y el animal en el Registro
+    Nacional—, y el hueco entre una y otra es justamente lo que recepción tiene
+    que poder decirle al Tutor. Un animal puede además llevar el chip de otra
+    clínica sin que su Tutor traiga el número, y ahí el estado es lo único que
+    se sabe.
+
+    Falta a propósito un cuarto valor: que la casilla esté en blanco significa
+    que nadie lo ha preguntado todavía, y eso **no** es `sin chip`. Es el mismo
+    reparto que el Estado sanitario de `CONTEXT.md` —`desconocido` no es
+    `vencido`—, y por el mismo motivo: lo que nadie ha mirado no puede
+    decírsele a un Tutor como si se hubiera comprobado.
+    """
+
+    SIN_CHIP = "sin_chip", _("sin chip")
+    IMPLANTADO = "implantado", _("chip implantado")
+    INSCRITO = "inscrito", _("inscrito en el Registro Nacional")
+
+
+# Lo que la ficha enseña cuando nadie ha preguntado todavía. Se dice con todas
+# sus letras y no con un guion, porque un hueco en esta casilla se lee como un
+# «no tiene» y aquí eso sería afirmar algo que nadie comprobó.
+SIN_PREGUNTAR = _("todavía no se ha preguntado")
 
 
 class Paciente(ModeloDeLaClinica):
@@ -50,11 +82,36 @@ class Paciente(ModeloDeLaClinica):
     color = models.CharField(_("color"), max_length=80, blank=True)
     observaciones = models.TextField(_("observaciones"), blank=True)
 
+    # El chip es opcional: llega a la consulta un animal sin chip, y exigirlo en
+    # el mostrador sería negarle la atención. Cuando está, es único dentro de la
+    # Clínica —nunca a nivel global, aunque el número identifique al animal en
+    # todo Chile (ADR-0001)—, y por eso el hueco se guarda como cadena vacía y la
+    # restricción lo deja fuera: dos Pacientes sin chip no son el mismo animal.
+    microchip = CampoDeMicrochip(_("microchip"), max_length=15, blank=True)
+    estado_de_identificacion = models.CharField(
+        _("estado de identificación"),
+        max_length=20,
+        choices=EstadoDeIdentificacion,
+        blank=True,
+    )
+
     class Meta:
         verbose_name = _("Paciente")
         verbose_name_plural = _("Pacientes")
         ordering = ["nombre", "pk"]
-        indexes = [models.Index(fields=["clinic", "nombre"], name="paciente_por_nombre")]
+        indexes = [
+            models.Index(fields=["clinic", "nombre"], name="paciente_por_nombre"),
+            # El chip es una forma de encontrar al animal, y por él se busca
+            # entero: es lo que trae el lector de un tirón (ticket 11).
+            models.Index(fields=["clinic", "microchip"], name="paciente_por_microchip"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["clinic", "microchip"],
+                condition=~models.Q(microchip=""),
+                name="microchip_unico_dentro_de_la_clinica",
+            )
+        ]
 
     def __str__(self):
         return self.nombre
@@ -97,3 +154,40 @@ class Paciente(ModeloDeLaClinica):
         """El Tutor que responde por él ante la clínica y ante la ley."""
         vinculo = self.vinculo_responsable
         return vinculo.tutor if vinculo else None
+
+    @property
+    def microchip_como_se_dicta(self):
+        """El chip en grupos de tres: «900 123 456 789 012». Vacío si no tiene."""
+        return formateado(self.microchip)
+
+    @property
+    def identificacion_a_la_vista(self):
+        """El estado de identificación tal como se le dice al Tutor.
+
+        Existe porque el hueco tiene que decir algo: `get_..._display` devuelve
+        la cadena vacía cuando nadie ha preguntado todavía, y una casilla en
+        blanco en la ficha se lee como un «no tiene chip» que nadie comprobó.
+        """
+        return self.get_estado_de_identificacion_display() or SIN_PREGUNTAR
+
+    @property
+    def lo_que_le_falta_a_la_ley(self):
+        """Qué le falta al Tutor para cumplir la Ley 21.020, o `None` si nada.
+
+        Se pregunta y no se guarda, como `raza_del_catalogo`: es una lectura del
+        estado de ahora mismo, y guardarla sería un segundo sitio donde vive la
+        misma verdad.
+
+        Depende de la especie porque la ley depende de la especie: obliga con
+        perros y gatos, y reclamarle a quien trae una iguana que la inscriba
+        sería dar un consejo falso desde el mostrador.
+        """
+        if not la_ley_exige_identificar(self.especie):
+            return None
+        if self.estado_de_identificacion == EstadoDeIdentificacion.INSCRITO:
+            return None
+        if self.estado_de_identificacion == EstadoDeIdentificacion.IMPLANTADO:
+            return _("Falta inscribirlo en el Registro Nacional de Mascotas.")
+        if self.estado_de_identificacion == EstadoDeIdentificacion.SIN_CHIP:
+            return _("Falta implantarle el chip e inscribirlo en el Registro Nacional.")
+        return _("Falta preguntar si está identificado e inscrito.")

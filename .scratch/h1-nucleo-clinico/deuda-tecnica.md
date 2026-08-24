@@ -156,6 +156,16 @@ si es superusuario, `audit.E002` si conserva los permisos, `audit.W001` si la
 base no responde. Verificado a mano contra un rol no superusuario, con y sin los
 permisos retirados. Tests en `tests/test_condicion_de_despliegue.py`.
 
+**Los campos que normalizan lo escrito ya no son de `tutors`.**
+`CampoQueNormaliza` —el `CharField` que pasa el valor por su normalizador en
+`to_python` y en `get_prep_value`, para que un `save()` sin `full_clean()`
+guarde igual que un formulario— era privado de `apps/tutors/campos.py`, y el
+microchip del **08** necesitaba exactamente lo mismo por el mismo motivo: sin
+normalizar al guardar, «único por Clínica» no significa nada. Vive ahora en
+`apps/campos.py`, fuera de las dos apps, porque las dos lo necesitan y ninguna
+puede importar de la otra (`CLAUDE.md`); qué es un RUT lo sigue decidiendo
+`rut.py` y qué es un chip, `microchip.py`. _Pagado el 23 de agosto de 2026._
+
 ## Rendimiento del vínculo
 
 **La lista de Tutores para vincular es un `<select>` con la Clínica entera.**
@@ -186,10 +196,19 @@ _Por qué importa ahora_: los dos avisos viven repartidos entre `TutorForm`
 en su sitio, pero el 12 traerá la tercera y la cuarta comparación, y ese es el
 momento de decidir si «a quién se parece esta ficha» merece un módulo propio en
 vez de un método por campo.
-_Cuándo se paga_: en el **12**. El **08** traerá antes el microchip, que es el
-mismo patrón exacto que el RUT y que ya puede apoyarse en
-`FormularioDeLaClinica.los_demas()`; si al escribirlo hay que copiar `clean_rut`
-casi entero, eso ya es el segundo ejemplo y conviene extraer entonces.
+_Cuándo se paga_: en el **12**.
 _El 07 no lo movió_: `PacienteForm` no compara con nada — el Paciente todavía no
 tiene ningún dato que identifique a otro. El primero será el microchip, en el
 **08**.
+_El 08 lo miró y decidió no extraerlo todavía_ (23 de agosto de 2026). Ya hay
+tres comparaciones —RUT, teléfono y microchip— y `clean_microchip` se parece a
+`clean_rut` como se esperaba: los dos preguntan a `los_demas()` por un campo
+exacto y los dos acaban en un enlace a la ficha que ya existe. Pero el parecido
+es de forma, no de decisión: lo que cambia entre ellos —si el duplicado impide
+guardar o solo avisa, y qué se le enseña a quien está delante— es justo lo que
+un módulo común tendría que recibir por parámetro, y un módulo cuya única razón
+de ser es un parámetro no es un módulo. Lo que sí se extrajo fue la mitad que
+**no** decide nada, y por eso salió limpia: `CampoQueNormaliza`, en
+`apps/campos.py` (ver abajo). La pregunta sigue siendo la del **12**, cuando
+haya comparaciones que no sean de campo exacto y el «a quién se parece esta
+ficha» tenga por fin algo que decidir de verdad.

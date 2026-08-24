@@ -92,6 +92,10 @@ _Avoid_: Clínica de urgencias, partner, referencia
 Anotación inalterable de qué Usuario vio o modificó qué dato, y cuándo. Es la evidencia exigible ante la Ley 21.719.
 _Avoid_: Log, auditoría, historial de cambios
 
+**Estado de identificación**:
+Situación del Paciente ante la Ley 21.020: `sin chip`, `chip implantado` o `inscrito en el Registro Nacional`. No se deduce de tener el número de microchip apuntado — tenerlo no es estar inscrito —, y que esté en blanco significa que nadie lo ha preguntado todavía, que no es `sin chip`. Solo obliga a perros y gatos.
+_Avoid_: Tiene chip, chipeado, estado del microchip
+
 **Consentimiento de contacto**:
 Autorización del Tutor para recibir Recordatorios por un canal concreto.
 _Avoid_: Opt-in, suscripción, permiso

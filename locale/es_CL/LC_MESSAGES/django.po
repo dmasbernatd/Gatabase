@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 20:04-0400\n"
+"POT-Creation-Date: 2026-08-23 20:32-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -111,83 +111,142 @@ msgstr ""
 msgid "hurón"
 msgstr ""
 
-#: apps/patients/forms.py:76
+#: apps/patients/forms.py:100
 msgid "Elija una especie"
 msgstr ""
 
-#: apps/patients/forms.py:77
+#: apps/patients/forms.py:101
 msgid "Todavía no se sabe"
 msgstr ""
 
-#: apps/patients/forms.py:88
+#: apps/patients/forms.py:106
+msgid "Todavía no se ha preguntado"
+msgstr ""
+
+#: apps/patients/forms.py:119
 msgid "Esa fecha todavía no ha llegado."
 msgstr ""
 
-#: apps/patients/forms.py:130 apps/tutors/models.py:71
+#: apps/patients/forms.py:140
+#, python-brace-format
+msgid "Este microchip ya es el de {ficha}, en esta misma Clínica."
+msgstr ""
+
+#: apps/patients/forms.py:170
+msgid "Tiene un microchip apuntado: no puede estar «sin chip»."
+msgstr ""
+
+#: apps/patients/forms.py:211 apps/tutors/models.py:71
 #: apps/tutors/models.py:141
 msgid "Tutor"
 msgstr ""
 
-#: apps/patients/forms.py:131
+#: apps/patients/forms.py:212
 msgid "Elija un Tutor"
 msgstr ""
 
-#: apps/patients/forms.py:133
+#: apps/patients/forms.py:214
 msgid "Es el responsable"
 msgstr ""
 
-#: apps/patients/models.py:31
+#: apps/patients/microchip.py:73
+#, python-format
+msgid "El microchip son %(cuantos)s dígitos, sin letras."
+msgstr ""
+
+#: apps/patients/microchip.py:81
+#, python-format
+msgid "Un microchip lleva %(cuantos)s dígitos, y ese lleva %(cuantos_hay)s."
+msgstr ""
+
+#: apps/patients/models.py:34
 msgid "macho"
 msgstr ""
 
-#: apps/patients/models.py:32
+#: apps/patients/models.py:35
 msgid "hembra"
 msgstr ""
 
-#: apps/patients/models.py:41 apps/tenancy/models.py:17
+#: apps/patients/models.py:56
+msgid "sin chip"
+msgstr ""
+
+#: apps/patients/models.py:57
+msgid "chip implantado"
+msgstr ""
+
+#: apps/patients/models.py:58
+msgid "inscrito en el Registro Nacional"
+msgstr ""
+
+#: apps/patients/models.py:64
+msgid "todavía no se ha preguntado"
+msgstr ""
+
+#: apps/patients/models.py:73 apps/tenancy/models.py:17
 #: apps/tenancy/models.py:38 apps/tenancy/models.py:90 apps/tutors/models.py:34
 msgid "nombre"
 msgstr ""
 
-#: apps/patients/models.py:42
+#: apps/patients/models.py:74
 msgid "especie"
 msgstr ""
 
-#: apps/patients/models.py:47
+#: apps/patients/models.py:79
 msgid "raza"
 msgstr ""
 
-#: apps/patients/models.py:48
+#: apps/patients/models.py:80
 msgid "sexo"
 msgstr ""
 
-#: apps/patients/models.py:49
+#: apps/patients/models.py:81
 msgid "fecha de nacimiento"
 msgstr ""
 
-#: apps/patients/models.py:50
+#: apps/patients/models.py:82
 msgid "color"
 msgstr ""
 
-#: apps/patients/models.py:51
+#: apps/patients/models.py:83
 msgid "observaciones"
 msgstr ""
 
-#: apps/patients/models.py:54 apps/tutors/models.py:147
+#: apps/patients/models.py:90
+msgid "microchip"
+msgstr ""
+
+#: apps/patients/models.py:92
+msgid "estado de identificación"
+msgstr ""
+
+#: apps/patients/models.py:99 apps/tutors/models.py:147
 msgid "Paciente"
 msgstr ""
 
-#: apps/patients/models.py:55 apps/tutors/models.py:58
+#: apps/patients/models.py:100 apps/tutors/models.py:58
 #: templates/tutors/ficha.html:30
 msgid "Pacientes"
 msgstr ""
 
-#: apps/patients/views.py:67 templates/tutors/ficha.html:48
+#: apps/patients/models.py:190
+msgid "Falta inscribirlo en el Registro Nacional de Mascotas."
+msgstr ""
+
+#: apps/patients/models.py:192
+msgid "Falta implantarle el chip e inscribirlo en el Registro Nacional."
+msgstr ""
+
+#: apps/patients/models.py:193
+msgid "Falta preguntar si está identificado e inscrito."
+msgstr ""
+
+#: apps/patients/views.py:85 templates/tutors/ficha.html:48
 msgid "Registrar Paciente"
 msgstr ""
 
-#: apps/patients/views.py:85 apps/tutors/views.py:134
-#: templates/patients/ficha.html:29 templates/tutors/ficha.html:28
+#: apps/patients/views.py:104 apps/tutors/views.py:134
+#: templates/patients/ficha.html:53 templates/tutors/ficha.html:28
 msgid "Corregir la ficha"
 msgstr ""
 
@@ -353,7 +412,7 @@ msgstr ""
 msgid "teléfono"
 msgstr ""
 
-#: apps/tutors/models.py:72 templates/patients/ficha.html:31
+#: apps/tutors/models.py:72 templates/patients/ficha.html:55
 #: templates/tenancy/base_panel.html:29 templates/tutors/lista.html:4
 #: templates/tutors/lista.html:7
 msgid "Tutores"
@@ -492,19 +551,31 @@ msgstr ""
 msgid "Observaciones"
 msgstr ""
 
-#: templates/patients/ficha.html:43
+#: templates/patients/ficha.html:29
+msgid "Identificación"
+msgstr ""
+
+#: templates/patients/ficha.html:42 templates/tenancy/usuarios.html:18
+msgid "Estado"
+msgstr ""
+
+#: templates/patients/ficha.html:45
+msgid "Microchip"
+msgstr ""
+
+#: templates/patients/ficha.html:67
 msgid "responsable"
 msgstr ""
 
-#: templates/patients/ficha.html:47
+#: templates/patients/ficha.html:71
 msgid "Hacer responsable"
 msgstr ""
 
-#: templates/patients/ficha.html:52
+#: templates/patients/ficha.html:76
 msgid "Nadie responde por este Paciente todavía."
 msgstr ""
 
-#: templates/patients/ficha.html:56 templates/patients/vincular.html:4
+#: templates/patients/ficha.html:80 templates/patients/vincular.html:4
 #: templates/patients/vincular.html:7
 msgid "Sumar un Tutor"
 msgstr ""
@@ -571,10 +642,6 @@ msgstr ""
 
 #: templates/tenancy/usuarios.html:16
 msgid "Rol"
-msgstr ""
-
-#: templates/tenancy/usuarios.html:18
-msgid "Estado"
 msgstr ""
 
 #: templates/tenancy/usuarios.html:30

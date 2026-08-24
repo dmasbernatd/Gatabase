@@ -168,3 +168,18 @@ def es_del_catalogo(especie, raza):
     seguirían diciendo que no.
     """
     return bool(raza) and raza in razas_de(especie)
+
+
+# A qué especies les exige la Ley 21.020 estar identificadas e inscritas en el
+# Registro Nacional de Mascotas. Son los perros y los gatos, no todo lo que la
+# clínica atiende, y la diferencia importa en el mostrador: decirle a quien trae
+# una iguana que la inscriba es darle un consejo falso desde detrás del
+# mostrador. Está aquí, junto al catálogo cerrado, porque es lo mismo que la
+# especie ya decide —qué protocolo y qué papeleo le toca a cada animal— y porque
+# así una especie nueva obliga a pasar por el sitio donde hay que decidirlo.
+ESPECIES_QUE_LA_LEY_OBLIGA_A_IDENTIFICAR = frozenset({Especie.PERRO, Especie.GATO})
+
+
+def la_ley_exige_identificar(especie):
+    """Si la Ley 21.020 obliga a chipear e inscribir a un animal de esa especie."""
+    return especie in ESPECIES_QUE_LA_LEY_OBLIGA_A_IDENTIFICAR

@@ -14,6 +14,11 @@ después de tenerla compuesta. Y estas páginas enseñan más de una cosa: la fi
 del Paciente dice cómo se llaman sus Tutores, y el alta dice de quién es el
 animal que se está registrando. Cada nombre servido es una lectura.
 
+Al guardar, el formulario puede haber tropezado con otro Paciente: el que ya
+tenía ese microchip. El aviso dice de quién se trata y enlaza a su ficha, y
+decirlo es enseñar esa ficha, así que deja constancia igual que si se hubiera
+abierto (ADR-0004).
+
 Un Paciente nunca nace suelto: se registra desde la ficha del Tutor que lo trae,
 y ese Tutor queda como responsable. Es como llega un animal al mostrador — con
 alguien— y ahorra el estado intermedio de un Paciente del que nadie responde.
@@ -30,6 +35,18 @@ from apps.patients.catalogo import razas_de
 from apps.patients.forms import PacienteForm, VinculoForm
 from apps.patients.models import Paciente
 from apps.tutors.models import Tutor, Vinculo
+
+
+def constancia_del_microchip_repetido(request, formulario):
+    """Anota la lectura del Paciente cuyo nombre trae el aviso de chip repetido.
+
+    El formulario rechazado no guardó nada, pero la página que vuelve dice de
+    qué animal es ya ese chip y enlaza a su ficha: recepción la ha visto sin
+    haber abierto nada.
+    """
+    otro = formulario.paciente_con_el_mismo_microchip
+    if otro:
+        anotar(request.user, Accion.LECTURA, otro)
 
 
 @login_required
@@ -58,6 +75,7 @@ def crear(request, tutor):
         # La ficha del Tutor cambió también: ahora tiene un Paciente más.
         anotar(request.user, Accion.MODIFICACION, tutor)
         return redirect("patients:ficha", pk=paciente.pk)
+    constancia_del_microchip_repetido(request, formulario)
     respuesta = render(
         request,
         "patients/formulario.html",
@@ -79,6 +97,7 @@ def editar(request, pk):
         formulario.save()
         anotar(request.user, Accion.MODIFICACION, paciente)
         return redirect("patients:ficha", pk=paciente.pk)
+    constancia_del_microchip_repetido(request, formulario)
     respuesta = render(
         request,
         "patients/formulario.html",

@@ -9,16 +9,29 @@ De la especie y la raza se encarga `catalogo.py`. Este formulario solo hace lo
 que no puede hacerse sin saber las dos a la vez: la raza se lee contra el
 catálogo **de la especie que se acaba de elegir**, así que se resuelve en el
 `clean` conjunto y no en un `clean_raza`, que correría sin saber de qué animal se
-habla.
+habla. Con el microchip y el estado de identificación pasa lo mismo, y por eso
+comparten `clean`: la única combinación imposible se ve mirando los dos.
+
+El microchip llega ya normalizado de su campo (`campos.py`), así que aquí se
+puede comparar con lo que ya hay en la Clínica sin volver a interpretar nada. Se
+compara como el RUT del Tutor y acaba igual: **repetido no deja guardar**, porque
+dos fichas con el mismo chip son el mismo animal registrado dos veces y un
+duplicado sale caro de deshacer. El aviso lleva a la ficha que ya existe, que es
+a lo que recepción venía casi siempre.
+
+Nombrar al otro Paciente es enseñar su ficha, así que quien lo enseñe —la vista—
+lo anota en el Registro de acceso (ADR-0004): la ley protege la ficha del animal
+igual que la de su Tutor, porque por ella se llega a él.
 """
 
 from django import forms
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from apps.patients.catalogo import Especie, canonica, razas_de
-from apps.patients.models import Paciente, Sexo
+from apps.patients.models import EstadoDeIdentificacion, Paciente, Sexo
 from apps.tenancy.aislamiento import FormularioDeLaClinica
 from apps.tutors.models import Tutor
 
@@ -46,6 +59,8 @@ class PacienteForm(FormularioDeLaClinica):
             "fecha_de_nacimiento",
             "color",
             "observaciones",
+            "microchip",
+            "estado_de_identificacion",
         ]
         widgets = {
             # Cambiar de especie cambia las razas que se sugieren, sin recargar
@@ -64,7 +79,16 @@ class PacienteForm(FormularioDeLaClinica):
             "raza": forms.TextInput(attrs={"list": SUGERENCIAS_DE_RAZA, "autocomplete": "off"}),
             "fecha_de_nacimiento": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "observaciones": forms.Textarea(attrs={"rows": 3}),
+            # Sin autocompletado del navegador: lo que va aquí lo dicta un
+            # certificado o lo escupe un lector, nunca la memoria del navegador,
+            # y un chip sugerido de otra ficha es un animal confundido con otro.
+            "microchip": forms.TextInput(attrs={"autocomplete": "off", "inputmode": "numeric"}),
         }
+
+    # El Paciente que ya tenía el microchip que se acaba de escribir, si lo hay.
+    # La vista lo mira para dejar constancia de que recepción acaba de ver su
+    # ficha sin haberla abierto.
+    paciente_con_el_mismo_microchip = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -75,6 +99,13 @@ class PacienteForm(FormularioDeLaClinica):
         # que es una respuesta legítima en un animal recién recogido.
         self.fields["especie"].choices = [("", _("Elija una especie")), *Especie.choices]
         self.fields["sexo"].choices = [("", _("Todavía no se sabe")), *Sexo.choices]
+        # El hueco del estado de identificación significa algo, y hay que poder
+        # elegirlo: no es «sin chip», es que nadie lo ha preguntado. Ver
+        # `EstadoDeIdentificacion`.
+        self.fields["estado_de_identificacion"].choices = [
+            ("", _("Todavía no se ha preguntado")),
+            *EstadoDeIdentificacion.choices,
+        ]
 
     def clean_fecha_de_nacimiento(self):
         """Un Paciente no puede haber nacido mañana.
@@ -88,16 +119,66 @@ class PacienteForm(FormularioDeLaClinica):
             raise forms.ValidationError(_("Esa fecha todavía no ha llegado."), code="fecha_futura")
         return fecha
 
-    def clean(self):
-        """Deja la raza con la ortografía del catálogo cuando se le parece.
+    def clean_microchip(self):
+        """Rechaza un chip que ya es el de otro Paciente **de esta Clínica**.
 
-        Sin esto, «bulldog frances» y «Bulldog Francés» serían dos razas para
-        cualquier recuento, que es justo lo que el catálogo viene a evitar.
+        Solo de esta: el número identifica al animal en todo Chile, pero cada
+        Clínica tiene su propio Paciente con su propia Historia clínica
+        (ADR-0001). Que el mismo chip exista en otra Clínica es correcto y no se
+        detecta — detectarlo sería cruzar datos entre tenants, que es lo que el
+        ADR prohíbe—, y eso lo garantiza `los_demas()`, que nunca sale de la
+        Clínica del formulario.
+        """
+        microchip = self.cleaned_data["microchip"]
+        if not microchip:
+            return microchip
+
+        self.paciente_con_el_mismo_microchip = self.los_demas().filter(microchip=microchip).first()
+        if self.paciente_con_el_mismo_microchip:
+            raise forms.ValidationError(
+                format_html(
+                    _("Este microchip ya es el de {ficha}, en esta misma Clínica."),
+                    ficha=self.enlace_a(self.paciente_con_el_mismo_microchip),
+                ),
+                code="microchip_repetido",
+            )
+        return microchip
+
+    def clean(self):
+        """Deja la raza con la ortografía del catálogo cuando se le parece, y no
+        deja apuntar un chip en un Paciente que dice no tener ninguno.
+
+        Lo de la raza, porque «bulldog frances» y «Bulldog Francés» serían dos
+        razas para cualquier recuento, que es justo lo que el catálogo viene a
+        evitar.
+
+        Lo del chip, porque es la **única** combinación de las dos casillas que
+        se contradice a sí misma, y sale de corregir una y olvidar la otra. Las
+        demás son estados reales y no se tocan: un chip implantado en otra
+        clínica cuyo número el Tutor no trae es lo más corriente del mostrador, y
+        exigir el número ahí obligaría a inventárselo.
         """
         datos = super().clean()
         if datos.get("raza"):
             datos["raza"] = canonica(datos.get("especie"), datos["raza"])
+        if datos.get("microchip") and datos.get("estado_de_identificacion") == (
+            EstadoDeIdentificacion.SIN_CHIP
+        ):
+            self.add_error(
+                "estado_de_identificacion",
+                forms.ValidationError(
+                    _("Tiene un microchip apuntado: no puede estar «sin chip»."),
+                    code="chip_que_se_contradice",
+                ),
+            )
         return datos
+
+    @staticmethod
+    def enlace_a(paciente):
+        """El nombre del Paciente, enlazado a su ficha."""
+        return format_html(
+            '<a href="{}">{}</a>', reverse("patients:ficha", args=[paciente.pk]), str(paciente)
+        )
 
     @property
     def razas_sugeridas(self):

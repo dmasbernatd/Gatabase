@@ -26,6 +26,29 @@
     <dd>{{ paciente.observaciones|default:"—" }}</dd>
   </dl>
 
+  <h2>{% translate "Identificación" %}</h2>
+
+  {% comment %}
+    El estado va con todas sus letras y nunca en blanco: un hueco en esta
+    casilla se lee como un «no tiene chip», y eso sería decirle al Tutor algo
+    que nadie ha comprobado. De ahí `identificacion_a_la_vista`.
+
+    Es un dato distinto del número, no un resumen suyo: tener el chip apuntado
+    no es estar inscrito en el Registro Nacional, y es justo ese hueco el que
+    hay que poder decirle al Tutor.
+  {% endcomment %}
+  <dl>
+    <dt>{% translate "Estado" %}</dt>
+    <dd>{{ paciente.identificacion_a_la_vista }}</dd>
+
+    <dt>{% translate "Microchip" %}</dt>
+    <dd>{{ paciente.microchip_como_se_dicta|default:"—" }}</dd>
+  </dl>
+
+  {% if paciente.lo_que_le_falta_a_la_ley %}
+    <p><strong>{{ paciente.lo_que_le_falta_a_la_ley }}</strong></p>
+  {% endif %}
+
   <p><a href="{% url 'patients:editar' paciente.pk %}">{% translate "Corregir la ficha" %}</a></p>
 
   <h2>{% translate "Tutores" %}</h2>
