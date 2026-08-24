@@ -10,8 +10,10 @@ import factory
 from django.contrib.auth import get_user_model
 
 from apps.audit.models import Accion, RegistroDeAcceso
+from apps.patients.catalogo import Especie
+from apps.patients.models import Paciente, Sexo
 from apps.tenancy.models import Clinica, Rol, Sede
-from apps.tutors.models import Tutor
+from apps.tutors.models import Tutor, Vinculo
 from apps.tutors.rut import digito_verificador
 
 CONTRASENA_DE_PRUEBA = "gatabase-de-prueba-2026"
@@ -104,6 +106,35 @@ class TutorFactory(FabricaDeLaClinica):
     telefono = "+56912345678"
     email = factory.Sequence(lambda n: f"tutor{n}@correo.example")
     direccion = "Av. Providencia 1234, Santiago"
+
+
+class PacienteFactory(FabricaDeLaClinica):
+    """El animal atendido por la clínica."""
+
+    class Meta:
+        model = Paciente
+
+    nombre = factory.Sequence(lambda n: f"Paciente de prueba {n}")
+    especie = Especie.PERRO
+    raza = "Mestizo"
+    sexo = Sexo.MACHO
+    color = "Negro"
+
+
+class VinculoFactory(FabricaDeLaClinica):
+    """Que un Tutor responde por un Paciente.
+
+    La Clínica sale del Tutor: un Vínculo entre Clínicas no significaría nada, y
+    dejar que la fábrica invente una tercera escondería justo los escenarios de
+    aislamiento que los tests vienen a armar.
+    """
+
+    class Meta:
+        model = Vinculo
+
+    tutor = factory.SubFactory(TutorFactory)
+    paciente = factory.SubFactory(PacienteFactory, clinic=factory.SelfAttribute("..tutor.clinic"))
+    clinic = factory.SelfAttribute("tutor.clinic")
 
 
 class RegistroDeAccesoFactory(FabricaDeLaClinica):

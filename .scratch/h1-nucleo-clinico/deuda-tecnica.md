@@ -125,13 +125,26 @@ mano.
 el formulario, validar, guardar, anotar y redirigir; difieren en la `Accion` y en
 que la corrección anota además la lectura. A dos casos es tolerable y sacarlo
 ahora sería inventar una abstracción con un solo ejemplo.
-_Cuándo se paga_: en el **07**, cuando el Paciente traiga el tercer y el cuarto
-caso. Si entonces se sigue pareciendo, ahí ya hay algo que extraer.
-_Sigue pendiente a propósito_: no se tocó al pagar el resto de esta sección.
 _Creció en el 06_: las dos vistas llaman ahora además a
 `avisar_del_telefono_compartido` y a `constancia_del_rut_repetido`, en el mismo
-sitio y por el mismo motivo. Son dos líneas más de lo mismo en cada una: no
-cambia la decisión, pero sube el precio de seguir esperando al 07.
+sitio y por el mismo motivo.
+_Mirado con cuatro ejemplos delante el 23 de agosto de 2026_, al escribir
+`crear` y `editar` de Paciente, y **no se extrajo la vista genérica**. Con los
+cuatro casos escritos, lo único que comparten es `si POST y válido: guardar y
+redirigir; si no, componer la página y anotar` — cuatro líneas. Todo lo demás
+difiere: el formulario y sus argumentos, qué hacer después de guardar (nada,
+vincular al Tutor que lo trae, avisar del teléfono compartido), qué `Accion` se
+anota y sobre qué objetos, la plantilla, el contexto y adónde se redirige. Una
+función que recibiera todo eso sería más larga que lo que ahorra, y escondería
+detrás de dos `callbacks` justo la parte que un revisor tiene que ver: qué queda
+anotado en el Registro.
+_Lo que sí se extrajo_ es la regla, que era el verdadero riesgo: `anotando`
+(`apps/audit/registro.py`) devuelve la respuesta ya compuesta y anota lo que
+enseña, así que el orden que sostiene al Registro —lo que no se llegó a servir no
+se anota— dejó de depender de acordarse. Lo usan las cinco vistas que sirven
+fichas.
+_Cuándo se vuelve a mirar_: cuando aparezca un quinto caso que además se parezca
+en lo que hoy difiere. Si no, esta entrada se cierra.
 
 ## Pagado
 
@@ -142,6 +155,25 @@ de la aplicación si su rol podría modificar el Registro de acceso: `audit.E001
 si es superusuario, `audit.E002` si conserva los permisos, `audit.W001` si la
 base no responde. Verificado a mano contra un rol no superusuario, con y sin los
 permisos retirados. Tests en `tests/test_condicion_de_despliegue.py`.
+
+## Rendimiento del vínculo
+
+**La lista de Tutores para vincular es un `<select>` con la Clínica entera.**
+Hoy es correcto y no se nota, pero es el mismo problema que el listado de
+Tutores y con menos excusa: no pagina, no busca y trae todos los nombres a la
+página. A cientos de Tutores es una página de cientos de líneas para elegir uno.
+_Cuándo se paga_: con la búsqueda del **11** delante, que es la que sabrá
+encontrar a un Tutor por nombre, teléfono o RUT sin traerlos a todos; el
+desplegable debería acabar siendo esa búsqueda. El volumen para notarlo lo trae
+el **16**.
+
+**La ficha del Tutor y la del Paciente anotan una lectura por cada nombre que
+enseñan.** Es lo que ADR-0004 pide, y es correcto. Pero un Tutor con seis
+Pacientes son siete anotaciones por visita, y el Registro crece con las
+visitas, no con los datos. No es un problema hoy —la tabla está indexada por
+Clínica y fecha— y no se toca sin medir.
+_Cuándo se paga_: cuando el **16** ponga volumen y se pueda contar de verdad
+cuánto ocupa un día de mostrador.
 
 ## Coincidencias entre fichas
 
@@ -158,3 +190,6 @@ _Cuándo se paga_: en el **12**. El **08** traerá antes el microchip, que es el
 mismo patrón exacto que el RUT y que ya puede apoyarse en
 `FormularioDeLaClinica.los_demas()`; si al escribirlo hay que copiar `clean_rut`
 casi entero, eso ya es el segundo ejemplo y conviene extraer entonces.
+_El 07 no lo movió_: `PacienteForm` no compara con nada — el Paciente todavía no
+tiene ningún dato que identifique a otro. El primero será el microchip, en el
+**08**.

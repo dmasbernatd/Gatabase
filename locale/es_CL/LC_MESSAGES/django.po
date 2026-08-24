@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 01:14-0400\n"
+"POT-Creation-Date: 2026-08-23 20:04-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -83,6 +83,114 @@ msgstr ""
 msgid "Registros de acceso"
 msgstr ""
 
+#: apps/patients/catalogo.py:33
+msgid "perro"
+msgstr ""
+
+#: apps/patients/catalogo.py:34
+msgid "gato"
+msgstr ""
+
+#: apps/patients/catalogo.py:35
+msgid "conejo"
+msgstr ""
+
+#: apps/patients/catalogo.py:36
+msgid "roedor"
+msgstr ""
+
+#: apps/patients/catalogo.py:37
+msgid "ave"
+msgstr ""
+
+#: apps/patients/catalogo.py:38
+msgid "reptil"
+msgstr ""
+
+#: apps/patients/catalogo.py:39
+msgid "hurón"
+msgstr ""
+
+#: apps/patients/forms.py:76
+msgid "Elija una especie"
+msgstr ""
+
+#: apps/patients/forms.py:77
+msgid "Todavía no se sabe"
+msgstr ""
+
+#: apps/patients/forms.py:88
+msgid "Esa fecha todavía no ha llegado."
+msgstr ""
+
+#: apps/patients/forms.py:130 apps/tutors/models.py:71
+#: apps/tutors/models.py:141
+msgid "Tutor"
+msgstr ""
+
+#: apps/patients/forms.py:131
+msgid "Elija un Tutor"
+msgstr ""
+
+#: apps/patients/forms.py:133
+msgid "Es el responsable"
+msgstr ""
+
+#: apps/patients/models.py:31
+msgid "macho"
+msgstr ""
+
+#: apps/patients/models.py:32
+msgid "hembra"
+msgstr ""
+
+#: apps/patients/models.py:41 apps/tenancy/models.py:17
+#: apps/tenancy/models.py:38 apps/tenancy/models.py:90 apps/tutors/models.py:34
+msgid "nombre"
+msgstr ""
+
+#: apps/patients/models.py:42
+msgid "especie"
+msgstr ""
+
+#: apps/patients/models.py:47
+msgid "raza"
+msgstr ""
+
+#: apps/patients/models.py:48
+msgid "sexo"
+msgstr ""
+
+#: apps/patients/models.py:49
+msgid "fecha de nacimiento"
+msgstr ""
+
+#: apps/patients/models.py:50
+msgid "color"
+msgstr ""
+
+#: apps/patients/models.py:51
+msgid "observaciones"
+msgstr ""
+
+#: apps/patients/models.py:54 apps/tutors/models.py:147
+msgid "Paciente"
+msgstr ""
+
+#: apps/patients/models.py:55 apps/tutors/models.py:58
+#: templates/tutors/ficha.html:30
+msgid "Pacientes"
+msgstr ""
+
+#: apps/patients/views.py:67 templates/tutors/ficha.html:48
+msgid "Registrar Paciente"
+msgstr ""
+
+#: apps/patients/views.py:85 apps/tutors/views.py:134
+#: templates/patients/ficha.html:29 templates/tutors/ficha.html:28
+msgid "Corregir la ficha"
+msgstr ""
+
 #: apps/tenancy/aislamiento.py:70 apps/tenancy/models.py:21
 #: apps/tenancy/models.py:36 apps/tenancy/models.py:85
 msgid "Clínica"
@@ -145,11 +253,6 @@ msgid ""
 "%(email)s."
 msgstr ""
 
-#: apps/tenancy/models.py:17 apps/tenancy/models.py:38
-#: apps/tenancy/models.py:90 apps/tutors/models.py:28
-msgid "nombre"
-msgstr ""
-
 #: apps/tenancy/models.py:18
 msgid "creada"
 msgstr ""
@@ -158,7 +261,7 @@ msgstr ""
 msgid "Clínicas"
 msgstr ""
 
-#: apps/tenancy/models.py:39 apps/tutors/models.py:42
+#: apps/tenancy/models.py:39 apps/tutors/models.py:48
 msgid "dirección"
 msgstr ""
 
@@ -187,11 +290,11 @@ msgstr ""
 msgid "Un Usuario necesita un correo para entrar."
 msgstr ""
 
-#: apps/tenancy/models.py:89 apps/tutors/models.py:41
+#: apps/tenancy/models.py:89 apps/tutors/models.py:47
 msgid "correo"
 msgstr ""
 
-#: apps/tenancy/models.py:91 apps/tutors/models.py:29
+#: apps/tenancy/models.py:91 apps/tutors/models.py:35
 msgid "apellidos"
 msgstr ""
 
@@ -232,7 +335,7 @@ msgstr ""
 msgid "Nombre"
 msgstr ""
 
-#: apps/tutors/listado.py:96 apps/tutors/models.py:36
+#: apps/tutors/listado.py:96 apps/tutors/models.py:42
 #: templates/tutors/ficha.html:15
 msgid "RUT"
 msgstr ""
@@ -246,17 +349,26 @@ msgstr ""
 msgid "Correo"
 msgstr ""
 
-#: apps/tutors/models.py:40
+#: apps/tutors/models.py:46
 msgid "teléfono"
 msgstr ""
 
-#: apps/tutors/models.py:51
-msgid "Tutor"
+#: apps/tutors/models.py:72 templates/patients/ficha.html:31
+#: templates/tenancy/base_panel.html:29 templates/tutors/lista.html:4
+#: templates/tutors/lista.html:7
+msgid "Tutores"
 msgstr ""
 
-#: apps/tutors/models.py:52 templates/tenancy/base_panel.html:29
-#: templates/tutors/lista.html:4 templates/tutors/lista.html:7
-msgid "Tutores"
+#: apps/tutors/models.py:149
+msgid "es el responsable"
+msgstr ""
+
+#: apps/tutors/models.py:152
+msgid "Vínculo"
+msgstr ""
+
+#: apps/tutors/models.py:153
+msgid "Vínculos"
 msgstr ""
 
 #: apps/tutors/rut.py:92
@@ -291,12 +403,8 @@ msgstr ""
 msgid "Este teléfono es también el de {ficha}."
 msgstr ""
 
-#: apps/tutors/views.py:108 templates/tutors/lista.html:9
+#: apps/tutors/views.py:114 templates/tutors/lista.html:9
 msgid "Registrar Tutor"
-msgstr ""
-
-#: apps/tutors/views.py:128 templates/tutors/ficha.html:28
-msgid "Corregir la ficha"
 msgstr ""
 
 #: templates/account/login.html:4 templates/account/login.html:7
@@ -360,6 +468,72 @@ msgstr ""
 msgid "Gestión clínica para clínicas veterinarias."
 msgstr ""
 
+#: templates/patients/ficha.html:10
+msgid "Especie"
+msgstr ""
+
+#: templates/patients/ficha.html:13
+msgid "Raza"
+msgstr ""
+
+#: templates/patients/ficha.html:16
+msgid "Sexo"
+msgstr ""
+
+#: templates/patients/ficha.html:19
+msgid "Fecha de nacimiento"
+msgstr ""
+
+#: templates/patients/ficha.html:22
+msgid "Color"
+msgstr ""
+
+#: templates/patients/ficha.html:25
+msgid "Observaciones"
+msgstr ""
+
+#: templates/patients/ficha.html:43
+msgid "responsable"
+msgstr ""
+
+#: templates/patients/ficha.html:47
+msgid "Hacer responsable"
+msgstr ""
+
+#: templates/patients/ficha.html:52
+msgid "Nadie responde por este Paciente todavía."
+msgstr ""
+
+#: templates/patients/ficha.html:56 templates/patients/vincular.html:4
+#: templates/patients/vincular.html:7
+msgid "Sumar un Tutor"
+msgstr ""
+
+#: templates/patients/formulario.html:10
+#, python-format
+msgid "Responderá por él %(responsable)s."
+msgstr ""
+
+#: templates/patients/formulario.html:23 templates/patients/vincular.html:14
+#: templates/tenancy/formulario_de_usuario.html:12
+#: templates/tutors/formulario.html:12
+msgid "Guardar"
+msgstr ""
+
+#: templates/patients/formulario.html:27 templates/patients/vincular.html:17
+#: templates/tutors/formulario.html:16
+msgid "Volver a la ficha"
+msgstr ""
+
+#: templates/patients/formulario.html:29
+msgid "Volver a la ficha del Tutor"
+msgstr ""
+
+#: templates/patients/vincular.html:9
+#, python-format
+msgid "Otra persona responde también por %(paciente)s."
+msgstr ""
+
 #: templates/tenancy/base_panel.html:15
 msgid "Cambiar de Sede"
 msgstr ""
@@ -374,11 +548,6 @@ msgstr ""
 
 #: templates/tenancy/base_panel.html:38
 msgid "Salir"
-msgstr ""
-
-#: templates/tenancy/formulario_de_usuario.html:12
-#: templates/tutors/formulario.html:12
-msgid "Guardar"
 msgstr ""
 
 #: templates/tenancy/formulario_de_usuario.html:15
@@ -424,12 +593,12 @@ msgstr ""
 msgid "Dirección"
 msgstr ""
 
-#: templates/tutors/ficha.html:30 templates/tutors/formulario.html:18
-msgid "Volver a Tutores"
+#: templates/tutors/ficha.html:44
+msgid "No se hace cargo de ningún Paciente todavía."
 msgstr ""
 
-#: templates/tutors/formulario.html:16
-msgid "Volver a la ficha"
+#: templates/tutors/ficha.html:50 templates/tutors/formulario.html:18
+msgid "Volver a Tutores"
 msgstr ""
 
 #: templates/tutors/listado.html:18

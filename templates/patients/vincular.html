@@ -1,0 +1,18 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Sumar un Tutor" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Sumar un Tutor" %}</h1>
+
+  <p>{% blocktranslate with paciente=paciente %}Otra persona responde también por {{ paciente }}.{% endblocktranslate %}</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ formulario.as_p }}
+    <button type="submit">{% translate "Guardar" %}</button>
+  </form>
+
+  <p><a href="{% url 'patients:ficha' paciente.pk %}">{% translate "Volver a la ficha" %}</a></p>
+{% endblock %}

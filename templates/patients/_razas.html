@@ -1,0 +1,17 @@
+{% comment %}
+  Las razas que se le sugieren a la especie elegida.
+
+  Es una `<datalist>` y no un `<select>` a propósito: el catálogo de razas
+  sugiere, no manda. Lo que no está en la lista se escribe igual, y esa es la
+  raza «otra» — un catálogo de razas nunca está completo, y bloquear el mostrador
+  por una que falta sería pedirle a recepción que mienta.
+
+  Se sustituye entera al cambiar de especie (htmx, `patients:razas`), así que
+  lleva el `id` puesto: es su propio destino.
+
+  Recibe `sugerencias` (el `id`, que es el mismo que nombra el campo de la raza
+  en su atributo `list`) y `razas`.
+{% endcomment %}
+<datalist id="{{ sugerencias }}">
+  {% for raza in razas %}<option value="{{ raza }}"></option>{% endfor %}
+</datalist>

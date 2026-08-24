@@ -15,7 +15,9 @@ redirección sí cuenta: es como responde una vista que acaba de guardar, y ahí
 dato se tocó de verdad.
 
 Cuando lo accedido no sale de la URL — un formulario que acaba de guardar, una
-exportación —, la vista llama a `anotar` con el objeto en la mano.
+exportación —, la vista llama a `anotar` con el objeto en la mano, o a
+`anotando` si además lo que se sirvió enseña datos de varios: la ficha de un
+Paciente dice cómo se llaman sus Tutores, y cada nombre es una lectura.
 """
 
 from functools import wraps
@@ -71,3 +73,20 @@ def deja_constancia(accion, sobre, identificado_por=IDENTIFICADOR_EN_LA_URL):
         return anotar_lo_servido
 
     return decorador
+
+
+def anotando(respuesta, usuario, accion, *objetos):
+    """Devuelve la respuesta, dejando constancia de lo que enseña.
+
+    Existe para que el orden no dependa de acordarse. La regla del Registro es
+    anotar **con la respuesta ya compuesta** — lo que no se llegó a servir no lo
+    vio nadie —, y escribirla a mano es escribir `anotar` debajo de un `render`
+    que ya está tres líneas más arriba, con una variable intermedia por medio.
+    Aquí el orden lo impone Python: la respuesta se compone antes de entrar.
+
+    Los objetos son todo lo que la página enseña de personas o de Pacientes: la
+    ficha misma y, con ella, los Tutores que nombra o los Pacientes que lista.
+    """
+    for objeto in objetos:
+        anotar(usuario, accion, objeto)
+    return respuesta

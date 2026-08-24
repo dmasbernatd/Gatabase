@@ -16,6 +16,7 @@ En desarrollo activo, con el hito **H1 — Núcleo clínico** en curso.
 - **Autenticación y roles.** Login por correo, roles `veterinario` / `recepcion` / `admin`, cambio de Sede en sesión, y administración de Usuarios desde el panel. Sin registro abierto: la primera Clínica se crea por comando.
 - **Registro de acceso** a datos personales, inalterable y escrito desde las vistas, con consulta filtrable para el admin ([ADR-0004](docs/adr/0004-registro-de-acceso-propio-para-registrar-lecturas.md)).
 - **Fichero de Tutores.** Alta, ficha y corrección, con listado buscable, ordenable y paginado, y cada acceso anotado.
+- **Fichas de Paciente**, con catálogo cerrado de especies y catálogo de razas por especie que sugiere sin cerrar el paso al texto libre. Un Paciente se registra desde la ficha del Tutor que lo trae, un Paciente puede tener varios Tutores y uno solo de ellos es el responsable.
 - **i18n es-CL** con un test que falla si aparece texto visible fuera de `gettext`.
 - **Fechas en UTC** con presentación en `America/Santiago`, verificado en verano e invierno austral.
 

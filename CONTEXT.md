@@ -10,6 +10,10 @@ Gestión clínica y de negocio para clínicas veterinarias en Chile: agenda, his
 Persona responsable de un Paciente ante la clínica y ante la ley; es quien paga y quien figura en el Registro Nacional de Mascotas. Un Paciente puede tener varios Tutores, uno de ellos marcado como responsable.
 _Avoid_: Dueño, propietario, cliente, usuario
 
+**Vínculo**:
+Que un Tutor responde por un Paciente. Uno de los Vínculos de un Paciente lo marca como responsable: a quien se llama y a quien se cobra. Se cierra con fecha cuando el animal cambia de manos, sin borrar quién lo trajo antes.
+_Avoid_: Relación, asociación, propiedad, dueño de
+
 **Usuario**:
 Persona que accede a la aplicación en el contexto de una Clínica — veterinario, recepción o administración. Un Tutor puede tener una cuenta de Usuario asociada, pero son entidades distintas.
 _Avoid_: Cuenta, perfil, cliente

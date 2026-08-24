@@ -36,7 +36,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from apps.audit.models import Accion
-from apps.audit.registro import anotar, deja_constancia
+from apps.audit.registro import anotando, anotar, deja_constancia
 from apps.tutors.forms import TutorForm
 from apps.tutors.listado import ListadoDeTutores
 from apps.tutors.models import Tutor
@@ -91,7 +91,13 @@ def lista(request):
 @login_required
 @deja_constancia(Accion.LECTURA, sobre=Tutor)
 def ficha(request, pk):
-    return render(request, "tutors/ficha.html", {"tutor": get_object_or_404(Tutor, pk=pk)})
+    tutor = get_object_or_404(Tutor, pk=pk)
+    pacientes = list(tutor.de_quienes_se_hace_cargo)
+    respuesta = render(request, "tutors/ficha.html", {"tutor": tutor, "pacientes": pacientes})
+    # El Tutor lo anota el decorador; sus Pacientes, no: la ficha los nombra uno
+    # a uno, y la ley protege la ficha del animal igual que la de su Tutor,
+    # porque por ella se llega a él (ADR-0004).
+    return anotando(respuesta, request.user, Accion.LECTURA, *pacientes)
 
 
 @login_required

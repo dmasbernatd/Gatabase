@@ -1,0 +1,56 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{{ paciente }}{% endblock %}
+
+{% block panel %}
+  <h1>{{ paciente }}</h1>
+
+  <dl>
+    <dt>{% translate "Especie" %}</dt>
+    <dd>{{ paciente.get_especie_display }}</dd>
+
+    <dt>{% translate "Raza" %}</dt>
+    <dd>{{ paciente.raza|default:"—" }}</dd>
+
+    <dt>{% translate "Sexo" %}</dt>
+    <dd>{{ paciente.get_sexo_display|default:"—" }}</dd>
+
+    <dt>{% translate "Fecha de nacimiento" %}</dt>
+    <dd>{{ paciente.fecha_de_nacimiento|default:"—" }}</dd>
+
+    <dt>{% translate "Color" %}</dt>
+    <dd>{{ paciente.color|default:"—" }}</dd>
+
+    <dt>{% translate "Observaciones" %}</dt>
+    <dd>{{ paciente.observaciones|default:"—" }}</dd>
+  </dl>
+
+  <p><a href="{% url 'patients:editar' paciente.pk %}">{% translate "Corregir la ficha" %}</a></p>
+
+  <h2>{% translate "Tutores" %}</h2>
+
+  {% comment %}
+    Quién responde por el Paciente, el responsable primero. El cargo se pasa por
+    POST y no por un enlace: cambia a quién se llama y a quién se cobra.
+  {% endcomment %}
+  <ul>
+    {% for vinculo in vinculos %}
+      <li>
+        <a href="{% url 'tutors:ficha' vinculo.tutor.pk %}">{{ vinculo.tutor }}</a>
+        {% if vinculo.responsable %}
+          <strong>{% translate "responsable" %}</strong>
+        {% else %}
+          <form method="post" action="{% url 'patients:responsable' paciente.pk vinculo.pk %}">
+            {% csrf_token %}
+            <button type="submit">{% translate "Hacer responsable" %}</button>
+          </form>
+        {% endif %}
+      </li>
+    {% empty %}
+      <li>{% translate "Nadie responde por este Paciente todavía." %}</li>
+    {% endfor %}
+  </ul>
+
+  <p><a href="{% url 'patients:vincular' paciente.pk %}">{% translate "Sumar un Tutor" %}</a></p>
+{% endblock %}

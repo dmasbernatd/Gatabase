@@ -26,5 +26,24 @@
 
   <p><a href="{% url 'tutors:editar' tutor.pk %}">{% translate "Corregir la ficha" %}</a></p>
 
+  <h2>{% translate "Pacientes" %}</h2>
+
+  {% comment %}
+    De qué animales se hace cargo. Es lo que recepción necesita saber cuando este
+    Tutor llama por teléfono, y por eso está en su ficha y no a un clic.
+  {% endcomment %}
+  <ul>
+    {% for paciente in pacientes %}
+      <li>
+        <a href="{% url 'patients:ficha' paciente.pk %}">{{ paciente }}</a>
+        <span>{{ paciente.get_especie_display }}</span>
+      </li>
+    {% empty %}
+      <li>{% translate "No se hace cargo de ningún Paciente todavía." %}</li>
+    {% endfor %}
+  </ul>
+
+  <p><a href="{% url 'patients:crear' tutor.pk %}">{% translate "Registrar Paciente" %}</a></p>
+
   <p><a href="{% url 'tutors:lista' %}">{% translate "Volver a Tutores" %}</a></p>
 {% endblock %}

@@ -7,9 +7,11 @@ es donde se rompería si la garantía fallase.
 import pytest
 from django.urls import reverse
 
+from apps.patients.catalogo import Especie
+from apps.patients.models import Paciente
 from apps.tenancy.aislamiento import activar_clinica, clinica_activa
 from apps.tutors.models import Tutor
-from tests.factories import ClinicaFactory, TutorFactory, UsuarioFactory
+from tests.factories import ClinicaFactory, PacienteFactory, TutorFactory, UsuarioFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -144,3 +146,116 @@ def test_la_clinica_activa_no_sobrevive_a_la_peticion(client):
     client.get(reverse("tenancy:inicio"))
 
     assert clinica_activa() is None
+
+
+# --- Pacientes y Vínculos -------------------------------------------------
+#
+# El Paciente entra por HTTP igual que el Tutor, y el Vínculo además por los dos
+# extremos: no basta con no ver al Paciente de otra Clínica si se le puede colgar
+# un Tutor propio, ni con no ver a su Tutor si se le puede pasar el cargo.
+
+
+def test_pedir_por_identificador_un_paciente_de_otra_clinica_da_404(client):
+    usuario = UsuarioFactory()
+    ajeno = PacienteFactory(nombre="Rocco")
+    client.force_login(usuario)
+
+    respuesta = client.get(reverse("patients:ficha", args=[ajeno.pk]))
+
+    assert respuesta.status_code == 404
+    assert "Rocco" not in respuesta.content.decode()
+
+
+def test_abrir_para_editar_un_paciente_de_otra_clinica_da_404(client):
+    usuario = UsuarioFactory()
+    ajeno = PacienteFactory(nombre="Rocco")
+    client.force_login(usuario)
+
+    respuesta = client.get(reverse("patients:editar", args=[ajeno.pk]))
+
+    assert respuesta.status_code == 404
+    assert "Rocco" not in respuesta.content.decode()
+
+
+def test_guardar_encima_de_un_paciente_de_otra_clinica_da_404_y_no_lo_toca(client):
+    usuario = UsuarioFactory()
+    ajeno = PacienteFactory(nombre="Rocco")
+    client.force_login(usuario)
+
+    respuesta = client.post(
+        reverse("patients:editar", args=[ajeno.pk]), {"nombre": "Otro", "especie": Especie.GATO}
+    )
+
+    ajeno.refresh_from_db()
+    assert respuesta.status_code == 404
+    assert ajeno.nombre == "Rocco"
+
+
+def test_registrar_un_paciente_a_nombre_de_un_tutor_de_otra_clinica_da_404(client):
+    usuario = UsuarioFactory()
+    ajeno = TutorFactory(nombre="Ignacio", apellidos="Fuentes")
+    client.force_login(usuario)
+
+    respuesta = client.post(
+        reverse("patients:crear", args=[ajeno.pk]), {"nombre": "Rocco", "especie": Especie.PERRO}
+    )
+
+    assert respuesta.status_code == 404
+    assert not Paciente.de_todas_las_clinicas.exists()
+
+
+def test_el_paciente_que_registra_recepcion_nace_en_su_propia_clinica(client):
+    usuario = UsuarioFactory()
+    tutor = TutorFactory(clinic=usuario.clinic)
+    client.force_login(usuario)
+
+    client.post(
+        reverse("patients:crear", args=[tutor.pk]), {"nombre": "Rocco", "especie": Especie.PERRO}
+    )
+
+    paciente = Paciente.de_todas_las_clinicas.get()
+    assert paciente.clinic == usuario.clinic
+    assert paciente.quienes_responden.get().clinic == usuario.clinic
+
+
+def test_no_se_puede_vincular_a_un_tutor_de_otra_clinica(client):
+    """Ni ofreciéndolo en el desplegable ni enviando su identificador a mano."""
+    usuario = UsuarioFactory()
+    propio = PacienteFactory(clinic=usuario.clinic)
+    ajeno = TutorFactory(nombre="Ignacio", apellidos="Fuentes")
+    client.force_login(usuario)
+
+    ofrecidos = client.get(reverse("patients:vincular", args=[propio.pk])).content.decode()
+    respuesta = client.post(reverse("patients:vincular", args=[propio.pk]), {"tutor": ajeno.pk})
+
+    assert "Ignacio Fuentes" not in ofrecidos
+    assert respuesta.status_code == 200
+    assert not propio.quienes_responden.exists()
+
+
+def test_sumar_un_tutor_a_un_paciente_de_otra_clinica_da_404(client):
+    usuario = UsuarioFactory()
+    ajeno = PacienteFactory()
+    client.force_login(usuario)
+
+    respuesta = client.post(
+        reverse("patients:vincular", args=[ajeno.pk]),
+        {"tutor": TutorFactory(clinic=usuario.clinic).pk},
+    )
+
+    assert respuesta.status_code == 404
+    assert not ajeno.quienes_responden.exists()
+
+
+def test_pasar_el_cargo_en_un_vinculo_de_otra_clinica_da_404(client):
+    usuario = UsuarioFactory()
+    ajeno = PacienteFactory()
+    primero = TutorFactory(clinic=ajeno.clinic).se_hace_cargo_de(ajeno)
+    segundo = TutorFactory(clinic=ajeno.clinic).se_hace_cargo_de(ajeno)
+    client.force_login(usuario)
+
+    respuesta = client.post(reverse("patients:responsable", args=[ajeno.pk, segundo.pk]))
+
+    primero.refresh_from_db()
+    assert respuesta.status_code == 404
+    assert primero.responsable

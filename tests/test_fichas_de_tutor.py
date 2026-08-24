@@ -442,6 +442,11 @@ def test_los_datos_personales_del_tutor_viven_todos_en_su_modelo():
     Un campo nuevo en el Tutor obliga a decidir si es dato personal —y entra en
     `DATOS_PERSONALES`, y desaparecerá al anonimizar— o no lo es. Este test es
     quien fuerza esa decisión el día que se escriba el campo.
+
+    `pacientes` es el primer campo que la ha tenido que responder, y la respuesta
+    fue que **no**: de qué animales se hizo cargo no es un dato personal suyo,
+    sino parte de la Historia del Paciente —quién lo trajo—, y tiene que
+    sobrevivir a la anonimización.
     """
     campos = {
         campo.name
@@ -451,7 +456,7 @@ def test_los_datos_personales_del_tutor_viven_todos_en_su_modelo():
         for campo in Tutor._meta.local_fields + Tutor._meta.local_many_to_many
     }
 
-    assert campos == {"id", "clinic"} | set(Tutor.DATOS_PERSONALES)
+    assert campos == {"id", "clinic", "pacientes"} | set(Tutor.DATOS_PERSONALES)
 
 
 # --- RUT ------------------------------------------------------------------
