@@ -7,18 +7,20 @@ orden ni la búsqueda. La vista se limita a construir un `ListadoDeTutores` y
 pasárselo a la plantilla.
 
 Esta búsqueda es la del fichero de Tutores: sirve para encontrar a alguien por su
-nombre, su apellido, su RUT, su teléfono o su correo. La caja única que además
-busca Pacientes y microchips, tolerante a tildes, es del ticket 11.
+nombre, su apellido, su RUT, su teléfono o su correo, y por dónde se le busca lo
+dice el Tutor mismo (`Tutor.POR_DONDE_SE_BUSCA`). La caja única del mostrador
+—la que además encuentra Pacientes y microchips— es otra pantalla y vive en
+`mostrador.py`, pero lee lo escrito con la misma mecánica (`apps/busqueda.py`) y
+busca a los Tutores por los mismos campos: dos definiciones de «cómo se encuentra
+a un Tutor» acabarían diciendo cosas distintas.
 """
 
 from django.core.paginator import Paginator
-from django.db.models import Q
 from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 
-from apps.tutors.rut import como_se_busca as rut_como_se_busca
+from apps.busqueda import condicion
 from apps.tutors.rut import formateado
-from apps.tutors.telefono import digitos_del_telefono
 
 TUTORES_POR_PAGINA = 25
 
@@ -102,30 +104,6 @@ COLUMNAS_POR_CLAVE = {columna.clave: columna for columna in COLUMNAS}
 ORDEN_POR_DEFECTO = COLUMNAS_POR_CLAVE["apellidos"]
 
 
-def tal_cual(palabra):
-    """Lo escrito, sin tocar: lo que vale para los campos que se guardan como se
-    escriben."""
-    return palabra
-
-
-# Por dónde se busca a un Tutor: cómo se llama, cómo se identifica y por dónde se
-# le contacta. La dirección queda fuera a propósito — nadie llama preguntando por
-# una calle — y meterla solo traería coincidencias que estorban.
-#
-# Cada campo dice además cómo hay que leer lo escrito para buscar en él. El RUT y
-# el teléfono se guardan normalizados y nadie los teclea así: quien busca escribe
-# «12.345.678» o «9 1234 5678», y sin quitarles antes la puntuación no
-# encontrarían nunca al Tutor que sí está. Los dos devuelven nada cuando lo
-# escrito no se les parece, y entonces ese campo no entra en la búsqueda.
-CAMPOS_BUSCABLES = {
-    "nombre": tal_cual,
-    "apellidos": tal_cual,
-    "rut": rut_como_se_busca,
-    "telefono": digitos_del_telefono,
-    "email": tal_cual,
-}
-
-
 class Orden:
     """Por qué Columna y en qué sentido se ordena el listado.
 
@@ -176,21 +154,18 @@ class Orden:
 def buscar(tutores, buscado):
     """Los Tutores que casan con lo escrito en la caja de búsqueda.
 
-    Cada palabra tiene que aparecer en alguno de los campos, no todas en el
-    mismo: así «camila rojas» encuentra a quien tiene el nombre en un campo y el
-    apellido en otro, que es como recepción escribe un nombre.
+    Cómo se lee lo escrito —entero, como un RUT o un teléfono dictado, o palabra
+    a palabra, como un nombre repartido entre dos campos— lo decide
+    `apps/busqueda.py`; por dónde se busca a un Tutor lo dice él mismo.
 
-    Un campo se salta cuando la palabra, leída a su manera, se queda en nada:
-    de «camila» no quedan dígitos, y buscarla en el teléfono como cadena vacía
-    haría coincidir a toda la Clínica.
+    Cuando lo escrito no cabe en ningún campo no quedan Tutores, y eso hay que
+    decirlo aquí: la condición vacía significaría lo contrario —traerlos a todos—
+    y una búsqueda que no encuentra nada no puede devolver la Clínica entera.
     """
-    for palabra in buscado.split():
-        coincide = Q()
-        for campo, como_se_lee in CAMPOS_BUSCABLES.items():
-            if buscada := como_se_lee(palabra):
-                coincide |= Q(**{f"{campo}__icontains": buscada})
-        tutores = tutores.filter(coincide)
-    return tutores
+    if not buscado.strip():
+        return tutores
+    coincide = condicion(tutores.model.POR_DONDE_SE_BUSCA, buscado)
+    return tutores.filter(coincide) if coincide is not None else tutores.none()
 
 
 class ListadoDeTutores:

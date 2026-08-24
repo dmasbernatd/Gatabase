@@ -1,0 +1,55 @@
+{% load i18n %}
+{% comment %}
+  Los resultados de la caja del mostrador. Es lo que htmx sustituye mientras
+  recepción escribe, y también lo que se incrusta en la página completa la
+  primera vez.
+
+  Las cuatro columnas son las cuatro cosas que hacen falta para confirmar por
+  voz que es el animal correcto —«¿Rocco, el gato de Camila Rojas?»— y ninguna
+  más: la fila se lee de un vistazo con alguien esperando al teléfono.
+{% endcomment %}
+<table>
+  <thead>
+    <tr>
+      <th>{% translate "Paciente" %}</th>
+      <th>{% translate "Especie" %}</th>
+      <th>{% translate "Tutor responsable" %}</th>
+      <th>{% translate "Teléfono" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for resultado in busqueda.resultados %}
+      <tr>
+        <td>
+          <a href="{% url 'patients:ficha' resultado.paciente.pk %}">{{ resultado.paciente.nombre }}</a>
+          {% comment %}
+            El que murió o dejó de venir sale marcado, no escondido (por qué:
+            `apps/patients/estados.py`).
+          {% endcomment %}
+          {% if resultado.marca %}<strong>{{ resultado.marca }}</strong>{% endif %}
+        </td>
+        <td>{{ resultado.especie }}</td>
+        <td>
+          {% if resultado.responsable %}
+            <a href="{% url 'tutors:ficha' resultado.responsable.pk %}">{{ resultado.quien_responde }}</a>
+          {% else %}
+            {{ resultado.quien_responde }}
+          {% endif %}
+        </td>
+        <td>{{ resultado.telefono }}</td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="4">
+          {% if busqueda.vacia %}
+            {% translate "Escriba un nombre, un teléfono, un RUT o un microchip." %}
+          {% else %}
+            {% translate "Ningún Paciente de la Clínica coincide con la búsqueda." %}
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if busqueda.hay_mas %}<p>{{ busqueda.HAY_MAS }}</p>{% endif %}

@@ -26,6 +26,7 @@
 
     <nav>
       <a href="{% url 'tenancy:inicio' %}">{% translate "Inicio" %}</a>
+      <a href="{% url 'buscar' %}">{% translate "Buscar" %}</a>
       <a href="{% url 'tutors:lista' %}">{% translate "Tutores" %}</a>
       {% if user.es_admin %}
         <a href="{% url 'tenancy:usuarios' %}">{% translate "Usuarios" %}</a>

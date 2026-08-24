@@ -57,30 +57,40 @@ lo mismo que aguantar. Debajo hay tres cosas que nadie mide:
   `nombre`) sirve al orden por defecto. Ordenar por nombre, RUT, teléfono o
   correo —las otras cuatro cabeceras que el listado ofrece— es recorrer y ordenar
   en memoria toda la Clínica.
-- La búsqueda es `icontains`, o sea un `LIKE '%…%'` por cada palabra y cada uno
-  de los cinco campos buscables. Con comodín delante, ningún índice normal
-  entra: es lectura secuencial de la tabla.
-  _Al día del 06_: el RUT es el quinto, y es el único que **sí** tendría índice
-  fácil: se guarda normalizado y se busca casi siempre entero, así que un
-  `LIKE 'x%'` sobre `(clinic, rut)` bastaría. La restricción de unicidad ya crea
-  un índice sobre esa pareja, aunque parcial y con la ordenación de la base: que
-  sirva tal cual para un prefijo hay que medirlo, no darlo por hecho. Lo que
-  falta en todo caso es que la búsqueda distinga un RUT completo del resto, en
-  vez de meterlo en el mismo `%…%` que los demás campos. Se decide en el **11**,
-  con el volumen del **16** delante.
+- La búsqueda es `LIKE '%…%'` sobre los campos de texto. Con comodín delante,
+  ningún índice normal entra: es lectura secuencial de la tabla.
+  _Pagada en el **11** la mitad que se podía pagar_: lo escrito se lee ahora
+  entero cuando es un número dictado, así que un RUT completo se busca con `=`
+  —lo resuelve el índice de `rut_unico_dentro_de_la_clinica`— y un chip completo
+  también —`paciente_por_microchip`—. No hizo falta ningún índice nuevo, y de
+  paso un RUT dictado entero deja de traer a quien lo lleva dentro del suyo.
+  _Lo que queda vivo_: los nombres siguen siendo un barrido, y ahí no hay índice
+  barato — la respuesta sería un GIN de trigramas, que es otra extensión de
+  Postgres y por tanto otro `CREATE EXTENSION` que el rol de la aplicación no
+  puede correr (ver el **11**). No se toca sin medir, y medir es del **16**.
 - El `Paginator` hace su `COUNT(*)` de la consulta completa en cada petición,
-  incluida cada búsqueda.
+  incluida cada búsqueda. Sigue vivo en el listado de Tutores. La caja del
+  mostrador del **11** no lo tiene: no pagina ni cuenta, trae veinte y uno de
+  más, y con el sobrante sabe que hay más sin haber contado nada. Si el listado
+  acaba haciendo lo mismo es decisión del **16**, cuando se pueda ver qué cuesta
+  el `COUNT`.
 
 A cientos de Tutores esto no se nota, y por eso no es un fallo hoy. Lo que falta
 no es optimizar a ciegas: es que **nada avise cuando deje de aguantar**. La
 batería entra por HTTP y comprueba lo que el Usuario observa, que es lo correcto,
 pero no cuenta consultas ni prueba a escala, así que una regresión de rendimiento
 —un `N+1` al pintar la tabla, pongamos— pasaría entera y en verde.
+_Pagado para la caja del **11**_: `tests/test_busqueda.py` cuenta las consultas
+de una búsqueda con un resultado y con sesenta y exige que sean las mismas —cada
+fila dice quién responde por el animal, que es exactamente el `N+1` que no se
+nota con tres Pacientes de prueba—, y busca además sobre una Clínica de
+ochocientos. El listado de Tutores sigue sin esa red.
 _Cuándo se paga_: en el **16**, que es quien trae volumen de verdad. Con datos
-mock encima, un `assertNumQueries` sobre el listado y la búsqueda deja de ser
-teatro y empieza a defender algo. La decisión sobre índices y sobre buscar en
-serio —tolerante a tildes, incremental— es del **11**, y conviene tomarla con
-el volumen del 16 delante y no antes.
+mock encima, contar consultas sobre el listado deja de ser teatro y empieza a
+defender algo. La decisión sobre índices y sobre buscar en serio —tolerante a
+tildes, incremental— la tomó el **11** con el volumen que pudo fabricarse él
+mismo; lo que el 16 aporta es volumen **realista** —nombres que se repiten,
+apellidos que colisionan—, que es donde un barrido por nombre se nota de verdad.
 
 ## Diseño del listado de Tutores
 
@@ -172,10 +182,12 @@ puede importar de la otra (`CLAUDE.md`); qué es un RUT lo sigue decidiendo
 Hoy es correcto y no se nota, pero es el mismo problema que el listado de
 Tutores y con menos excusa: no pagina, no busca y trae todos los nombres a la
 página. A cientos de Tutores es una página de cientos de líneas para elegir uno.
-_Cuándo se paga_: con la búsqueda del **11** delante, que es la que sabrá
-encontrar a un Tutor por nombre, teléfono o RUT sin traerlos a todos; el
-desplegable debería acabar siendo esa búsqueda. El volumen para notarlo lo trae
-el **16**.
+_Cuándo se paga_: el **11** ya dejó la pieza que hace falta —`condicion` sobre
+`Tutor.POR_DONDE_SE_BUSCA` encuentra a un Tutor sin traerlos a todos—, así que
+lo que queda es la mitad de interfaz: cambiar el `<select>` por una caja que
+busque. No se hizo en el 11 porque el 11 buscaba Pacientes y esto busca Tutores,
+y meterlo habría sido dos pantallas en un ticket. El volumen para notarlo lo
+trae el **16**.
 
 **La ficha del Tutor y la del Paciente anotan una lectura por cada nombre que
 enseñan.** Es lo que ADR-0004 pide, y es correcto. Pero un Tutor con seis
@@ -212,3 +224,57 @@ de ser es un parámetro no es un módulo. Lo que sí se extrajo fue la mitad que
 `apps/campos.py` (ver abajo). La pregunta sigue siendo la del **12**, cuando
 haya comparaciones que no sean de campo exacto y el «a quién se parece esta
 ficha» tenga por fin algo que decidir de verdad.
+
+## La caja del mostrador
+
+Lo que el **11** dejó decidido a medias, y por qué se dejó así.
+
+**La caja vive en una página propia y no en la cabecera del panel.** Encontrar al
+Paciente son hoy dos gestos desde cualquier otra pantalla: pulsar «Buscar» y
+escribir. Una caja en la cabecera lo dejaría en uno, que es lo que se espera de
+la funcionalidad que tiene que ganarle al archivador, pero pondría **dos** cajas
+en la página de resultados —la de la cabecera y la de la página— y el ticket
+pedía una sola. Hacer que la de la cabecera fuera la única obligaría a que su
+`hx-target` existiera en todas las páginas del panel, y eso es un contenedor de
+resultados escondido en cada una.
+_Cuándo se paga_: cuando alguien use esto en un mostrador de verdad y diga si el
+gesto de más molesta. No antes: es una decisión de uso, no de código.
+
+**Un Tutor sin Pacientes no sale por la caja.** Lo que se encuentra son
+Pacientes, así que quien todavía no ha traído a ningún animal solo aparece en el
+fichero de Tutores, que tiene su propia búsqueda. Es raro —un Tutor se registra
+casi siempre para registrar a un animal— pero pasa: se dio de alta la ficha y la
+consulta era para la semana siguiente.
+_Cuándo se paga_: si aparece la queja. La respuesta entonces no es añadir Tutores
+a la misma tabla —las cuatro columnas son de un Paciente— sino una segunda
+sección de resultados. Se decide con el caso delante.
+
+**Cada búsqueda del mostrador escribe dos filas en el Registro de acceso** —el
+conjunto de Pacientes y el de Tutores—, y una búsqueda son una o dos peticiones
+según lo que se pare quien escribe. Es la decisión correcta y no sale gratis: es
+el mismo crecimiento que ya está anotado más arriba para las fichas —el Registro
+crece con las visitas, no con los datos—, solo que aquí el multiplicador es el
+teclado. Un día de mostrador con doscientas búsquedas son unas quinientas filas.
+_Cuándo se paga_: con el volumen del **16**, midiendo cuánto ocupa un día de
+verdad. Si molesta, lo que se toca es el retardo de la caja —250 ms hoy—, no la
+regla: dejar de anotar la búsqueda sería una pantalla que enseña veinte nombres
+y veinte teléfonos sin dejar rastro.
+
+**Buscar «9» en el fichero de Tutores ya no devuelve nada**, donde antes devolvía
+a todo el que tuviera un nueve en el correo. Es consecuencia de que lo escrito se
+lea entero como número cuando no trae letras: por debajo del largo mínimo no hay
+búsqueda que hacer. Para la caja incremental es lo que se quiere —sigue
+escribiendo—, y para el fichero, donde hay que pulsar «Buscar», es un cambio de
+comportamiento del **05** que nadie pidió.
+_Cuándo se paga_: si alguien lo echa de menos. Nadie busca a una persona por un
+dígito suelto, así que se deja hasta que aparezca la queja.
+
+**Hay dos maneras de quitarle las tildes a un texto en el repositorio.**
+`apps/busqueda.py` usa una tabla explícita de acentos porque Postgres tiene que
+poder hacer lo mismo con `translate`; `apps/patients/catalogo.py` usa
+`unicodedata` para decidir si una raza escrita es la del catálogo. Hacen trabajos
+distintos —una compara para buscar, la otra para guardar con la ortografía
+buena— y la de `catalogo` pliega más, que para su trabajo está bien.
+_Cuándo se paga_: si aparece una tercera. Con dos que no se contradicen y cuyos
+motivos están escritos, juntarlas sería obligar a una a hacer el trabajo de la
+otra.

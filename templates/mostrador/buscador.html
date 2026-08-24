@@ -1,0 +1,39 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Buscar" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Buscar" %}</h1>
+
+  {% comment %}
+    Una sola caja, y ningún desplegable que obligue a elegir campo antes de
+    escribir: quien está al teléfono teclea lo primero que le dictan.
+
+    El `hx-get` cuelga de la caja misma y no del formulario, porque lo que
+    dispara la búsqueda es escribir. El retardo es lo que separa «incremental»
+    de «una petición por tecla». Sin JavaScript el formulario sigue enviándose
+    con el botón, y la misma vista responde con la página entera.
+  {% endcomment %}
+  <form method="get" action="{% url 'buscar' %}" role="search">
+    <label for="{{ busqueda.CAMPO }}">{% translate "Nombre del Paciente o del Tutor, teléfono, RUT o microchip" %}</label>
+    <input type="search"
+           id="{{ busqueda.CAMPO }}"
+           name="{{ busqueda.CAMPO }}"
+           value="{{ busqueda.buscado }}"
+           autocomplete="off"
+           autofocus
+           hx-get="{% url 'buscar' %}"
+           hx-target="#resultados"
+           hx-trigger="input changed delay:250ms, search">
+    <button type="submit">{% translate "Buscar" %}</button>
+  </form>
+
+  {% comment %}
+    `aria-live` porque los resultados cambian sin que la página se recargue: sin
+    él, un lector de pantalla no anunciaría nada de lo que acaba de aparecer.
+  {% endcomment %}
+  <div id="resultados" aria-live="polite">
+    {% include "mostrador/_resultados.html" %}
+  </div>
+{% endblock %}

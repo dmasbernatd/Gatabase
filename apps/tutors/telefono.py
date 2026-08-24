@@ -65,6 +65,18 @@ def digitos_del_telefono(escrito):
     return "".join(caracter for caracter in (escrito or "") if caracter.isdigit())
 
 
+def como_se_busca(escrito):
+    """Los dígitos por los que buscar este teléfono, o nada si no los hay.
+
+    Lo guardado es E.164 —«+56912345678»— y lo escrito es cualquiera de las
+    formas del mostrador. Lo que todas tienen en común son los dígitos finales,
+    así que se busca por ellos y se quita el 0 de delante: el troncal se marcaba
+    —«09 1234 5678»— y nunca fue parte del número, de modo que buscarlo tal cual
+    no encontraría al Tutor que sí está.
+    """
+    return digitos_del_telefono(escrito).lstrip(TRONCAL_NACIONAL)
+
+
 def _en_e164(digitos):
     if not DIGITOS_MINIMOS <= len(digitos) <= DIGITOS_MAXIMOS:
         raise TelefonoInvalido(COMO_SE_ESCRIBE, code="telefono_de_largo_imposible")

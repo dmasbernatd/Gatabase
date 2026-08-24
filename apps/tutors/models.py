@@ -22,9 +22,13 @@ from django.db import models, transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from apps.busqueda import Campo
 from apps.tenancy.aislamiento import ModeloDeLaClinica
 from apps.tutors.campos import CampoDeRut, CampoDeTelefono
+from apps.tutors.rut import como_se_busca as rut_como_se_busca
 from apps.tutors.rut import formateado
+from apps.tutors.rut import normalizado as rut_normalizado
+from apps.tutors.telefono import como_se_busca as telefono_como_se_busca
 
 
 class Tutor(ModeloDeLaClinica):
@@ -68,6 +72,27 @@ class Tutor(ModeloDeLaClinica):
     # parte de la Historia del Paciente —quién lo trajo— y tiene que sobrevivir a
     # la anonimización.
     DATOS_PERSONALES = ("nombre", "apellidos", "rut", "telefono", "email", "direccion")
+
+    # Por dónde se busca a un Tutor: cómo se llama, cómo se identifica y por
+    # dónde se le contacta. La dirección queda fuera a propósito —nadie llama
+    # preguntando por una calle— y meterla solo traería coincidencias que
+    # estorban.
+    #
+    # Es un hecho del Tutor y no de ninguna pantalla, y por eso vive aquí y no
+    # en el listado: lo usan el fichero de Tutores (`listado.py`) y la caja
+    # única del mostrador (`mostrador.py`), y dos definiciones de «cómo se
+    # encuentra a un Tutor» acabarían diciendo cosas distintas.
+    #
+    # Cada campo dice además cómo hay que leer lo escrito para buscar en él
+    # (`apps/busqueda.py`): el RUT y el teléfono se guardan normalizados y nadie
+    # los teclea así.
+    POR_DONDE_SE_BUSCA = (
+        Campo.de_texto("nombre"),
+        Campo.de_texto("apellidos"),
+        Campo.normalizado("rut", rut_normalizado, rut_como_se_busca),
+        Campo.de_digitos("telefono", telefono_como_se_busca),
+        Campo.de_texto("email"),
+    )
 
     class Meta:
         verbose_name = _("Tutor")

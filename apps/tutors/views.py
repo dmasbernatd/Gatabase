@@ -27,6 +27,9 @@ devuelven solo la tabla de resultados. Se dispara al enviar la búsqueda y al
 pulsar una cabecera o una página, nunca a cada tecla: cada una de esas
 peticiones sirve datos personales y se anota, y una búsqueda por tecla llenaría
 de ruido justo la tabla que tiene que valer como prueba.
+
+La caja del mostrador (`mostrador`) sí busca mientras se escribe, y por eso lo
+que anota es distinto: ver su docstring.
 """
 
 from django.contrib import messages
@@ -38,9 +41,11 @@ from django.utils.translation import gettext_lazy as _
 from apps.audit.models import Accion
 from apps.audit.registro import anotando, anotar, deja_constancia
 from apps.patients.estados import FiltroPorEstado
+from apps.patients.models import Paciente
 from apps.tutors.forms import TutorForm
 from apps.tutors.listado import ListadoDeTutores
 from apps.tutors.models import Tutor
+from apps.tutors.mostrador import BusquedaDelMostrador
 
 # Lo que htmx pone en toda petición suya; Django lo entrega como cabecera.
 PETICION_DE_HTMX = "HX-Request"
@@ -75,6 +80,40 @@ def avisar_del_telefono_compartido(request, formulario):
             ),
         )
         anotar(request.user, Accion.LECTURA, otro)
+
+
+@login_required
+def mostrador(request):
+    """La caja única: encuentra al Paciente por lo que se escriba.
+
+    Está en `tutors` porque atraviesa el Vínculo (ver `mostrador.py`), pero no
+    es el fichero de Tutores: su ruta cuelga del panel y no de ninguna de las
+    dos apps, porque lo que encuentra son Pacientes y quien responde por ellos.
+
+    Anota **el conjunto** y no cada resultado, que es lo que separa esta caja
+    del listado con paginación. La lista se repinta a cada pocas teclas, y
+    anotar los veinte nombres que se ven de paso llenaría de ruido justo la
+    tabla que tiene que valer como prueba: quedaría un Registro donde no se
+    distingue a quién se consultó de verdad de quién pasó por delante mientras
+    alguien escribía. La lectura de una persona concreta se anota al abrir su
+    ficha, que es cuando alguien la consultó de verdad (ADR-0004).
+
+    La página con la caja todavía vacía no sirve dato de nadie, y por eso no
+    anota nada: es la misma regla de siempre —lo que no se llegó a servir no se
+    anota—, aplicada a una página que se abre antes de preguntar nada.
+    """
+    busqueda = BusquedaDelMostrador(request.GET)
+    solo_los_resultados = PETICION_DE_HTMX in request.headers
+    respuesta = render(
+        request,
+        "mostrador/_resultados.html" if solo_los_resultados else "mostrador/buscador.html",
+        {"busqueda": busqueda},
+    )
+    if busqueda.vacia:
+        return respuesta
+    # Los dos conjuntos, porque la tabla enseña datos de los dos: el animal y
+    # quien responde por él, con su teléfono.
+    return anotando(respuesta, request.user, Accion.LECTURA, Paciente, Tutor)
 
 
 @login_required

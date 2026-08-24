@@ -22,10 +22,12 @@ from django.db import models
 from django.utils.formats import date_format
 from django.utils.translation import gettext_lazy as _
 
+from apps.busqueda import Campo
 from apps.patients.campos import CampoDeMicrochip
 from apps.patients.catalogo import Especie, es_del_catalogo, la_ley_exige_identificar
 from apps.patients.estados import POR_DEFECTO, EstadoDelPaciente
-from apps.patients.microchip import formateado
+from apps.patients.microchip import digitos_del_microchip, formateado
+from apps.patients.microchip import normalizado as microchip_normalizado
 from apps.tenancy.aislamiento import ModeloDeLaClinica
 
 
@@ -111,6 +113,16 @@ class Paciente(ModeloDeLaClinica):
     # que nadie se acuerde: lo rechaza la base de datos, más abajo.
     fecha_de_fallecimiento = models.DateField(
         _("fecha de fallecimiento"), null=True, blank=True
+    )
+
+    # Por dónde se encuentra a un Paciente cuando su Tutor llama: cómo se
+    # llama el animal y el número que lleva puesto. La raza y el color quedan
+    # fuera — «el perro negro» no identifica a nadie en una clínica llena de
+    # perros negros —, y quien responde por él se busca en el Tutor, que es de
+    # quien son esos datos (`Tutor.POR_DONDE_SE_BUSCA`).
+    POR_DONDE_SE_BUSCA = (
+        Campo.de_texto("nombre"),
+        Campo.normalizado("microchip", microchip_normalizado, digitos_del_microchip),
     )
 
     class Meta:
