@@ -7,7 +7,11 @@ datos personales mientras la Historia clínica de sus Pacientes —de la que es
 titular el animal, no él— tiene que conservarse. Anonimizar (ticket 20) será
 vaciar `DATOS_PERSONALES` de esta tabla sin tocar ninguna otra.
 
-El Consentimiento de contacto llega en el ticket 15.
+Aquí vive también el **Consentimiento de contacto**: por qué canales acepta
+que se le escriba. Es dato personal suyo y no del Paciente, y se guarda como
+una declaración por cada vez que dijo algo —no como una columna de sí o no—,
+porque lo exigible no es el valor de hoy sino cuándo lo dio y cuándo se
+desdijo. Quién pregunta y qué se responde lo cuenta `consentimiento.py`.
 
 Aquí vive también el **Vínculo**, que es quién responde por qué Paciente. Está en
 esta app y no en `patients` porque es un hecho del Tutor —de quién se hace cargo—
@@ -28,6 +32,7 @@ from apps.campos import CampoDeTelefono
 from apps.telefono import como_se_busca as telefono_como_se_busca
 from apps.tenancy.aislamiento import ModeloDeLaClinica
 from apps.tutors.campos import CampoDeRut
+from apps.tutors.consentimiento import Canal, lo_que_diria, lo_ultimo_que_dijo
 from apps.tutors.rut import como_se_busca as rut_como_se_busca
 from apps.tutors.rut import formateado
 from apps.tutors.rut import normalizado as rut_normalizado
@@ -190,6 +195,55 @@ class Tutor(ModeloDeLaClinica):
         return vinculo
 
 
+    @property
+    def lo_que_ha_dicho_del_contacto(self):
+        """Todo lo que ha dicho sobre que se le contacte, lo último primero.
+
+        La historia entera y no el valor de hoy, porque es la historia lo que hay
+        que poder enseñar: un consentimiento que solo dice qué acepta ahora no
+        prueba nada del mensaje que salió en marzo. Por el manager sin filtro,
+        por lo mismo que `lo_ultimo_que_dijo`.
+        """
+        return self.consentimientos(manager="de_todas_las_clinicas").all()
+
+    def deja_dicho_sobre_el_contacto(self, canal, otorgado, fecha=None):
+        """Anota lo que el Tutor acaba de decir de un canal; devuelve la anotación.
+
+        Devuelve `None` cuando no dice nada nuevo: volver a autorizar lo que ya
+        estaba autorizado no es una decisión, es la misma de siempre. La regla
+        vive aquí y no en el formulario porque el importador y el mostrador
+        tienen que respetarla igual, y porque la historia del consentimiento es
+        justo lo que hay que poder enseñar: una fila por cada visita a una
+        pantalla la volvería ilegible.
+
+        Nunca pisa lo anterior. Revocar es decir algo nuevo, no borrar lo dicho:
+        lo que consta es que hasta ese día había un sí, y eso es lo que sostiene
+        cada mensaje que ya salió.
+
+        Sin fecha se toma la de hoy, que es cuando se dice en el mostrador; se
+        admite una anterior porque el consentimiento llega a veces en papel.
+
+        La Clínica sale del Tutor, que es de donde tiene que salir: un
+        Consentimiento entre Clínicas no significaría nada, y por eso lo escribe
+        el manager que cruza la frontera a la vista de todos (ADR-0003).
+        """
+        fecha = fecha or timezone.localdate()
+        ultima = lo_ultimo_que_dijo(self, canal)
+        # Solo se calla lo que repite lo que vale **hoy**. Una declaración con
+        # fecha anterior a la última se guarda diga lo que diga: es un trozo de
+        # historia que alguien está completando —el papel que llegó tarde—, y
+        # tirarlo por parecerse al presente sería tirar evidencia.
+        if ultima is not None and ultima.fecha <= fecha and ultima.otorgado == otorgado:
+            return None
+        return Consentimiento.de_todas_las_clinicas.create(
+            clinic=self.clinic,
+            tutor=self,
+            canal=canal,
+            otorgado=otorgado,
+            fecha=fecha,
+        )
+
+
 class Vinculo(ModeloDeLaClinica):
     """Que un Tutor responde por un Paciente.
 
@@ -323,3 +377,52 @@ class Vinculo(ModeloDeLaClinica):
             )
             self.responsable = True
             self.save(update_fields=["responsable"])
+
+
+class Consentimiento(ModeloDeLaClinica):
+    """Lo que un Tutor dijo un día sobre que se le contacte por un canal.
+
+    Una fila **no es el consentimiento actual**: es una declaración con su fecha.
+    El consentimiento de hoy es la última de su canal, y eso lo responde
+    `consentimiento.se_puede_contactar`, que es por donde pregunta todo envío.
+
+    Se guarda así, y no como tres columnas del Tutor, porque la Ley 21.719 no
+    pregunta qué acepta hoy: pregunta desde cuándo lo aceptaba el día que se le
+    escribió. Un booleano que se sobrescribe deja cada mensaje ya enviado sin
+    nada detrás.
+
+    Nada se borra y nada se corrige: el Tutor que se desdice deja una fila que
+    dice que no, encima de la que decía que sí. Por eso tampoco hay formulario de
+    edición de una declaración — solo se declara de nuevo.
+    """
+
+    tutor = models.ForeignKey(
+        Tutor,
+        on_delete=models.CASCADE,
+        related_name="consentimientos",
+        verbose_name=_("Tutor"),
+    )
+    canal = models.CharField(_("canal"), max_length=20, choices=Canal.choices)
+    otorgado = models.BooleanField(_("autoriza"))
+    # Una fecha y no un instante: lo que consta es el día en que lo dijo, que es
+    # lo que se apunta en un mostrador y lo que se lee en un papel firmado. El
+    # orden dentro del mismo día lo pone `-pk`, que es el orden en que llegaron.
+    fecha = models.DateField(_("fecha"), default=timezone.localdate)
+
+    class Meta:
+        verbose_name = _("Consentimiento de contacto")
+        verbose_name_plural = _("Consentimientos de contacto")
+        # Lo último primero: es lo que vale, y así la primera fila de cada canal
+        # responde la pregunta sin ordenar nada más.
+        ordering = ["-fecha", "-pk"]
+        indexes = [
+            models.Index(fields=["tutor", "canal", "-fecha", "-id"], name="consentimiento_ultimo")
+        ]
+
+    def __str__(self):
+        return f"{self.tutor} — {self.get_canal_display()} — {self.fecha}"
+
+    @property
+    def a_la_vista(self):
+        """Lo que dijo, tal como se lee en la historia de su ficha."""
+        return lo_que_diria(self.otorgado).label

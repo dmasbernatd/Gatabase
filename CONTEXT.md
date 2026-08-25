@@ -101,7 +101,7 @@ Situación del Paciente ante la Ley 21.020: `sin chip`, `chip implantado` o `ins
 _Avoid_: Tiene chip, chipeado, estado del microchip
 
 **Consentimiento de contacto**:
-Autorización del Tutor para recibir Recordatorios por un canal concreto.
+Autorización del Tutor a que la clínica se dirija a él por un canal concreto —WhatsApp, teléfono o correo—, con la fecha en que la dio. No es un valor que se sobrescriba: cada vez que el Tutor dice algo queda una declaración con su fecha, y la última es la que vale, de modo que consta cuándo lo otorgó y cuándo lo revocó. Que no conste nada no es una negativa —nadie se lo ha preguntado todavía—, pero tampoco autoriza: los dos niegan el envío. Ningún Aviso de cita sale sin preguntarlo antes.
 _Avoid_: Opt-in, suscripción, permiso
 
 ### Organización

@@ -1,0 +1,48 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Consentimiento de contacto" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Consentimiento de contacto" %}</h1>
+
+  <p>{% blocktranslate with tutor=tutor %}Por qué canales acepta {{ tutor }} recibir mensajes de la clínica.{% endblocktranslate %}</p>
+
+  {% comment %}
+    Lo que se guarda aquí no es una casilla: es lo que el Tutor dijo, con la
+    fecha en que lo dijo. Se cuenta antes de pulsar porque quien está en el
+    mostrador tiene que saber qué está registrando —y que nada de esto borra lo
+    anterior—, no descubrirlo después.
+  {% endcomment %}
+  <p>{% translate "Se registra lo que el Tutor diga, con la fecha de hoy. Lo anterior no se borra: queda cuándo lo otorgó y cuándo lo revocó." %}</p>
+  <p>{% translate "El canal que se deje en blanco se queda como está: en blanco no es una negativa, es que de ese canal no se habló." %}</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ formulario.as_p }}
+    <button type="submit">{% translate "Guardar" %}</button>
+  </form>
+
+  {% comment %}
+    Todo lo que ha dicho, y no solo lo que vale hoy. Es lo que hay que poder
+    enseñar si alguien reclama por un mensaje: no basta con decir qué acepta
+    ahora, hay que poder decir desde cuándo lo aceptaba el día que se le
+    escribió. Aquí y no en la ficha porque es historia y no una lista de
+    trabajo: quien atiende mira el estado de ahora, quien responde de un envío
+    viene a esta página.
+  {% endcomment %}
+  {% if historia %}
+    <h2>{% translate "Lo que ha dicho" %}</h2>
+    <ul>
+      {% for dicho in historia %}
+        <li>
+          <span>{{ dicho.get_canal_display }}</span>
+          <strong>{{ dicho.a_la_vista }}</strong>
+          <span>{{ dicho.fecha }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <p><a href="{% url 'tutors:ficha' tutor.pk %}">{% translate "Volver a la ficha" %}</a></p>
+{% endblock %}

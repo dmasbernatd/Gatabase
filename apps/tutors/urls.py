@@ -14,4 +14,8 @@ urlpatterns = [
     path("<int:pk>/coincidencias/", views.coincidencias, name="coincidencias"),
     path("<int:pk>/", views.ficha, name="ficha"),
     path("<int:pk>/corregir/", views.editar, name="editar"),
+    # Por dónde acepta que se le contacte. En su propia ruta y no dentro de la
+    # corrección de la ficha: no es un dato que se teclea, es algo que el Tutor
+    # dijo, y lo que se guarda es la declaración con su fecha.
+    path("<int:pk>/consentimiento/", views.consentimiento, name="consentimiento"),
 ]

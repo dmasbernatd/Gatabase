@@ -21,9 +21,11 @@ comparaciones acaban distinto a propósito:
   sentido si hubo guardado.
 """
 
+from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from apps.coincidencias import FormularioQueSeParece, Parecido
+from apps.tutors.consentimiento import LoQueDijo, como_esta
 from apps.tutors.models import Tutor
 
 
@@ -47,3 +49,55 @@ class TutorForm(FormularioQueSeParece):
     )
 
     DETECCION = "tutors:coincidencias"
+
+
+class ConsentimientoDeContactoForm(forms.Form):
+    """Lo que el Tutor dice de cada canal, tal como se le pregunta en el mostrador.
+
+    No es un `ModelForm` porque lo que se rellena no es una fila: es una
+    respuesta por canal, y cada una que cambie dejará su propia declaración con
+    su fecha. Los campos se arman a partir del catálogo (`Canal`) y no a mano,
+    para que añadir un canal no dependa de acordarse de tocar esta pantalla.
+
+    **Ningún campo es obligatorio, y el hueco no es un «no».** Recepción pregunta
+    por lo que puede preguntar —el Tutor llamó por otra cosa y solo dio el
+    WhatsApp—, así que un canal en blanco es un canal del que no se habló y se
+    queda como estaba. Tratarlo como una negativa convertiría cada visita a esta
+    página en una revocación silenciosa de los otros dos.
+
+    Lo que se puede contestar —y por qué «no consta» no está entre las opciones—
+    lo dice `LoQueDijo`.
+    """
+
+    def __init__(self, *args, tutor, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tutor = tutor
+        for estado in como_esta(tutor):
+            self.fields[estado.canal] = forms.ChoiceField(
+                label=estado.etiqueta,
+                choices=LoQueDijo.choices,
+                # Lo que ya constaba viene puesto: quien atiende no tiene que
+                # acordarse de lo que este Tutor dijo hace ocho meses.
+                initial=estado.lo_que_dijo,
+                required=False,
+                widget=forms.RadioSelect,
+                help_text=estado.a_la_vista,
+            )
+
+    def guardar(self):
+        """Deja dicho lo contestado y devuelve las declaraciones que hizo falta.
+
+        Vacía cuando nada cambió, que es lo que mira la vista para decidir si
+        hubo modificación que anotar: abrir la página y volver a guardarla igual
+        no es un cambio en los datos de nadie.
+        """
+        return [
+            declaracion
+            for canal, contestado in self.cleaned_data.items()
+            if contestado
+            and (
+                declaracion := self.tutor.deja_dicho_sobre_el_contacto(
+                    canal, otorgado=contestado == LoQueDijo.SI
+                )
+            )
+        ]

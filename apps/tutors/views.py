@@ -33,6 +33,10 @@ de ruido justo la tabla que tiene que valer como prueba.
 
 La caja del mostrador (`mostrador`) sí busca mientras se escribe, y por eso lo
 que anota es distinto: ver su docstring.
+
+Por dónde acepta el Tutor que se le contacte se enseña en su ficha y se cambia en
+página aparte (`consentimiento`), porque no es un dato que se teclea: es algo que
+él dijo, y lo que se guarda es la declaración con su fecha.
 """
 
 from django.contrib.auth.decorators import login_required
@@ -48,7 +52,8 @@ from apps.coincidencias import (
 )
 from apps.patients.estados import FiltroPorEstado
 from apps.patients.models import Paciente
-from apps.tutors.forms import TutorForm
+from apps.tutors.consentimiento import como_esta
+from apps.tutors.forms import ConsentimientoDeContactoForm, TutorForm
 from apps.tutors.listado import ListadoDeTutores
 from apps.tutors.models import Tutor
 from apps.tutors.mostrador import BusquedaDelMostrador
@@ -138,7 +143,16 @@ def ficha(request, pk):
     respuesta = render(
         request,
         "tutors/ficha.html",
-        {"tutor": tutor, "pacientes": pacientes, "filtro": filtro, "cerrados": cerrados},
+        {
+            "tutor": tutor,
+            "pacientes": pacientes,
+            "filtro": filtro,
+            "cerrados": cerrados,
+            # Por dónde acepta que se le escriba, con su fecha. Va en la ficha y
+            # no a un clic porque la pregunta se hace justo aquí: quien mira esta
+            # página es quien está a punto de contactarlo.
+            "consentimiento": como_esta(tutor),
+        },
     )
     # El Tutor lo anota el decorador; sus Pacientes, no: la ficha los nombra uno
     # a uno, y la ley protege la ficha del animal igual que la de su Tutor,
@@ -194,3 +208,43 @@ def editar(request, pk):
     anotar(request.user, Accion.LECTURA, tutor)
     constancia_de_lo_que_impidio_guardar(request, formulario)
     return respuesta
+
+
+@login_required
+def consentimiento(request, pk):
+    """Registra o revoca por qué canales acepta el Tutor que se le contacte.
+
+    En página aparte de la ficha por lo mismo que el estado del Paciente: no es
+    una corrección de la ficha, es dejar constancia de algo que el Tutor dijo, y
+    con su fecha. La ficha enseña lo que consta; aquí se cambia.
+
+    Lo que se guarda **no pisa** lo anterior: cada respuesta que cambia deja su
+    propia declaración, y la anterior sigue ahí. Eso es lo que hace que el
+    consentimiento sea exigible ante la Ley 21.719 — no vale decir qué acepta
+    hoy, hay que poder decir desde cuándo lo aceptaba el día que se le escribió.
+
+    Se anota como modificación **solo si algo cambió** (ADR-0004): guardar el
+    formulario tal como llegó no toca ningún dato de nadie, y anotarlo dejaría en
+    el Registro de acceso una modificación que no ocurrió. La lectura sí consta
+    siempre, que es lo que de verdad pasó al abrir la página.
+    """
+    tutor = get_object_or_404(Tutor, pk=pk)
+    formulario = ConsentimientoDeContactoForm(request.POST or None, tutor=tutor)
+    if request.method == "POST" and formulario.is_valid():
+        if formulario.guardar():
+            anotar(request.user, Accion.MODIFICACION, tutor)
+        return redirect("tutors:ficha", pk=tutor.pk)
+    respuesta = render(
+        request,
+        "tutors/consentimiento.html",
+        # Con todo lo que ha dicho hasta hoy: «queda registro» solo significa
+        # algo si alguien lo puede mirar sin abrir la base de datos.
+        {
+            "formulario": formulario,
+            "tutor": tutor,
+            "historia": tutor.lo_que_ha_dicho_del_contacto,
+        },
+    )
+    # La página dice de quién se habla, con su nombre y por dónde se le contacta:
+    # eso es servir datos personales, y consta aunque no se cambie nada.
+    return anotando(respuesta, request.user, Accion.LECTURA, tutor)

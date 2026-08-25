@@ -26,6 +26,35 @@
 
   <p><a href="{% url 'tutors:editar' tutor.pk %}">{% translate "Corregir la ficha" %}</a></p>
 
+  {% comment %}
+    Por dónde acepta que se le escriba, y desde cuándo. Va aquí arriba, al lado
+    del teléfono y del correo, y no en una pestaña: quien mira este bloque es
+    quien está a punto de contactarlo, y un consentimiento que hay que ir a
+    buscar es un consentimiento que nadie mira.
+
+    Los tres canales salen siempre, conste algo o no. El que dice «No consta» es
+    justamente el que hay que preguntar la próxima vez que este Tutor aparezca
+    por el mostrador; esconderlo hasta que alguien lo rellene es lo que deja la
+    pregunta sin hacer para siempre.
+  {% endcomment %}
+  <h2>{% translate "Consentimiento de contacto" %}</h2>
+
+  <dl>
+    {% for estado in consentimiento %}
+      <dt>{{ estado.etiqueta }}</dt>
+      <dd>
+        {% if estado.se_puede_contactar %}
+          <strong>{% translate "Se le puede contactar" %}</strong>
+        {% else %}
+          <strong>{% translate "No se le puede contactar" %}</strong>
+        {% endif %}
+        <span>{{ estado.a_la_vista }}</span>
+      </dd>
+    {% endfor %}
+  </dl>
+
+  <p><a href="{% url 'tutors:consentimiento' tutor.pk %}">{% translate "Registrar el consentimiento" %}</a></p>
+
   <h2>{% translate "Pacientes" %}</h2>
 
   {% comment %}
