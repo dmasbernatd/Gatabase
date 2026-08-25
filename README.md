@@ -14,6 +14,7 @@ En desarrollo activo, con el hito **H1 — Núcleo clínico** en curso.
 
 - **Aislamiento multi-clínica por defecto.** Los modelos de dominio heredan el filtro por Clínica y un `check` de Django falla al arrancar si alguno no lo cumple ([ADR-0003](docs/adr/0003-tenancy-por-clave-ajena-y-manager.md)). La garantía no depende de acordarse de filtrar.
 - **Autenticación y roles.** Login por correo, roles `veterinario` / `recepcion` / `admin`, cambio de Sede en sesión, y administración de Usuarios desde el panel. Sin registro abierto: la primera Clínica se crea por comando.
+- **Sesiones pensadas para un mostrador.** La sesión caduca a la media hora sin actividad —configurable— y avisa antes de caducar para que nadie pierda lo que está escribiendo; toda página dice de forma visible qué Usuario está activo, y se cambia de Usuario en un clic conservando la Sede del box. Al rol admin, que puede exportar la base entera, se le exige un segundo factor: sin él configurado no completa el login.
 - **Registro de acceso** a datos personales, inalterable y escrito desde las vistas, con consulta filtrable para el admin ([ADR-0004](docs/adr/0004-registro-de-acceso-propio-para-registrar-lecturas.md)).
 - **Fichero de Tutores.** Alta, ficha y corrección, con listado buscable, ordenable y paginado, y cada acceso anotado.
 - **Fichas de Paciente**, con catálogo cerrado de especies y catálogo de razas por especie que sugiere sin cerrar el paso al texto libre. Un Paciente se registra desde la ficha del Tutor que lo trae, un Paciente puede tener varios Tutores y uno solo de ellos es el responsable. Un Paciente nunca se borra: el que muere o deja de venir cambia de estado, conserva su ficha entera y las listas lo esconden por defecto sin perderlo de vista. Un animal que cambia de manos tampoco pierde nada: el Vínculo del Tutor anterior se cierra con fecha —no se borra— y las dos fichas siguen diciendo de quién fue y hasta cuándo.
@@ -86,9 +87,23 @@ No hay registro abierto: **no existe** una URL de alta. La primera Clínica, su 
 
 La contraseña se pide por teclado si no se pasa `--contrasena`. A partir de ahí, el admin de la Clínica crea el resto de los Usuarios en `/panel/usuarios/`, les asigna rol (`veterinario`, `recepcion`, `admin`) y Sedes, y los desactiva. Hasta que haya correo saliente, el admin fija una contraseña inicial y se la entrega al Usuario.
 
-De `django-allauth` se enrutan solo el login, el logout y la página de cuenta desactivada. Lo que no está enrutado no existe.
+De `django-allauth` se enrutan solo el login, el logout, la página de cuenta desactivada y la que pide el código del segundo factor. Lo que no está enrutado no existe: retirar el segundo factor no tiene URL porque para el admin es obligatorio.
 
-No hay `django.contrib.admin`: sería una segunda puerta de entrada, con sus propios permisos, al lado de los roles de `tenancy`. El segundo factor para el rol admin y la caducidad de sesión son del ticket 13.
+No hay `django.contrib.admin`: sería una segunda puerta de entrada, con sus propios permisos, al lado de los roles de `tenancy`.
+
+### La sesión de un mostrador compartido
+
+El computador del mostrador queda encendido a la vista de los Tutores y la tablet del box la comparten tres veterinarios. De ahí tres cosas:
+
+- **Caduca por inactividad**, no desde que se entró: `SESSION_SAVE_EVERY_REQUEST` renueva el plazo en cada petición, así que a nadie lo echan a media ficha. Son 30 minutos, y se cambian con `GATABASE_MINUTOS_DE_SESION`. Antes de caducar aparece un aviso —`static/sesion.js` cuenta desde los plazos que la página trae en `data-`— con un botón que renueva la sesión sin recargar.
+- **Quién está activo se ve siempre**, en la cabecera de toda página interna, y al lado va «Cambiar de Usuario»: cierra la sesión y deja el login listo para quien viene detrás. La Sede se conserva, porque la tablet no se ha movido de box.
+- **El admin necesita un segundo factor.** Es quien puede exportar la base entera de una Clínica. Si entra sin tenerlo configurado, el login queda a medias —sin sesión y sin ver nada— y se le lleva a darlo de alta ahí mismo con un código para escanear. Al veterinario y a recepción no se les exige: atienden con Tutores esperando delante. No exigirlo no es prohibirlo — quien lo dé de alta entrará con él.
+
+Al admin que pierde el teléfono lo rescata un comando, que retira el segundo factor para que lo vuelva a dar de alta la próxima vez que entre:
+
+```sh
+.venv/bin/python manage.py restablecer_segundo_factor admin@losandes.example
+```
 
 ## Aislamiento por Clínica
 

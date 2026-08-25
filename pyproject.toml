@@ -5,7 +5,10 @@ description = "Gestión clínica y de negocio para clínicas veterinarias en Chi
 requires-python = ">=3.12"
 dependencies = [
     "django>=6.1,<7.0",
-    "django-allauth>=65.19",
+    # `[mfa]` trae `qrcode` y `fido2`: el segundo factor del admin (ticket 13).
+    # `fido2` no se usa —no hay llaves WebAuthn—, pero `allauth.mfa` lo importa
+    # aunque solo esté activado TOTP.
+    "django-allauth[mfa]>=65.19",
     "psycopg[binary]>=3.2",
     "python-dotenv>=1.0",
 ]

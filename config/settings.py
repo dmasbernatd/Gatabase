@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "allauth",
     "allauth.account",
+    "allauth.mfa",
     "apps.tenancy",
     "apps.tutors",
     "apps.patients",
@@ -120,6 +121,34 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*"]
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_LOGOUT_ON_GET = False
 ACCOUNT_TEMPLATE_EXTENDS = "base.html"
+
+# El adaptador solo añade una etapa al login: la que exige al admin tener
+# configurado su segundo factor (ver `apps/tenancy/segundo_factor.py`).
+ACCOUNT_ADAPTER = "apps.tenancy.adaptador.AdaptadorDeCuentas"
+
+# Segundo factor: solo TOTP — un código de la aplicación del teléfono. Sin
+# códigos de recuperación, que habría que entregar por correo y todavía no hay
+# correo saliente: al admin que pierde el teléfono lo rescata el comando
+# `restablecer_segundo_factor`. Sin llaves WebAuthn, que en un mostrador
+# compartido serían una llave física más que perder.
+MFA_SUPPORTED_TYPES = ["totp"]
+MFA_TOTP_ISSUER = "Gatabase"
+# No hay verificación por correo (ver arriba), así que exigirla para dar de alta
+# el segundo factor dejaría al admin sin poder entrar nunca.
+MFA_ALLOW_UNVERIFIED_EMAIL = True
+
+# Caducidad de la sesión por inactividad. El computador del mostrador queda
+# encendido a la vista de los Tutores y la tablet del box la comparten tres
+# veterinarios: la sesión que nadie cierra la cierra el reloj. Es por
+# inactividad y no desde que se entró —`SESSION_SAVE_EVERY_REQUEST` renueva el
+# plazo en cada petición—, para no dejar a nadie fuera a media ficha.
+MINUTOS_DE_SESION = int(_env("GATABASE_MINUTOS_DE_SESION", "30"))
+SESSION_COOKIE_AGE = MINUTOS_DE_SESION * 60
+SESSION_SAVE_EVERY_REQUEST = True
+# Cuánto antes de caducar se avisa al Usuario, para que no pierda lo que está
+# escribiendo. `apps.tenancy.sesion` lo recorta si la sesión es más corta que
+# el propio aviso.
+SEGUNDOS_DE_AVISO_DE_CADUCIDAD = 120
 
 LOGIN_URL = "account_login"
 LOGIN_REDIRECT_URL = "tenancy:inicio"

@@ -36,14 +36,16 @@ def test_el_comando_crea_clinica_sede_y_admin():
 
 
 def test_el_admin_dado_de_alta_entra_con_su_contrasena(client):
+    """Su contraseña vale, pero es admin: antes de tener sesión configura su
+    segundo factor (ver `tests/test_segundo_factor.py`)."""
     _dar_de_alta()
 
-    client.post(
+    respuesta = client.post(
         reverse("account_login"),
         {"login": "admin@losandes.example", "password": CONTRASENA},
     )
 
-    assert "_auth_user_id" in client.session
+    assert respuesta["Location"] == reverse("tenancy:alta_de_segundo_factor")
 
 
 def test_el_comando_no_pisa_una_clinica_ya_dada_de_alta():

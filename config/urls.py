@@ -1,4 +1,5 @@
 from allauth.account import views as cuentas
+from allauth.mfa.base import views as segundo_factor
 from django.urls import include, path
 
 from apps.tutors.views import mostrador
@@ -12,6 +13,12 @@ urlpatterns = [
     path("accounts/login/", cuentas.login, name="account_login"),
     path("accounts/logout/", cuentas.logout, name="account_logout"),
     path("accounts/inactivo/", cuentas.account_inactive, name="account_inactive"),
+    # De `allauth.mfa` se enruta solo esto: la página donde quien ya tiene
+    # segundo factor teclea su código. Darlo de alta es de `tenancy`, porque
+    # ocurre con el login a medias; retirarlo no se enruta a propósito — para el
+    # admin es obligatorio, y quien pierde el teléfono se rescata con el comando
+    # `restablecer_segundo_factor`.
+    path("accounts/segundo-factor/", segundo_factor.authenticate, name="mfa_authenticate"),
     path("panel/", include("apps.tenancy.urls")),
     # La caja del mostrador no es del fichero de Tutores ni del de Pacientes:
     # encuentra animales escribiendo el nombre de una persona, y es la puerta

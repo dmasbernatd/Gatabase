@@ -1,10 +1,11 @@
-"""Formularios de la administración de Usuarios.
+"""Formularios de la administración de Usuarios y del alta del segundo factor.
 
-Ambos formularios reciben la Clínica de quien administra —de eso se encarga
+Los dos de la administración reciben la Clínica de quien administra —de eso se encarga
 `FormularioDeLaClinica`— y limitan a sus Sedes lo que se puede elegir: un
 `<select>` es una sugerencia, no una frontera.
 """
 
+from allauth.mfa.totp.forms import ActivateTOTPForm
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -55,3 +56,17 @@ class CrearUsuarioForm(UsuarioForm):
     def save(self, commit=True):
         self.instance.set_password(self.cleaned_data["contrasena"])
         return super().save(commit)
+
+
+class AltaDeSegundoFactorForm(ActivateTOTPForm):
+    """El código con el que el Usuario demuestra que su teléfono ya guarda el secreto.
+
+    De `allauth` sale el secreto —lo guarda en la sesión mientras dura el
+    alta— y la comprobación del código. Lo que se cambia aquí es el rótulo: el
+    de origen habla de «autenticador», que en el mostrador no dice nada.
+    """
+
+    code = forms.CharField(
+        label=_("Código de la aplicación"),
+        widget=forms.TextInput(attrs={"autocomplete": "one-time-code", "inputmode": "numeric"}),
+    )

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Código de la aplicación" %}{% endblock %}
+
+{% block content %}
+  <h1>{% translate "Código de la aplicación" %}</h1>
+
+  <p>{% translate "Escriba el número que le muestra ahora su aplicación de autenticación." %}</p>
+
+  <form method="post" action="{% url 'mfa_authenticate' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">{% translate "Entrar" %}</button>
+  </form>
+{% endblock %}

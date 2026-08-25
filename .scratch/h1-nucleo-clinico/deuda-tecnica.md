@@ -332,3 +332,60 @@ contradicción que el **08** dejó fuera de la base a propósito. No puede darse
 de un dato que solo podría entrar por el importador del **18**.
 _Cuándo se paga_: en el **18**, si el importador acaba pudiendo escribir fichas
 que el formulario no dejaría escribir.
+
+## Sesiones de mostrador y segundo factor
+
+Lo que el **13** dejó decidido a medias, y por qué se dejó así.
+
+**El secreto TOTP se guarda en claro.** El adaptador de `allauth.mfa` cifra con
+una función identidad si no se le dice otra cosa, y no se le dijo: cifrarlo con
+`SECRET_KEY` guarda la llave al lado de la cerradura —quien lee la base suele
+poder leer también el entorno— y cifrarlo de verdad pide una llave aparte, con su
+rotación y su custodia, que hoy no existe. Quien pueda leer la tabla
+`mfa_authenticator` puede generar los códigos del admin de cualquier Clínica.
+_Cuándo se paga_: cuando haya gestión de secretos de despliegue — la misma que
+hará falta para el correo saliente y para las claves de mensajería del **H4** —.
+Entonces es `MFA_ADAPTER` con `encrypt`/`decrypt` de verdad, y una migración que
+recifre lo ya guardado.
+
+**El alta del segundo factor se hace con la contraseña recién tecleada.** Quien
+robe la contraseña de un admin que todavía no configuró su segundo factor puede
+configurarlo él, y desde ese momento es él quien tiene el segundo factor. Es
+inherente a exigir un segundo factor que el propio Usuario da de alta: la
+alternativa —entregarlo el admin anterior, o por correo— no existe hasta que
+haya correo saliente. Lo que sí protege desde el primer minuto es todo lo que
+venga después del alta, que es la ventana larga.
+_Cuándo se paga_: con el correo saliente, cambiando el alta por una invitación
+que llegue por otro canal.
+
+**No hay códigos de recuperación.** `MFA_SUPPORTED_TYPES` es solo `totp`: los
+códigos habría que entregarlos por correo —que no hay— o enseñarlos una vez en
+pantalla, y una hoja de códigos junto al computador del mostrador es exactamente
+lo que este ticket viene a evitar. El rescate del admin que pierde el teléfono es
+`manage.py restablecer_segundo_factor`, que se ejecuta en el servidor.
+_Lo que cuesta_: una Clínica sin nadie con acceso al servidor y con un solo admin
+que pierde el teléfono se queda sin administración hasta que alguien entre por
+ahí. Con dos admins no pasa.
+_Cuándo se paga_: si aparece la queja, o con el correo saliente.
+
+**`fido2` se instala y no se usa.** `allauth.mfa` lo importa al envolver
+cualquier autenticador, aunque WebAuthn esté apagado en `MFA_SUPPORTED_TYPES`. Es
+una dependencia de despliegue —con `cryptography` y `cffi` detrás— que no
+ejecuta nada.
+_Cuándo se paga_: no se paga. Se anota para que nadie la busque en el código
+creyendo que hace algo.
+
+**Sin JavaScript la sesión caduca sin avisar.** El aviso lo saca
+`static/sesion.js` contando desde los plazos que la página trae en `data-`; sin
+él, el Usuario descubre que caducó al enviar el formulario, que es lo que pasaba
+antes de este ticket. Servirlo desde el servidor pediría una petición periódica
+solo para preguntar cuánto queda, y esa petición renovaría el plazo que viene a
+medir.
+_Cuándo se paga_: si aparece un mostrador sin JavaScript. Hoy la caja del **11**
+y la detección del **12** dependen de htmx exactamente igual.
+
+**El reloj del aviso no mira la actividad del Usuario, solo las peticiones.**
+Se reinicia al cargar la página, al responder htmx y al pulsar «Sigo aquí» —que
+es justo cuando el servidor renueva el plazo—, y no al teclear. Es lo correcto:
+el servidor tampoco cuenta las teclas. La consecuencia es que quien escribe una
+Consulta larga sin enviar nada ve el aviso, que es exactamente para eso.

@@ -10,6 +10,12 @@
       se sigue usando entera, solo que recargando.
     {% endcomment %}
     <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
+    {% comment %}
+      El aviso de caducidad de sesión. Va en un archivo y no en la página porque
+      todo lo que se escribe dentro de una plantilla se queda fuera de gettext y
+      del catálogo: aquí el guion no lleva ni un texto visible.
+    {% endcomment %}
+    <script src="{% static 'sesion.js' %}" defer></script>
   </head>
   <body>
     <main>

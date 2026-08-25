@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Configurar el segundo factor" %}{% endblock %}
+
+{% block content %}
+  <h1>{% translate "Configurar el segundo factor" %}</h1>
+
+  <p>{% translate "Su cuenta administra la Clínica entera, así que entrar con la contraseña no basta. Escanee este código con una aplicación de autenticación y escriba el número que le muestre." %}</p>
+
+  <img src="{{ codigo_qr }}" alt="{% translate 'Código para escanear con la aplicación de autenticación' %}">
+
+  <p>
+    {% translate "¿No puede escanearlo? Escriba esta clave a mano en la aplicación:" %}
+    <code>{{ secreto }}</code>
+  </p>
+
+  <form method="post" action="{% url 'tenancy:alta_de_segundo_factor' %}">
+    {% csrf_token %}
+    {{ formulario.as_p }}
+    <button type="submit">{% translate "Confirmar y entrar" %}</button>
+  </form>
+{% endblock %}

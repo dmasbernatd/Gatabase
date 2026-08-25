@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-24 17:03-0400\n"
+"POT-Creation-Date: 2026-08-24 17:23-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -75,7 +75,7 @@ msgid "momento"
 msgstr ""
 
 #: apps/audit/models.py:74 templates/audit/registro.html:4
-#: templates/audit/registro.html:7 templates/tenancy/base_panel.html:33
+#: templates/audit/registro.html:7 templates/tenancy/base_panel.html:48
 msgid "Registro de acceso"
 msgstr ""
 
@@ -336,8 +336,13 @@ msgstr ""
 msgid "Clínica"
 msgstr ""
 
-#: apps/tenancy/forms.py:38
+#: apps/tenancy/forms.py:39
 msgid "Contraseña inicial"
+msgstr ""
+
+#: apps/tenancy/forms.py:70 templates/mfa/authenticate.html:4
+#: templates/mfa/authenticate.html:7
+msgid "Código de la aplicación"
 msgstr ""
 
 #: apps/tenancy/management/commands/crear_clinica.py:20
@@ -393,6 +398,31 @@ msgid ""
 "%(email)s."
 msgstr ""
 
+#: apps/tenancy/management/commands/restablecer_segundo_factor.py:21
+msgid ""
+"Retira el segundo factor de un Usuario para que lo vuelva a dar de alta al "
+"entrar."
+msgstr ""
+
+#: apps/tenancy/management/commands/restablecer_segundo_factor.py:24
+msgid "Correo del Usuario"
+msgstr ""
+
+#: apps/tenancy/management/commands/restablecer_segundo_factor.py:30
+#, python-format
+msgid "No hay ningún Usuario con el correo «%s»."
+msgstr ""
+
+#: apps/tenancy/management/commands/restablecer_segundo_factor.py:34
+#, python-format
+msgid "«%s» no tenía segundo factor configurado."
+msgstr ""
+
+#: apps/tenancy/management/commands/restablecer_segundo_factor.py:37
+#, python-format
+msgid "Segundo factor retirado. «%s» lo dará de alta la próxima vez que entre."
+msgstr ""
+
 #: apps/tenancy/models.py:18
 msgid "creada"
 msgstr ""
@@ -446,16 +476,20 @@ msgstr ""
 msgid "alta"
 msgstr ""
 
-#: apps/tenancy/models.py:106 templates/tenancy/base_panel.html:32
+#: apps/tenancy/models.py:106 templates/tenancy/base_panel.html:47
 msgid "Usuarios"
 msgstr ""
 
-#: apps/tenancy/views.py:51 templates/tenancy/usuarios.html:9
+#: apps/tenancy/views.py:60 templates/tenancy/usuarios.html:9
 msgid "Crear Usuario"
 msgstr ""
 
-#: apps/tenancy/views.py:65
+#: apps/tenancy/views.py:74
 msgid "Editar Usuario"
+msgstr ""
+
+#: apps/tenancy/views.py:117
+msgid "Entre con su propio correo."
 msgstr ""
 
 #: apps/tutors/forms.py:43
@@ -496,7 +530,7 @@ msgid "teléfono"
 msgstr ""
 
 #: apps/tutors/models.py:100 templates/patients/ficha.html:73
-#: templates/tenancy/base_panel.html:30 templates/tutors/lista.html:4
+#: templates/tenancy/base_panel.html:45 templates/tutors/lista.html:4
 #: templates/tutors/lista.html:7
 msgid "Tutores"
 msgstr ""
@@ -568,7 +602,7 @@ msgstr ""
 msgid "Entrar en Gatabase"
 msgstr ""
 
-#: templates/account/login.html:15
+#: templates/account/login.html:15 templates/mfa/authenticate.html:14
 msgid "Entrar"
 msgstr ""
 
@@ -625,6 +659,10 @@ msgstr ""
 msgid "Gestión clínica para clínicas veterinarias."
 msgstr ""
 
+#: templates/mfa/authenticate.html:9
+msgid "Escriba el número que le muestra ahora su aplicación de autenticación."
+msgstr ""
+
 #: templates/mostrador/_resultados.html:15 templates/patients/ficha.html:24
 msgid "Especie"
 msgstr ""
@@ -642,7 +680,7 @@ msgid "Ningún Paciente de la Clínica coincide con la búsqueda."
 msgstr ""
 
 #: templates/mostrador/buscador.html:4 templates/mostrador/buscador.html:7
-#: templates/mostrador/buscador.html:30 templates/tenancy/base_panel.html:29
+#: templates/mostrador/buscador.html:30 templates/tenancy/base_panel.html:44
 #: templates/tutors/listado.html:21
 msgid "Buscar"
 msgstr ""
@@ -802,6 +840,30 @@ msgstr ""
 msgid "Otra persona responde también por %(paciente)s."
 msgstr ""
 
+#: templates/tenancy/alta_de_segundo_factor.html:4
+#: templates/tenancy/alta_de_segundo_factor.html:7
+msgid "Configurar el segundo factor"
+msgstr ""
+
+#: templates/tenancy/alta_de_segundo_factor.html:9
+msgid ""
+"Su cuenta administra la Clínica entera, así que entrar con la contraseña no "
+"basta. Escanee este código con una aplicación de autenticación y escriba el "
+"número que le muestre."
+msgstr ""
+
+#: templates/tenancy/alta_de_segundo_factor.html:11
+msgid "Código para escanear con la aplicación de autenticación"
+msgstr ""
+
+#: templates/tenancy/alta_de_segundo_factor.html:14
+msgid "¿No puede escanearlo? Escriba esta clave a mano en la aplicación:"
+msgstr ""
+
+#: templates/tenancy/alta_de_segundo_factor.html:21
+msgid "Confirmar y entrar"
+msgstr ""
+
 #: templates/tenancy/base_panel.html:15
 msgid "Cambiar de Sede"
 msgstr ""
@@ -810,12 +872,28 @@ msgstr ""
 msgid "Cambiar"
 msgstr ""
 
-#: templates/tenancy/base_panel.html:28
-msgid "Inicio"
+#: templates/tenancy/base_panel.html:32
+msgid "Usuario activo"
 msgstr ""
 
 #: templates/tenancy/base_panel.html:39
+msgid "Cambiar de Usuario"
+msgstr ""
+
+#: templates/tenancy/base_panel.html:43
+msgid "Inicio"
+msgstr ""
+
+#: templates/tenancy/base_panel.html:54
 msgid "Salir"
+msgstr ""
+
+#: templates/tenancy/base_panel.html:70
+msgid "Su sesión está por caducar. Lo que no haya guardado se perderá."
+msgstr ""
+
+#: templates/tenancy/base_panel.html:73
+msgid "Sigo aquí"
 msgstr ""
 
 #: templates/tenancy/formulario_de_usuario.html:15

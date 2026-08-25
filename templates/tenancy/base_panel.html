@@ -22,7 +22,21 @@
       </form>
     {% endif %}
 
-    <p>{{ user }} — {{ user.get_rol_display }}</p>
+    {% comment %}
+      Quién está trabajando, siempre a la vista: la tablet del box la comparten
+      tres veterinarios, y una Consulta firmada con el nombre equivocado tiene
+      valor legal. Al lado, y no escondido, el cambio de Usuario.
+    {% endcomment %}
+    <p>
+      <span>{% translate "Usuario activo" %}:</span>
+      <strong>{{ user }}</strong>
+      <span>({{ user.get_rol_display }})</span>
+    </p>
+
+    <form method="post" action="{% url 'tenancy:cambiar_de_usuario' %}">
+      {% csrf_token %}
+      <button type="submit">{% translate "Cambiar de Usuario" %}</button>
+    </form>
 
     <nav>
       <a href="{% url 'tenancy:inicio' %}">{% translate "Inicio" %}</a>
@@ -39,6 +53,24 @@
       <button type="submit">{% translate "Salir" %}</button>
     </form>
   </header>
+
+  {% comment %}
+    El aviso de que la sesión está por caducar. Nace oculto y lo saca
+    `static/sesion.js` contando desde los plazos que van aquí en `data-`: la
+    plantilla no calcula nada y el guion no sabe de textos. Sin JavaScript no se
+    ve, y entonces la sesión caduca sin aviso — que es lo que pasaba antes. El
+    aviso avisa y nada más: quien echa a nadie de la página es el servidor.
+  {% endcomment %}
+  <aside id="aviso-de-sesion"
+         hidden
+         data-segundos-de-sesion="{{ segundos_de_sesion }}"
+         data-segundos-de-aviso="{{ segundos_de_aviso }}">
+    <p>{% translate "Su sesión está por caducar. Lo que no haya guardado se perderá." %}</p>
+    <form method="post" action="{% url 'tenancy:seguir_conectado' %}" id="seguir-conectado">
+      {% csrf_token %}
+      <button type="submit">{% translate "Sigo aquí" %}</button>
+    </form>
+  </aside>
 
   {% block panel %}{% endblock %}
 {% endblock %}
