@@ -1,0 +1,82 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{{ sede }}{% endblock %}
+
+{% block panel %}
+  <h1>{{ sede }}</h1>
+
+  <h2>{% translate "Horario de atención" %}</h2>
+
+  {% comment %}
+    Los siete días salen siempre, incluso los que no tienen franjas: un horario
+    se revisa mirando lo que falta, y el día que no aparece no se echa de menos.
+  {% endcomment %}
+  <table>
+    <tbody>
+      {% for dia in semana %}
+        <tr>
+          <th>{{ dia.dia }}</th>
+          <td>
+            {% for franja in dia.franjas %}
+              <span>{{ franja.desde|time:"H:i" }}–{{ franja.hasta|time:"H:i" }}</span>
+              <form method="post" action="{% url 'tenancy:quitar_franja' sede.pk franja.pk %}">
+                {% csrf_token %}
+                <button type="submit">{% translate "Quitar" %}</button>
+              </form>
+            {% empty %}
+              {% translate "cerrado" %}
+            {% endfor %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>{% translate "Añadir una franja" %}</h3>
+  <form method="post" action="{% url 'tenancy:crear_franja' sede.pk %}">
+    {% csrf_token %}
+    {{ formulario_de_franja.as_p }}
+    <button type="submit">{% translate "Añadir" %}</button>
+  </form>
+
+  <h2>{% translate "Excepciones" %}</h2>
+
+  {% comment %}
+    Sin calendario de festivos a propósito (`horarios.py`): los festivos chilenos
+    se mueven y un cierre por vacaciones no está en ninguna lista.
+  {% endcomment %}
+  <p>{% translate "Festivos y cierres. La fecha que tenga una Excepción no sigue el horario de su semana." %}</p>
+
+  <ul>
+    {% for excepcion in excepciones %}
+      <li>
+        <span>{{ excepcion }}</span>
+        {% if excepcion.motivo %}<span>({{ excepcion.motivo }})</span>{% endif %}
+        <form method="post" action="{% url 'tenancy:quitar_excepcion' sede.pk excepcion.pk %}">
+          {% csrf_token %}
+          <button type="submit">{% translate "Quitar" %}</button>
+        </form>
+      </li>
+    {% empty %}
+      <li>{% translate "No hay ninguna Excepción declarada." %}</li>
+    {% endfor %}
+  </ul>
+
+  <h3>{% translate "Añadir una Excepción" %}</h3>
+  <form method="post" action="{% url 'tenancy:crear_excepcion' sede.pk %}">
+    {% csrf_token %}
+    {{ formulario_de_excepcion.as_p }}
+    <p>{% translate "Sin horas, la Sede cierra ese día entero." %}</p>
+    <button type="submit">{% translate "Añadir" %}</button>
+  </form>
+
+  <h2>{% translate "Urgencias" %}</h2>
+  <form method="post" action="{% url 'tenancy:guardar_urgencias' sede.pk %}">
+    {% csrf_token %}
+    {{ formulario_de_urgencias.as_p }}
+    <button type="submit">{% translate "Guardar" %}</button>
+  </form>
+
+  <p><a href="{% url 'tenancy:configuracion' %}">{% translate "Volver a la configuración" %}</a></p>
+{% endblock %}

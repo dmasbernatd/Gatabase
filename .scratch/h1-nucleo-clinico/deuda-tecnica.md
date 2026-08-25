@@ -389,3 +389,45 @@ Se reinicia al cargar la página, al responder htmx y al pulsar «Sigo aquí» �
 es justo cuando el servidor renueva el plazo—, y no al teclear. Es lo correcto:
 el servidor tampoco cuenta las teclas. La consecuencia es que quien escribe una
 Consulta larga sin enviar nada ve el aviso, que es exactamente para eso.
+
+## Configuración de la Sede
+
+Lo que el **14** dejó decidido a medias, y por qué se dejó así.
+
+**Una franja no puede cruzar la medianoche.** La base exige `hasta > desde`, así
+que la Sede que atiende de 20:00 a 02:00 lo declara en dos franjas, una en cada
+día. Es lo que ya hace quien escribe el cartel de la puerta, y evita que «de
+20:00 a 02:00» signifique dos cosas según quién lo lea. Lo que **no** se puede
+declarar de ninguna manera es un día entero seguido: `TimeField` no sabe decir
+24:00, así que las 24 horas se escriben de 00:00 a 23:59 y queda un minuto
+muerto. Hoy no molesta a nadie —la Sede que atiende siempre lo declara con la
+bandera de urgencias, no con su horario—, y en H3 la agenda no da horas a las
+23:59.
+_Cuándo se paga_: si aparece una Sede que atiende de verdad las veinticuatro
+horas y necesita que la agenda le ofrezca ese hueco. Entonces es una bandera
+`todo_el_dia` en la Franja, o guardar duraciones en vez de horas de reloj.
+
+**Una fecha con Excepciones no mira la semana, y eso incluye la Excepción a
+medio escribir.** Quien declara «el 24 de diciembre de 11:00 a 14:00» y se
+equivoca al teclear la fecha cierra sin querer el día que tecleó: no se abre
+«además de» su horario, se abre «en lugar de». Es la regla correcta —es lo que
+significa una excepción— pero no hay ninguna pantalla que enseñe el efecto antes
+de guardar.
+_Cuándo se paga_: con la agenda del **H3**, que es donde el horario se ve
+dibujado y el error salta a la vista solo.
+
+**No hay historia del horario.** Una Franja se borra cuando el horario cambia, y
+lo que la Sede atendía el mes pasado no queda escrito en ninguna parte. Es
+deliberado —el horario es lo que la Sede hace hoy, no un hecho del pasado; los
+hechos son las Consultas y esas no se tocan—, pero significa que una Cita del
+H3 agendada fuera del horario de hoy no podrá explicarse mirando el horario.
+_Cuándo se paga_: no se paga, salvo que alguna auditoría llegue a pedir «a qué
+hora abría esta Sede el 3 de marzo». Entonces es una tabla de versiones, no un
+campo más.
+
+**Las Clínicas de derivación no se comprueban contra nada.** Nombre, teléfono y
+dirección los teclea el admin, y una clínica que cerró sigue en la lista hasta
+que alguien la quite. No hay forma de saberlo desde aquí: no existe un registro
+público de clínicas veterinarias consultable por API.
+_Cuándo se paga_: no se paga. Se anota para que nadie espere una validación que
+no puede existir.

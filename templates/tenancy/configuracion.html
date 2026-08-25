@@ -1,0 +1,28 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Configuración de la Clínica" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Configuración de la Clínica" %}</h1>
+
+  {% comment %}
+    Nada de esto se ve en el mostrador: es lo que van a preguntar la agenda y la
+    Autorespuesta. Se dice aquí para que quien entre no busque el efecto en una
+    pantalla que todavía no existe.
+  {% endcomment %}
+  <p>{% translate "Lo que la Clínica declara de sí misma: cuándo atiende cada Sede y a quién derivar cuando no puede." %}</p>
+
+  <h2>{% translate "Sedes" %}</h2>
+  <ul>
+    {% for sede in sedes %}
+      <li>
+        <a href="{% url 'tenancy:horario_de_la_sede' sede.pk %}">{{ sede }}</a>
+        {% if sede.atiende_urgencias %}<span>{% translate "atiende urgencias" %}</span>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+
+  <h2>{% translate "Clínicas de derivación" %}</h2>
+  <p><a href="{% url 'tenancy:derivaciones' %}">{% translate "Ver las Clínicas de derivación" %}</a></p>
+{% endblock %}

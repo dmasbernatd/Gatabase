@@ -13,7 +13,8 @@ qué hace la Clínica con él.
 
 import pytest
 
-from apps.tutors import rut, telefono
+from apps import telefono
+from apps.tutors import rut
 
 # Un RUT de verdad, escrito de las cinco formas en que lo dicta un Tutor.
 RUT = "123456785"

@@ -1,4 +1,9 @@
-"""El teléfono: cómo se lee lo que dicta el Tutor y cómo se guarda.
+"""El teléfono: cómo se lee lo que se dicta y cómo se guarda.
+
+Está fuera de `tutors` por lo mismo que `campos.py`: lo necesita más de una app y
+ninguna de ellas puede importar de la otra. Lo estrenó el Tutor, pero un teléfono
+lo tiene también la Sede que atiende urgencias, y `tenancy` no puede depender de
+`tutors` — todo el mundo depende de `tenancy`, empezando por `tutors`.
 
 Se guarda en E.164 —«+56912345678»—, que es la forma que no admite dos lecturas:
 lleva el país delante y no lleva nada más. Es la que después sirve para llamar,

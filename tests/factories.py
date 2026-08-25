@@ -6,13 +6,23 @@ cuando el modelo tenga clave natural. Los tests las importan desde aquí; las
 fábricas de un solo test viven junto a ese test.
 """
 
+import datetime as dt
+
 import factory
 from django.contrib.auth import get_user_model
 
 from apps.audit.models import Accion, RegistroDeAcceso
 from apps.patients.catalogo import Especie
 from apps.patients.models import Paciente, Sexo
-from apps.tenancy.models import Clinica, Rol, Sede
+from apps.tenancy.horarios import Dia
+from apps.tenancy.models import (
+    Clinica,
+    ClinicaDeDerivacion,
+    ExcepcionDeAtencion,
+    FranjaDeAtencion,
+    Rol,
+    Sede,
+)
 from apps.tutors.models import Tutor, Vinculo
 from apps.tutors.rut import digito_verificador
 
@@ -156,3 +166,55 @@ class RegistroDeAccesoFactory(FabricaDeLaClinica):
     tipo_de_objeto = "tutors.Tutor"
     identificador = factory.Sequence(str)
     accion = Accion.LECTURA
+
+
+class FabricaDeLaSede(FabricaDeLaClinica):
+    """Base de lo que una Sede declara de sí misma.
+
+    La Clínica sale de la Sede, como en los formularios: una Franja cuya Clínica
+    no fuera la de su Sede no significaría nada, y dejar que la fábrica invente
+    una tercera escondería justo los escenarios de aislamiento que se quieren
+    armar.
+    """
+
+    class Meta:
+        abstract = True
+
+    sede = factory.SubFactory(SedeFactory)
+    clinic = factory.SelfAttribute("sede.clinic")
+
+
+class FranjaDeAtencionFactory(FabricaDeLaSede):
+    """Un tramo de un día de la semana en que la Sede atiende."""
+
+    class Meta:
+        model = FranjaDeAtencion
+
+    dia = Dia.LUNES
+    desde = dt.time(9, 0)
+    hasta = dt.time(13, 0)
+
+
+class ExcepcionDeAtencionFactory(FabricaDeLaSede):
+    """Lo que la Sede hace una fecha concreta, en vez de lo que diga su semana.
+
+    Nace como un cierre —sin horas—, que es el caso corriente: un festivo o una
+    semana de vacaciones. El día de horario raro se pide con `desde` y `hasta`.
+    """
+
+    class Meta:
+        model = ExcepcionDeAtencion
+
+    fecha = dt.date(2026, 9, 18)
+    motivo = "Fiestas Patrias"
+
+
+class ClinicaDeDerivacionFactory(FabricaDeLaClinica):
+    """Clínica externa a la que se manda a un Tutor cuando la Sede no puede."""
+
+    class Meta:
+        model = ClinicaDeDerivacion
+
+    nombre = factory.Sequence(lambda n: f"Clínica de urgencias {n}")
+    telefono = "+56912345678"
+    direccion = "Av. Las Condes 4321, Santiago"

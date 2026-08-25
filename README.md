@@ -19,6 +19,7 @@ En desarrollo activo, con el hito **H1 — Núcleo clínico** en curso.
 - **Fichero de Tutores.** Alta, ficha y corrección, con listado buscable, ordenable y paginado, y cada acceso anotado.
 - **Fichas de Paciente**, con catálogo cerrado de especies y catálogo de razas por especie que sugiere sin cerrar el paso al texto libre. Un Paciente se registra desde la ficha del Tutor que lo trae, un Paciente puede tener varios Tutores y uno solo de ellos es el responsable. Un Paciente nunca se borra: el que muere o deja de venir cambia de estado, conserva su ficha entera y las listas lo esconden por defecto sin perderlo de vista. Un animal que cambia de manos tampoco pierde nada: el Vínculo del Tutor anterior se cierra con fecha —no se borra— y las dos fichas siguen diciendo de quién fue y hasta cuándo.
 - **Una sola caja de búsqueda** en el panel, que encuentra al Paciente escribiendo lo primero que haya a mano: el nombre del animal, el de quien responde por él, un teléfono, un RUT o el chip. Lo escrito se lee de una de dos maneras según traiga letras o no —un número dictado, entero y con sus espacios como puntuación, o un nombre palabra a palabra—, no distingue tildes ni mayúsculas, y responde mientras se escribe. Los Pacientes fallecidos e inactivos salen marcados, no escondidos. La búsqueda anota en el Registro que se consultó el conjunto; la lectura de una persona se anota al abrir su ficha.
+- **Configuración de la Sede.** El admin declara el Horario de atención de cada Sede —varias franjas por día—, las Excepciones por fecha para festivos y vacaciones, si la Sede atiende urgencias y con qué teléfono, y mantiene el catálogo de Clínicas de derivación. En H1 no cambia nada de lo que ve el mostrador: es de lo que van a colgar la agenda (H3) y la Autorespuesta (H4).
 - **i18n es-CL** con un test que falla si aparece texto visible fuera de `gettext`.
 - **Fechas en UTC** con presentación en `America/Santiago`, verificado en verano e invierno austral.
 
@@ -178,6 +179,29 @@ Buscar, ordenar y paginar el listado es `apps/tutors/listado.py`, fuera de la vi
 - **Una columna del listado es una `Columna` y una sola edición** (`COLUMNAS`). El mismo objeto sabe su rótulo, por qué campos ordena, qué `aria-sort` anuncia su cabecera y qué celda pinta en cada fila; la plantilla recorre la lista para las cabeceras y para el cuerpo, y el `colspan` de la fila vacía las cuenta. Añadir el RUT (ticket 06) al listado es tocar `COLUMNAS` y nada más.
 - **La búsqueda reparte lo escrito entre los campos**: cada palabra tiene que aparecer en alguno, no todas en el mismo, así que «camila rojas» encuentra a quien tiene el nombre en un campo y el apellido en otro. Es la búsqueda del fichero de Tutores; la caja única que además busca Pacientes y microchips, tolerante a tildes, es del ticket 11.
 - **El orden y la búsqueda viajan en los enlaces** del paginador y de las cabeceras, y cambiar de orden vuelve a la primera página.
+
+## Configuración de la Sede
+
+En `/panel/configuracion/`, y solo para el admin. Son datos que en H1 no se ven en ninguna pantalla del mostrador: existen porque de ellos dependen el cálculo de huecos de la agenda (H3) y qué contesta la Autorespuesta a las tres de la mañana (H4).
+
+El **Horario de atención** de una Sede son sus Franjas —«martes de 09:00 a 13:00»— y hay varias por día a propósito: una clínica que cierra a mediodía y vuelve por la tarde declarada con una sola franja de 09:00 a 19:00 daría hora a las 14:30 con la puerta cerrada.
+
+Las **Excepciones** son lo que pasa una fecha concreta *en lugar de* lo que diga la semana: sin horas, la Sede cierra el día entero —un festivo, la semana de vacaciones—; con horas, atiende esas y no las de su semana —el 24 de diciembre hasta las 14:00—. **No hay calendario automático de festivos**, y es deliberado: los feriados chilenos se mueven, los hay regionales, y un cierre por vacaciones no está en ninguna lista. Un calendario daría por sabido lo que no se sabe y cerraría la clínica un día que abrió.
+
+Quien contesta si la Sede atiende es `apps/tenancy/horarios.py`, con firma y tests propios y fuera de toda vista:
+
+```python
+esta_en_horario(sede, instante)  # -> True / False
+```
+
+Dos cosas que decide esa función y conviene no perder:
+
+- **La franja incluye su hora de apertura y no su hora de cierre.** A las 09:00 en punto se atiende; a las 13:00 en punto, ya no. Es lo que permite declarar mañana y tarde sin que el mediodía caiga en las dos franjas a la vez, y es lo que significa «cierro a las 13:00» dicho por quien atiende.
+- **Se pregunta por un instante, no por una hora de reloj.** En la base todo está en UTC y el horario se declara en hora de Santiago, que dos domingos al año no dura veinticuatro horas. La traducción ocurre una sola vez, dentro de la función. Hay tests en las semanas del cambio de hora de septiembre y de abril de 2026 precisamente por eso: las 12:00 UTC son las 09:00 en Santiago en verano y las 08:00 en invierno, y la Sede abre a las 09:00 las dos veces.
+
+Las **Clínicas de derivación** cuelgan de la Clínica y no de la Sede —el trato con la clínica de al lado lo tiene la organización, y las Sedes comparten la lista igual que comparten Tutores— y las mantiene el admin: la red de clínicas socias es conocimiento local y cambia sin que nadie de fuera se entere. Se guardan las tres cosas que hay que darle a un Tutor por teléfono de madrugada: nombre, número y dirección.
+
+El teléfono de urgencias se normaliza a E.164 como el del Tutor. Por eso la regla del teléfono vive en `apps/telefono.py` y su campo en `apps/campos.py`, fuera de `tutors`: `tenancy` no puede importar de una app que a su vez lo importa a él.
 
 ## HTMX
 

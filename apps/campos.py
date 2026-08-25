@@ -1,8 +1,9 @@
 """Campos de modelo que normalizan lo que se escribe antes de guardarlo.
 
-Aquí vive solo la base. Qué es un RUT lo decide `apps/tutors/rut.py`, y qué es un
-microchip, `apps/patients/microchip.py`; este módulo no sabe de ninguno de los
-dos.
+Aquí vive la base, y con ella el único campo que no puede ser de nadie: el
+teléfono, que necesitan el Tutor y la Sede de urgencias. Qué es un RUT lo decide
+`apps/tutors/rut.py`, y qué es un microchip, `apps/patients/microchip.py`; este
+módulo no sabe de ninguno de los dos.
 
 Está fuera de las dos apps porque las dos lo necesitan y ninguna puede importar
 de la otra: `tutors` conoce a `patients` y `patients` no conoce a nadie
@@ -22,6 +23,8 @@ que acordarse de llamar a nadie.
 
 from django import forms
 from django.db import models
+
+from apps import telefono
 
 
 class CampoQueNormaliza(models.CharField):
@@ -45,3 +48,23 @@ class CampoQueNormaliza(models.CharField):
 
     def formfield(self, **kwargs):
         return super().formfield(**{"form_class": self.entrada, **kwargs})
+
+
+class EntradaDeTelefono(forms.CharField):
+    """La caja donde se teclea un teléfono: entra como sea y se guarda en E.164."""
+
+    def to_python(self, valor):
+        return telefono.normalizado(super().to_python(valor))
+
+
+class CampoDeTelefono(CampoQueNormaliza):
+    """Un teléfono, guardado en E.164 (`apps/telefono.py`).
+
+    Este sí vive aquí, y no en la app que lo usa, porque lo usan dos que no
+    pueden importarse entre sí: el Tutor al que hay que llamar y la Sede que
+    atiende urgencias. La regla —qué es un teléfono— sigue estando en un solo
+    sitio, `apps/telefono.py`; aquí solo se dice que el campo pasa por ella.
+    """
+
+    normalizador = staticmethod(telefono.normalizado)
+    entrada = EntradaDeTelefono

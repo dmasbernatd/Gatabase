@@ -24,12 +24,13 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.busqueda import Campo
+from apps.campos import CampoDeTelefono
+from apps.telefono import como_se_busca as telefono_como_se_busca
 from apps.tenancy.aislamiento import ModeloDeLaClinica
-from apps.tutors.campos import CampoDeRut, CampoDeTelefono
+from apps.tutors.campos import CampoDeRut
 from apps.tutors.rut import como_se_busca as rut_como_se_busca
 from apps.tutors.rut import formateado
 from apps.tutors.rut import normalizado as rut_normalizado
-from apps.tutors.telefono import como_se_busca as telefono_como_se_busca
 
 
 class Tutor(ModeloDeLaClinica):

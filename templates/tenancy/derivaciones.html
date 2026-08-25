@@ -1,0 +1,45 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Clínicas de derivación" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Clínicas de derivación" %}</h1>
+
+  <p>{% translate "A quién mandar a un Tutor cuando la Sede no puede atenderlo. La lista es suya: nadie de fuera sabe con quién tiene trato." %}</p>
+
+  <p><a href="{% url 'tenancy:crear_derivacion' %}">{% translate "Añadir Clínica de derivación" %}</a></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>{% translate "Nombre" %}</th>
+        <th>{% translate "Teléfono" %}</th>
+        <th>{% translate "Dirección" %}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for derivacion in derivaciones %}
+        <tr>
+          <td>{{ derivacion }}</td>
+          <td>{{ derivacion.telefono }}</td>
+          <td>{{ derivacion.direccion }}</td>
+          <td>
+            <a href="{% url 'tenancy:editar_derivacion' derivacion.pk %}">{% translate "Editar" %}</a>
+            <form method="post" action="{% url 'tenancy:quitar_derivacion' derivacion.pk %}">
+              {% csrf_token %}
+              <button type="submit">{% translate "Quitar" %}</button>
+            </form>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="4">{% translate "No hay ninguna Clínica de derivación todavía." %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p><a href="{% url 'tenancy:configuracion' %}">{% translate "Volver a la configuración" %}</a></p>
+{% endblock %}

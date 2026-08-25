@@ -44,6 +44,7 @@
       <a href="{% url 'tutors:lista' %}">{% translate "Tutores" %}</a>
       {% if user.es_admin %}
         <a href="{% url 'tenancy:usuarios' %}">{% translate "Usuarios" %}</a>
+        <a href="{% url 'tenancy:configuracion' %}">{% translate "Configuración" %}</a>
         <a href="{% url 'audit:registro' %}">{% translate "Registro de acceso" %}</a>
       {% endif %}
     </nav>

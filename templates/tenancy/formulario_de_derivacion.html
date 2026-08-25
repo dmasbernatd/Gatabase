@@ -1,0 +1,16 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block panel %}
+  <h1>{{ titulo }}</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ formulario.as_p }}
+    <button type="submit">{% translate "Guardar" %}</button>
+  </form>
+
+  <p><a href="{% url 'tenancy:derivaciones' %}">{% translate "Volver a las Clínicas de derivación" %}</a></p>
+{% endblock %}

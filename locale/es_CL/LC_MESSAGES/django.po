@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-24 17:23-0400\n"
+"POT-Creation-Date: 2026-08-25 15:37-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: apps/audit/forms.py:35 apps/audit/models.py:63 apps/tenancy/models.py:105
+#: apps/audit/forms.py:35 apps/audit/models.py:63 apps/tenancy/models.py:135
 #: templates/audit/registro.html:27
 msgid "Usuario"
 msgstr ""
@@ -75,7 +75,7 @@ msgid "momento"
 msgstr ""
 
 #: apps/audit/models.py:74 templates/audit/registro.html:4
-#: templates/audit/registro.html:7 templates/tenancy/base_panel.html:48
+#: templates/audit/registro.html:7 templates/tenancy/base_panel.html:49
 msgid "Registro de acceso"
 msgstr ""
 
@@ -111,7 +111,7 @@ msgstr ""
 msgid "hurón"
 msgstr ""
 
-#: apps/patients/estados.py:38 apps/tenancy/models.py:96
+#: apps/patients/estados.py:38 apps/tenancy/models.py:126
 #: templates/tenancy/usuarios.html:30
 msgid "activo"
 msgstr ""
@@ -165,8 +165,8 @@ msgstr ""
 msgid "Tiene un microchip apuntado: no puede estar «sin chip»."
 msgstr ""
 
-#: apps/patients/forms.py:210 apps/tutors/models.py:99
-#: apps/tutors/models.py:213
+#: apps/patients/forms.py:210 apps/tutors/models.py:100
+#: apps/tutors/models.py:214
 msgid "Tutor"
 msgstr ""
 
@@ -237,8 +237,9 @@ msgstr ""
 msgid "todavía no se ha preguntado"
 msgstr ""
 
-#: apps/patients/models.py:79 apps/tenancy/models.py:17
-#: apps/tenancy/models.py:38 apps/tenancy/models.py:90 apps/tutors/models.py:41
+#: apps/patients/models.py:79 apps/tenancy/models.py:28
+#: apps/tenancy/models.py:49 apps/tenancy/models.py:120
+#: apps/tenancy/models.py:256 apps/tutors/models.py:42
 msgid "nombre"
 msgstr ""
 
@@ -282,12 +283,12 @@ msgstr ""
 msgid "fecha de fallecimiento"
 msgstr ""
 
-#: apps/patients/models.py:130 apps/tutors/models.py:219
+#: apps/patients/models.py:130 apps/tutors/models.py:220
 #: templates/mostrador/_resultados.html:14
 msgid "Paciente"
 msgstr ""
 
-#: apps/patients/models.py:131 apps/tutors/models.py:65
+#: apps/patients/models.py:131 apps/tutors/models.py:66
 #: templates/tutors/ficha.html:30
 msgid "Pacientes"
 msgstr ""
@@ -331,18 +332,76 @@ msgstr ""
 msgid "Corregir la ficha"
 msgstr ""
 
-#: apps/tenancy/aislamiento.py:70 apps/tenancy/models.py:21
-#: apps/tenancy/models.py:36 apps/tenancy/models.py:85
+#: apps/telefono.py:55
+msgid ""
+"No se entiende como un teléfono. Escríbelo con sus nueve dígitos —«9 1234 "
+"5678»— o, si es de otro país, con su + y su código."
+msgstr ""
+
+#: apps/telefono.py:104
+msgid "Un teléfono se escribe con números."
+msgstr ""
+
+#: apps/tenancy/aislamiento.py:70 apps/tenancy/models.py:32
+#: apps/tenancy/models.py:47 apps/tenancy/models.py:115
 msgid "Clínica"
 msgstr ""
 
-#: apps/tenancy/forms.py:39
+#: apps/tenancy/forms.py:47
 msgid "Contraseña inicial"
 msgstr ""
 
-#: apps/tenancy/forms.py:70 templates/mfa/authenticate.html:4
+#: apps/tenancy/forms.py:78 templates/mfa/authenticate.html:4
 #: templates/mfa/authenticate.html:7
 msgid "Código de la aplicación"
+msgstr ""
+
+#: apps/tenancy/forms.py:119 apps/tenancy/forms.py:159
+msgid "La franja tiene que terminar después de empezar."
+msgstr ""
+
+#: apps/tenancy/forms.py:123
+msgid "Ya hay una franja de ese día que se pisa con esta. Amplíe la que hay."
+msgstr ""
+
+#: apps/tenancy/forms.py:156
+msgid "Escriba las dos horas, o ninguna para cerrar todo el día."
+msgstr ""
+
+#: apps/tenancy/forms.py:180
+msgid "Esta Sede no atiende urgencias: borre el número o marque que sí."
+msgstr ""
+
+#: apps/tenancy/forms.py:195
+msgid "Esa clínica ya está en la lista."
+msgstr ""
+
+#: apps/tenancy/horarios.py:51
+msgid "lunes"
+msgstr ""
+
+#: apps/tenancy/horarios.py:52
+msgid "martes"
+msgstr ""
+
+#: apps/tenancy/horarios.py:53
+msgid "miércoles"
+msgstr ""
+
+#: apps/tenancy/horarios.py:54
+msgid "jueves"
+msgstr ""
+
+#: apps/tenancy/horarios.py:55
+msgid "viernes"
+msgstr ""
+
+#: apps/tenancy/horarios.py:56
+msgid "sábado"
+msgstr ""
+
+#: apps/tenancy/horarios.py:57
+msgid "domingo"
 msgstr ""
 
 #: apps/tenancy/management/commands/crear_clinica.py:20
@@ -423,73 +482,151 @@ msgstr ""
 msgid "Segundo factor retirado. «%s» lo dará de alta la próxima vez que entre."
 msgstr ""
 
-#: apps/tenancy/models.py:18
+#: apps/tenancy/models.py:29
 msgid "creada"
 msgstr ""
 
-#: apps/tenancy/models.py:22
+#: apps/tenancy/models.py:33
 msgid "Clínicas"
 msgstr ""
 
-#: apps/tenancy/models.py:39 apps/tutors/models.py:55
+#: apps/tenancy/models.py:50 apps/tenancy/models.py:258
+#: apps/tutors/models.py:56
 msgid "dirección"
 msgstr ""
 
-#: apps/tenancy/models.py:42 templates/tenancy/base_panel.html:8
+#: apps/tenancy/models.py:55 templates/tenancy/configuracion.html:22
+msgid "atiende urgencias"
+msgstr ""
+
+#: apps/tenancy/models.py:60
+msgid "teléfono de urgencias"
+msgstr ""
+
+#: apps/tenancy/models.py:64 apps/tenancy/models.py:161
+#: apps/tenancy/models.py:203 templates/tenancy/base_panel.html:8
 msgid "Sede"
 msgstr ""
 
-#: apps/tenancy/models.py:43 apps/tenancy/models.py:94
-#: templates/tenancy/usuarios.html:17
+#: apps/tenancy/models.py:65 apps/tenancy/models.py:124
+#: templates/tenancy/configuracion.html:17 templates/tenancy/usuarios.html:17
 msgid "Sedes"
 msgstr ""
 
-#: apps/tenancy/models.py:56
+#: apps/tenancy/models.py:86
 msgid "veterinario"
 msgstr ""
 
-#: apps/tenancy/models.py:57
+#: apps/tenancy/models.py:87
 msgid "recepción"
 msgstr ""
 
-#: apps/tenancy/models.py:58
+#: apps/tenancy/models.py:88
 msgid "admin"
 msgstr ""
 
-#: apps/tenancy/models.py:70
+#: apps/tenancy/models.py:100
 msgid "Un Usuario necesita un correo para entrar."
 msgstr ""
 
-#: apps/tenancy/models.py:89 apps/tutors/models.py:54
+#: apps/tenancy/models.py:119 apps/tutors/models.py:55
 msgid "correo"
 msgstr ""
 
-#: apps/tenancy/models.py:91 apps/tutors/models.py:42
+#: apps/tenancy/models.py:121 apps/tutors/models.py:43
 msgid "apellidos"
 msgstr ""
 
-#: apps/tenancy/models.py:92
+#: apps/tenancy/models.py:122
 msgid "rol"
 msgstr ""
 
-#: apps/tenancy/models.py:97
+#: apps/tenancy/models.py:127
 msgid "alta"
 msgstr ""
 
-#: apps/tenancy/models.py:106 templates/tenancy/base_panel.html:47
+#: apps/tenancy/models.py:136 templates/tenancy/base_panel.html:47
 msgid "Usuarios"
 msgstr ""
 
-#: apps/tenancy/views.py:60 templates/tenancy/usuarios.html:9
+#: apps/tenancy/models.py:163
+msgid "día"
+msgstr ""
+
+#: apps/tenancy/models.py:164 apps/tenancy/models.py:209
+msgid "desde"
+msgstr ""
+
+#: apps/tenancy/models.py:165 apps/tenancy/models.py:210
+#: apps/tutors/models.py:228
+msgid "hasta"
+msgstr ""
+
+#: apps/tenancy/models.py:168
+msgid "Franja de atención"
+msgstr ""
+
+#: apps/tenancy/models.py:169
+msgid "Franjas de atención"
+msgstr ""
+
+#: apps/tenancy/models.py:205
+msgid "fecha"
+msgstr ""
+
+#: apps/tenancy/models.py:208
+msgid "motivo"
+msgstr ""
+
+#: apps/tenancy/models.py:213
+msgid "Excepción de atención"
+msgstr ""
+
+#: apps/tenancy/models.py:214
+msgid "Excepciones de atención"
+msgstr ""
+
+#: apps/tenancy/models.py:232
+#, python-format
+msgid "%(fecha)s: cerrado"
+msgstr ""
+
+#: apps/tenancy/models.py:233
+#, python-format
+msgid "%(fecha)s: de %(desde)s a %(hasta)s"
+msgstr ""
+
+#: apps/tenancy/models.py:257 apps/tutors/models.py:54
+msgid "teléfono"
+msgstr ""
+
+#: apps/tenancy/models.py:261
+msgid "Clínica de derivación"
+msgstr ""
+
+#: apps/tenancy/models.py:262 templates/tenancy/configuracion.html:27
+#: templates/tenancy/derivaciones.html:4 templates/tenancy/derivaciones.html:7
+msgid "Clínicas de derivación"
+msgstr ""
+
+#: apps/tenancy/views.py:75 templates/tenancy/usuarios.html:9
 msgid "Crear Usuario"
 msgstr ""
 
-#: apps/tenancy/views.py:74
+#: apps/tenancy/views.py:89
 msgid "Editar Usuario"
 msgstr ""
 
-#: apps/tenancy/views.py:117
+#: apps/tenancy/views.py:132
 msgid "Entre con su propio correo."
+msgstr ""
+
+#: apps/tenancy/views.py:312 templates/tenancy/derivaciones.html:11
+msgid "Añadir Clínica de derivación"
+msgstr ""
+
+#: apps/tenancy/views.py:328
+msgid "Editar Clínica de derivación"
 msgstr ""
 
 #: apps/tutors/forms.py:43
@@ -506,17 +643,18 @@ msgstr ""
 msgid "Apellidos"
 msgstr ""
 
-#: apps/tutors/listado.py:97 templates/tenancy/usuarios.html:14
+#: apps/tutors/listado.py:97 templates/tenancy/derivaciones.html:16
+#: templates/tenancy/usuarios.html:14
 msgid "Nombre"
 msgstr ""
 
-#: apps/tutors/listado.py:98 apps/tutors/models.py:49
+#: apps/tutors/listado.py:98 apps/tutors/models.py:50
 #: templates/tutors/ficha.html:15
 msgid "RUT"
 msgstr ""
 
 #: apps/tutors/listado.py:99 templates/mostrador/_resultados.html:17
-#: templates/tutors/ficha.html:18
+#: templates/tenancy/derivaciones.html:17 templates/tutors/ficha.html:18
 msgid "Teléfono"
 msgstr ""
 
@@ -525,33 +663,25 @@ msgstr ""
 msgid "Correo"
 msgstr ""
 
-#: apps/tutors/models.py:53
-msgid "teléfono"
-msgstr ""
-
-#: apps/tutors/models.py:100 templates/patients/ficha.html:73
+#: apps/tutors/models.py:101 templates/patients/ficha.html:73
 #: templates/tenancy/base_panel.html:45 templates/tutors/lista.html:4
 #: templates/tutors/lista.html:7
 msgid "Tutores"
 msgstr ""
 
-#: apps/tutors/models.py:221
+#: apps/tutors/models.py:222
 msgid "es el responsable"
 msgstr ""
 
-#: apps/tutors/models.py:227
-msgid "hasta"
-msgstr ""
-
-#: apps/tutors/models.py:230
+#: apps/tutors/models.py:231
 msgid "Vínculo"
 msgstr ""
 
-#: apps/tutors/models.py:231
+#: apps/tutors/models.py:232
 msgid "Vínculos"
 msgstr ""
 
-#: apps/tutors/models.py:292
+#: apps/tutors/models.py:293
 #, python-format
 msgid ""
 "%(paciente)s se quedaría sin nadie que responda por él: diga antes quién lo "
@@ -577,16 +707,6 @@ msgstr ""
 msgid ""
 "El dígito verificador no corresponde: para %(cuerpo)s tendría que ser "
 "%(cual)s."
-msgstr ""
-
-#: apps/tutors/telefono.py:50
-msgid ""
-"No se entiende como un teléfono. Escríbelo con sus nueve dígitos —«9 1234 "
-"5678»— o, si es de otro país, con su + y su código."
-msgstr ""
-
-#: apps/tutors/telefono.py:99
-msgid "Un teléfono se escribe con números."
 msgstr ""
 
 #: apps/tutors/traspaso.py:40
@@ -704,7 +824,9 @@ msgstr ""
 #: templates/patients/cerrar_vinculo.html:22 templates/patients/estado.html:24
 #: templates/patients/formulario.html:59 templates/patients/traspaso.html:28
 #: templates/patients/vincular.html:14
+#: templates/tenancy/formulario_de_derivacion.html:12
 #: templates/tenancy/formulario_de_usuario.html:12
+#: templates/tenancy/horario_de_la_sede.html:80
 #: templates/tutors/formulario.html:25
 msgid "Guardar"
 msgstr ""
@@ -884,20 +1006,115 @@ msgstr ""
 msgid "Inicio"
 msgstr ""
 
-#: templates/tenancy/base_panel.html:54
+#: templates/tenancy/base_panel.html:48
+msgid "Configuración"
+msgstr ""
+
+#: templates/tenancy/base_panel.html:55
 msgid "Salir"
 msgstr ""
 
-#: templates/tenancy/base_panel.html:70
+#: templates/tenancy/base_panel.html:71
 msgid "Su sesión está por caducar. Lo que no haya guardado se perderá."
 msgstr ""
 
-#: templates/tenancy/base_panel.html:73
+#: templates/tenancy/base_panel.html:74
 msgid "Sigo aquí"
+msgstr ""
+
+#: templates/tenancy/configuracion.html:4
+#: templates/tenancy/configuracion.html:7
+msgid "Configuración de la Clínica"
+msgstr ""
+
+#: templates/tenancy/configuracion.html:15
+msgid ""
+"Lo que la Clínica declara de sí misma: cuándo atiende cada Sede y a quién "
+"derivar cuando no puede."
+msgstr ""
+
+#: templates/tenancy/configuracion.html:28
+msgid "Ver las Clínicas de derivación"
+msgstr ""
+
+#: templates/tenancy/derivaciones.html:9
+msgid ""
+"A quién mandar a un Tutor cuando la Sede no puede atenderlo. La lista es "
+"suya: nadie de fuera sabe con quién tiene trato."
+msgstr ""
+
+#: templates/tenancy/derivaciones.html:18 templates/tutors/ficha.html:24
+msgid "Dirección"
+msgstr ""
+
+#: templates/tenancy/derivaciones.html:29 templates/tenancy/usuarios.html:33
+msgid "Editar"
+msgstr ""
+
+#: templates/tenancy/derivaciones.html:32
+#: templates/tenancy/horario_de_la_sede.html:26
+#: templates/tenancy/horario_de_la_sede.html:60
+msgid "Quitar"
+msgstr ""
+
+#: templates/tenancy/derivaciones.html:38
+msgid "No hay ninguna Clínica de derivación todavía."
+msgstr ""
+
+#: templates/tenancy/derivaciones.html:44
+#: templates/tenancy/horario_de_la_sede.html:83
+msgid "Volver a la configuración"
+msgstr ""
+
+#: templates/tenancy/formulario_de_derivacion.html:15
+msgid "Volver a las Clínicas de derivación"
 msgstr ""
 
 #: templates/tenancy/formulario_de_usuario.html:15
 msgid "Volver a los Usuarios"
+msgstr ""
+
+#: templates/tenancy/horario_de_la_sede.html:9
+msgid "Horario de atención"
+msgstr ""
+
+#: templates/tenancy/horario_de_la_sede.html:29
+msgid "cerrado"
+msgstr ""
+
+#: templates/tenancy/horario_de_la_sede.html:37
+msgid "Añadir una franja"
+msgstr ""
+
+#: templates/tenancy/horario_de_la_sede.html:41
+#: templates/tenancy/horario_de_la_sede.html:73
+msgid "Añadir"
+msgstr ""
+
+#: templates/tenancy/horario_de_la_sede.html:44
+msgid "Excepciones"
+msgstr ""
+
+#: templates/tenancy/horario_de_la_sede.html:51
+msgid ""
+"Festivos y cierres. La fecha que tenga una Excepción no sigue el horario de "
+"su semana."
+msgstr ""
+
+#: templates/tenancy/horario_de_la_sede.html:64
+msgid "No hay ninguna Excepción declarada."
+msgstr ""
+
+#: templates/tenancy/horario_de_la_sede.html:68
+msgid "Añadir una Excepción"
+msgstr ""
+
+#: templates/tenancy/horario_de_la_sede.html:72
+msgid "Sin horas, la Sede cierra ese día entero."
+msgstr ""
+
+#: templates/tenancy/horario_de_la_sede.html:76
+msgid "Urgencias"
 msgstr ""
 
 #: templates/tenancy/inicio.html:9
@@ -923,16 +1140,8 @@ msgstr ""
 msgid "desactivado"
 msgstr ""
 
-#: templates/tenancy/usuarios.html:33
-msgid "Editar"
-msgstr ""
-
 #: templates/tenancy/usuarios.html:37
 msgid "Desactivar"
-msgstr ""
-
-#: templates/tutors/ficha.html:24
-msgid "Dirección"
 msgstr ""
 
 #: templates/tutors/ficha.html:69
