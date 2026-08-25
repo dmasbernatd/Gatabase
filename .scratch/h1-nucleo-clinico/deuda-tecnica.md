@@ -47,6 +47,18 @@ casilla en el **16** (limpiar es rehacer la base, no borrar la Clínica) y en el
 **qué significa cerrar una Clínica** — desactivar a sus Usuarios, dejarla sin
 acceso, algo más —, y eso se decide al hacer el 19.
 
+**`.gitignore` se llevaba por delante la app `apps/imports/`.** La regla
+`imports/`, escrita para los ficheros de importación de la clínica (tickets
+17-19), no estaba anclada a la raíz, así que casaba también con el directorio de
+la app. El código del **16** no entró en `git add` y solo se notó al revisar lo
+que había quedado en el índice; los tickets 17, 18 y 19 escriben ahí dentro y
+habrían tropezado con lo mismo.
+_Pagado el 25 de agosto de 2026_: las dos reglas pasan a ser `/imports/` y
+`/exports/`.
+_Lo que queda vivo_: no hay nada que avise de una regla de `.gitignore` que
+esconde código. Lo que la delató fue mirar `git status --short` antes de commitear,
+que es barato y conviene seguir haciendo.
+
 ## Rendimiento
 
 **«Usable con cientos de Tutores» está afirmado, no sostenido.** Es una casilla

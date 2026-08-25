@@ -106,6 +106,24 @@ Al admin que pierde el teléfono lo rescata un comando, que retira el segundo fa
 .venv/bin/python manage.py restablecer_segundo_factor admin@losandes.example
 ```
 
+## Datos de demostración
+
+Para desarrollar contra volumen, medir si la búsqueda aguanta y enseñarle el sistema a la clínica piloto sin abrir la ficha de un cliente real:
+
+```sh
+.venv/bin/python manage.py datos_mock
+```
+
+Deja **dos** Clínicas —una de 3000 Tutores y otra pequeña—, cada una con su Sede, Usuarios de los tres roles, Pacientes, Vínculos y Consentimientos. Todos los Usuarios entran con la contraseña que el comando imprime al terminar. Se ajusta con `--tutores` y con `--semilla`; la misma semilla da la misma clínica, así que un fallo que aparece con estos datos se vuelve a ver mañana.
+
+Dos Clínicas y no una porque es lo que deja **comprobar el aislamiento a mano**: quien entra con un Usuario de una y busca a un Tutor de la otra no lo encuentra, sin proponérselo.
+
+Los datos son verosímiles y no de relleno: RUT con dígito verificador que cuadra, teléfonos chilenos en E.164, nombres y apellidos de una sala de espera de Santiago, y una mezcla de especies con perros y gatos delante. Los casos límite que rompen pantallas —Paciente sin chip, Paciente fallecido, Tutor sin RUT, Tutor extranjero, dos Tutores con el mismo teléfono, Paciente con dos Tutores— se ponen a propósito y el resumen dice en qué ficha están, para que no haya que buscarlos. Quién inventa qué y por qué lo cuenta `apps/imports/mock.py`.
+
+**Correrlo dos veces seguidas deja la misma clínica**, no el doble: rehace sus Tutores y sus Pacientes antes de escribir. Lo que no hace es borrar la Clínica — el Registro de acceso no admite `DELETE` ([ADR-0004](docs/adr/0004-registro-de-acceso-propio-para-registrar-lecturas.md)), así que el borrado en cascada de una Clínica con accesos anotados falla. Para dejar la base sin rastro hay que rehacerla: `dropdb` y `make migrate`, o el contenedor de `scripts/db.sh` otra vez.
+
+**No se ejecuta contra un despliegue.** Con `DJANGO_DEBUG` apagado se niega, y si además hay Clínicas que no son las suyas se niega sin apelación: eso es una base con clientes. El despliegue de la demostración —configuración de producción y ni un cliente dentro— se pide a mano con `--aunque-no-sea-desarrollo`. En desarrollo corre sin preguntar y no toca las Clínicas que haya hechas a mano.
+
 ## Aislamiento por Clínica
 
 La Clínica es la frontera de todos los datos ([ADR-0003](docs/adr/0003-tenancy-por-clave-ajena-y-manager.md)). La garantía no es acordarse de filtrar: es que filtrar sea lo que pasa por defecto.

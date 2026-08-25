@@ -12,8 +12,10 @@
 media/
 
 # Importaciones y exportaciones de la clínica (tickets 17-19): datos personales.
-imports/
-exports/
+# Anclados a la raíz: sin la barra de delante, `imports/` se llevaba por delante
+# la app `apps/imports/` entera, y con ella el código que iba dentro.
+/imports/
+/exports/
 
 # Artefactos de Python y del build.
 __pycache__/
