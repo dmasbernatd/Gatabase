@@ -1,0 +1,94 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Importar Tutores" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Importar Tutores desde una planilla" %}</h1>
+
+  <p>
+    {% translate "Sube la planilla con la que llevas tus Tutores hoy. Antes de guardar nada se enseña qué filas entrarían y cuáles no, y por qué." %}
+  </p>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ formulario.as_p }}
+    <button type="submit">{% translate "Ver qué entraría" %}</button>
+  </form>
+
+  {% if importaciones %}
+    <h2>{% translate "Lo que se importó antes" %}</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>{% translate "Cuándo" %}</th>
+          <th>{% translate "Quién" %}</th>
+          <th>{% translate "Planilla" %}</th>
+          <th>{% translate "Filas" %}</th>
+          <th>{% translate "Creadas" %}</th>
+          <th>{% translate "Ya estaban" %}</th>
+          <th>{% translate "Con error" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for importacion in importaciones %}
+          <tr>
+            <td>{{ importacion.momento }}</td>
+            <td>{{ importacion.usuario }}</td>
+            <td>{{ importacion.planilla }}</td>
+            <td>{{ importacion.filas_leidas }}</td>
+            <td>{{ importacion.filas_creadas }}</td>
+            <td>{{ importacion.filas_repetidas }}</td>
+            <td>{{ importacion.filas_con_error }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <h2>{% translate "Cómo tiene que ser la planilla" %}</h2>
+
+  <p>
+    {% translate "Un archivo CSV con una fila de cabecera. Las columnas pueden ir en cualquier orden, y las que no aparecen aquí se ignoran." %}
+  </p>
+
+  {% comment %}
+    Las columnas salen de `tutores.COLUMNAS_DE_LA_PLANILLA`, que es también de
+    donde salen el archivo de ejemplo y el reconocimiento de la cabecera:
+    documentar una columna que el importador no reconociera es un error que
+    nadie ve hasta que alguien se descarga el ejemplo y no le entra.
+  {% endcomment %}
+  <table>
+    <thead>
+      <tr>
+        <th>{% translate "Columna" %}</th>
+        <th>{% translate "Qué trae" %}</th>
+        <th>{% translate "¿Obligatoria?" %}</th>
+        <th>{% translate "También se acepta" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for columna in columnas %}
+        <tr>
+          <td><code>{{ columna.nombre }}</code></td>
+          <td>{{ columna.etiqueta }}</td>
+          <td>{% if columna.obligatoria %}{% translate "sí" %}{% else %}{% translate "no" %}{% endif %}</td>
+          <td>{% for alias in columna.alias %}<code>{{ alias }}</code>{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p>
+    {% translate "El RUT se escribe como se dicte —con puntos, con guion o de corrido— y el teléfono también: se guardan como el sistema los guarda. Una fila sin RUT y sin teléfono no se importa, porque no habría manera de reconocerla si vuelves a subir la planilla." %}
+  </p>
+
+  <p>
+    <a href="{% url 'imports:ejemplo_de_tutores' %}">{% translate "Descargar una planilla de ejemplo" %}</a>
+  </p>
+
+  <p>
+    {% translate "Puedes importar por tandas y volver a subir la misma planilla las veces que haga falta: quien ya está en la Clínica no se duplica." %}
+  </p>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Qué entraría de la planilla" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Qué entraría de la planilla" %}</h1>
+
+  <p>{% blocktranslate with archivo=planilla %}Planilla: {{ archivo }}. Todavía no se ha guardado nada.{% endblocktranslate %}</p>
+
+  <ul>
+    <li>{% blocktranslate count cuantas=informe.creables|length %}Se crearía {{ cuantas }} Tutor.{% plural %}Se crearían {{ cuantas }} Tutores.{% endblocktranslate %}</li>
+    <li>{% blocktranslate count cuantas=informe.repetidas|length %}Se saltaría {{ cuantas }} fila que ya estaba.{% plural %}Se saltarían {{ cuantas }} filas que ya estaban.{% endblocktranslate %}</li>
+    <li>{% blocktranslate count cuantas=informe.erroneas|length %}Hay {{ cuantas }} fila con algún error.{% plural %}Hay {{ cuantas }} filas con algún error.{% endblocktranslate %}</li>
+  </ul>
+
+  <form method="post" action="{% url 'imports:confirmar' %}">
+    {% csrf_token %}
+    <button type="submit" {% if not informe.trae_algo_que_crear %}disabled{% endif %}>
+      {% translate "Importar lo que entra" %}
+    </button>
+  </form>
+
+  <form method="post" action="{% url 'imports:descartar' %}">
+    {% csrf_token %}
+    <button type="submit">{% translate "Descartar esta planilla" %}</button>
+  </form>
+
+  {% if informe.no_se_crean %}
+    <h2>{% translate "Filas que no se crearían" %}</h2>
+
+    <p>
+      <a href="{% url 'imports:informe' %}">{% translate "Descargar este informe como planilla" %}</a>
+      {% translate "— para abrirlo al lado del archivo y corregirlo. Descárgalo ahora: al importar se descarta la planilla, y recuperarlo pasa por volver a subirla." %}
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>{% translate "Línea" %}</th>
+          <th>{% translate "Fila" %}</th>
+          <th>{% translate "Qué pasa" %}</th>
+          <th>{% translate "Motivo" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fila in informe.no_se_crean %}
+          <tr>
+            <td>{{ fila.numero }}</td>
+            <td>{{ fila.resumen|default:"—" }}</td>
+            <td>{% if fila.es_un_error %}{% translate "hay que corregirla" %}{% else %}{% translate "ya estaba" %}{% endif %}</td>
+            <td>{{ fila.motivo }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <p><a href="{% url 'imports:tutores' %}">{% translate "Volver a subir otra planilla" %}</a></p>
+{% endblock %}

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 15:37-0400\n"
+"POT-Creation-Date: 2026-08-25 20:10-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -17,8 +17,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: apps/audit/forms.py:35 apps/audit/models.py:63 apps/tenancy/models.py:135
-#: templates/audit/registro.html:27
+#: apps/audit/forms.py:35 apps/audit/models.py:63 apps/imports/models.py:46
+#: apps/tenancy/models.py:135 templates/audit/registro.html:27
 msgid "Usuario"
 msgstr ""
 
@@ -70,17 +70,233 @@ msgstr ""
 msgid "acción"
 msgstr ""
 
-#: apps/audit/models.py:71
+#: apps/audit/models.py:71 apps/imports/models.py:54
 msgid "momento"
 msgstr ""
 
 #: apps/audit/models.py:74 templates/audit/registro.html:4
-#: templates/audit/registro.html:7 templates/tenancy/base_panel.html:49
+#: templates/audit/registro.html:7 templates/tenancy/base_panel.html:50
 msgid "Registro de acceso"
 msgstr ""
 
 #: apps/audit/models.py:75
 msgid "Registros de acceso"
+msgstr ""
+
+#: apps/imports/forms.py:27 templates/imports/tutores.html:27
+msgid "Planilla"
+msgstr ""
+
+#: apps/imports/forms.py:28
+msgid ""
+"Un archivo CSV. Todavía no se guarda nada: primero se enseña qué entraría."
+msgstr ""
+
+#: apps/imports/forms.py:35
+#, python-format
+msgid "La planilla ocupa más de %(maximo)s MB. ¿Seguro que es la planilla?"
+msgstr ""
+
+#: apps/imports/informe.py:88
+msgid "línea"
+msgstr ""
+
+#: apps/imports/informe.py:88
+msgid "fila"
+msgstr ""
+
+#: apps/imports/informe.py:88
+msgid "qué pasa"
+msgstr ""
+
+#: apps/imports/informe.py:88 apps/tenancy/models.py:208
+msgid "motivo"
+msgstr ""
+
+#: apps/imports/informe.py:93 templates/imports/vista_previa.html:51
+msgid "hay que corregirla"
+msgstr ""
+
+#: apps/imports/informe.py:93 templates/imports/vista_previa.html:51
+msgid "ya estaba"
+msgstr ""
+
+#: apps/imports/management/commands/datos_mock.py:16
+msgid "Llena la base con dos Clínicas de demostración y datos verosímiles."
+msgstr ""
+
+#: apps/imports/management/commands/datos_mock.py:23
+#, python-format
+msgid "Cuántos Tutores tiene la Clínica grande (por defecto %(cuantos)s)"
+msgstr ""
+
+#: apps/imports/management/commands/datos_mock.py:30
+msgid "Semilla del azar; la misma semilla da la misma clínica"
+msgstr ""
+
+#: apps/imports/management/commands/datos_mock.py:35
+msgid "Puebla con DJANGO_DEBUG apagado: el despliegue de la demostración"
+msgstr ""
+
+#: apps/imports/management/commands/datos_mock.py:48
+#, python-format
+msgid "Con menos de %(minimo)s Tutores no caben los casos límite."
+msgstr ""
+
+#: apps/imports/management/commands/datos_mock.py:61
+#, python-format
+msgid "Listo. Todos los Usuarios entran con la contraseña «%(clave)s»."
+msgstr ""
+
+#: apps/imports/management/commands/datos_mock.py:71
+#, python-format
+msgid ""
+"  Sede %(sede)s · %(tutores)s Tutores · %(pacientes)s Pacientes · "
+"%(vinculos)s Vínculos · %(consentimientos)s Consentimientos"
+msgstr ""
+
+#: apps/imports/management/commands/datos_mock.py:83
+msgid "  Casos límite:"
+msgstr ""
+
+#: apps/imports/mock.py:243
+#, python-format
+msgid ""
+"DJANGO_DEBUG está apagado y esta base tiene Clínicas que no son de "
+"demostración (%(cuales)s): son datos de clientes. Este comando no se ejecuta "
+"contra ellos."
+msgstr ""
+
+#: apps/imports/mock.py:250
+msgid ""
+"DJANGO_DEBUG está apagado, así que esto parece un despliegue. Si de verdad "
+"es el de la demostración y no tiene clientes, repítelo con --aunque-no-sea-"
+"desarrollo."
+msgstr ""
+
+#: apps/imports/mock.py:497
+msgid "Tutor sin RUT"
+msgstr ""
+
+#: apps/imports/mock.py:498
+msgid "Tutor extranjero, sin RUT y con teléfono de fuera"
+msgstr ""
+
+#: apps/imports/mock.py:500
+#, python-format
+msgid "Dos Tutores con el mismo teléfono (%(telefono)s)"
+msgstr ""
+
+#: apps/imports/mock.py:592
+msgid "Paciente sin microchip"
+msgstr ""
+
+#: apps/imports/mock.py:593
+msgid "Paciente fallecido, con su fecha"
+msgstr ""
+
+#: apps/imports/mock.py:663
+msgid "Paciente con dos Tutores (responsable primero)"
+msgstr ""
+
+#: apps/imports/mock.py:664
+msgid "Paciente que cambió de manos, con el Tutor de antes"
+msgstr ""
+
+#: apps/imports/mock.py:713
+msgid "Tutor que se desdijo del contacto"
+msgstr ""
+
+#: apps/imports/mock.py:714
+msgid "Tutor del que no consta nada del contacto"
+msgstr ""
+
+#: apps/imports/models.py:34 apps/tutors/models.py:106
+#: templates/patients/ficha.html:73 templates/tenancy/base_panel.html:45
+#: templates/tutors/lista.html:4 templates/tutors/lista.html:7
+msgid "Tutores"
+msgstr ""
+
+#: apps/imports/models.py:49
+msgid "qué se importó"
+msgstr ""
+
+#: apps/imports/models.py:53
+msgid "planilla"
+msgstr ""
+
+#: apps/imports/models.py:55
+msgid "filas leídas"
+msgstr ""
+
+#: apps/imports/models.py:56
+msgid "filas creadas"
+msgstr ""
+
+#: apps/imports/models.py:57
+msgid "filas repetidas"
+msgstr ""
+
+#: apps/imports/models.py:58
+msgid "filas con error"
+msgstr ""
+
+#: apps/imports/models.py:61
+msgid "Importación"
+msgstr ""
+
+#: apps/imports/models.py:62
+msgid "Importaciones"
+msgstr ""
+
+#: apps/imports/models.py:69
+#, python-format
+msgid "%(que)s desde %(planilla)s: %(creadas)s de %(leidas)s filas"
+msgstr ""
+
+#: apps/imports/planilla.py:102
+msgid "No se entiende con qué codificación está escrita la planilla."
+msgstr ""
+
+#: apps/imports/planilla.py:148
+msgid "La planilla está vacía: no trae ni siquiera la cabecera."
+msgstr ""
+
+#: apps/imports/planilla.py:157
+#, python-format
+msgid "A la planilla le falta la columna %(cuales)s."
+msgstr ""
+
+#: apps/imports/tutores.py:295
+msgid ""
+"Sin RUT y sin teléfono no hay manera de reconocer esta fila si la planilla "
+"se vuelve a subir. Añade uno de los dos, o registra la ficha a mano."
+msgstr ""
+
+#: apps/imports/tutores.py:310
+#, python-format
+msgid "La misma persona ya venía en la línea %(cual)s de esta planilla."
+msgstr ""
+
+#: apps/imports/tutores.py:319
+#, python-format
+msgid "Ya está en la Clínica: %(quien)s."
+msgstr ""
+
+#: apps/imports/views.py:72
+msgid "No hay ninguna planilla esperando. Vuelve a subirla."
+msgstr ""
+
+#: apps/imports/views.py:173
+#, python-format
+msgid "Importados %(creados)s Tutores de %(leidas)s filas."
+msgstr ""
+
+#: apps/imports/views.py:182
+#, python-format
+msgid ""
+"%(cuantas)s filas quedaron sin importar por algún error. Corrígelas en la "
+"planilla y vuelve a subirla: lo que ya entró no se duplica."
 msgstr ""
 
 #: apps/patients/catalogo.py:33
@@ -165,8 +381,8 @@ msgstr ""
 msgid "Tiene un microchip apuntado: no puede estar «sin chip»."
 msgstr ""
 
-#: apps/patients/forms.py:210 apps/tutors/models.py:100
-#: apps/tutors/models.py:214
+#: apps/patients/forms.py:210 apps/tutors/models.py:105
+#: apps/tutors/models.py:268 apps/tutors/models.py:403
 msgid "Tutor"
 msgstr ""
 
@@ -239,7 +455,7 @@ msgstr ""
 
 #: apps/patients/models.py:79 apps/tenancy/models.py:28
 #: apps/tenancy/models.py:49 apps/tenancy/models.py:120
-#: apps/tenancy/models.py:256 apps/tutors/models.py:42
+#: apps/tenancy/models.py:256 apps/tutors/models.py:47
 msgid "nombre"
 msgstr ""
 
@@ -283,13 +499,13 @@ msgstr ""
 msgid "fecha de fallecimiento"
 msgstr ""
 
-#: apps/patients/models.py:130 apps/tutors/models.py:220
+#: apps/patients/models.py:130 apps/tutors/models.py:274
 #: templates/mostrador/_resultados.html:14
 msgid "Paciente"
 msgstr ""
 
-#: apps/patients/models.py:131 apps/tutors/models.py:66
-#: templates/tutors/ficha.html:30
+#: apps/patients/models.py:131 apps/tutors/models.py:71
+#: templates/tutors/ficha.html:60
 msgid "Pacientes"
 msgstr ""
 
@@ -319,7 +535,7 @@ msgstr ""
 msgid "%(paciente)s consta como fallecido: no se le pueden dar Citas."
 msgstr ""
 
-#: apps/patients/views.py:140 templates/tutors/ficha.html:73
+#: apps/patients/views.py:140 templates/tutors/ficha.html:103
 msgid "Registrar Paciente"
 msgstr ""
 
@@ -327,7 +543,7 @@ msgstr ""
 msgid "La ficha de un Paciente fallecido no se corrige: queda tal como estaba."
 msgstr ""
 
-#: apps/patients/views.py:171 apps/tutors/views.py:187
+#: apps/patients/views.py:171 apps/tutors/views.py:201
 #: templates/patients/ficha.html:68 templates/tutors/ficha.html:28
 msgid "Corregir la ficha"
 msgstr ""
@@ -491,7 +707,7 @@ msgid "Clínicas"
 msgstr ""
 
 #: apps/tenancy/models.py:50 apps/tenancy/models.py:258
-#: apps/tutors/models.py:56
+#: apps/tutors/models.py:61
 msgid "dirección"
 msgstr ""
 
@@ -529,11 +745,12 @@ msgstr ""
 msgid "Un Usuario necesita un correo para entrar."
 msgstr ""
 
-#: apps/tenancy/models.py:119 apps/tutors/models.py:55
+#: apps/tenancy/models.py:119 apps/tutors/consentimiento.py:43
+#: apps/tutors/models.py:60
 msgid "correo"
 msgstr ""
 
-#: apps/tenancy/models.py:121 apps/tutors/models.py:43
+#: apps/tenancy/models.py:121 apps/tutors/models.py:48
 msgid "apellidos"
 msgstr ""
 
@@ -558,7 +775,7 @@ msgid "desde"
 msgstr ""
 
 #: apps/tenancy/models.py:165 apps/tenancy/models.py:210
-#: apps/tutors/models.py:228
+#: apps/tutors/models.py:282
 msgid "hasta"
 msgstr ""
 
@@ -570,12 +787,8 @@ msgstr ""
 msgid "Franjas de atención"
 msgstr ""
 
-#: apps/tenancy/models.py:205
+#: apps/tenancy/models.py:205 apps/tutors/models.py:410
 msgid "fecha"
-msgstr ""
-
-#: apps/tenancy/models.py:208
-msgid "motivo"
 msgstr ""
 
 #: apps/tenancy/models.py:213
@@ -596,7 +809,8 @@ msgstr ""
 msgid "%(fecha)s: de %(desde)s a %(hasta)s"
 msgstr ""
 
-#: apps/tenancy/models.py:257 apps/tutors/models.py:54
+#: apps/tenancy/models.py:257 apps/tutors/consentimiento.py:42
+#: apps/tutors/models.py:59
 msgid "teléfono"
 msgstr ""
 
@@ -629,12 +843,38 @@ msgstr ""
 msgid "Editar Clínica de derivación"
 msgstr ""
 
-#: apps/tutors/forms.py:43
+#: apps/tutors/consentimiento.py:41
+msgid "WhatsApp"
+msgstr ""
+
+#: apps/tutors/consentimiento.py:59
+msgid "Sí, autoriza"
+msgstr ""
+
+#: apps/tutors/consentimiento.py:60
+msgid "No autoriza"
+msgstr ""
+
+#: apps/tutors/consentimiento.py:128
+msgid "No consta: nadie se lo ha preguntado todavía."
+msgstr ""
+
+#: apps/tutors/consentimiento.py:133
+#, python-format
+msgid "Autorizado el %(fecha)s."
+msgstr ""
+
+#: apps/tutors/consentimiento.py:134
+#, python-format
+msgid "Revocado el %(fecha)s."
+msgstr ""
+
+#: apps/tutors/forms.py:45
 #, python-brace-format
 msgid "Este RUT ya es el de {ficha}, en esta misma Clínica."
 msgstr ""
 
-#: apps/tutors/forms.py:46
+#: apps/tutors/forms.py:48
 #, python-brace-format
 msgid "Este teléfono es también el de {ficha}."
 msgstr ""
@@ -648,7 +888,7 @@ msgstr ""
 msgid "Nombre"
 msgstr ""
 
-#: apps/tutors/listado.py:98 apps/tutors/models.py:50
+#: apps/tutors/listado.py:98 apps/tutors/models.py:55
 #: templates/tutors/ficha.html:15
 msgid "RUT"
 msgstr ""
@@ -663,29 +903,40 @@ msgstr ""
 msgid "Correo"
 msgstr ""
 
-#: apps/tutors/models.py:101 templates/patients/ficha.html:73
-#: templates/tenancy/base_panel.html:45 templates/tutors/lista.html:4
-#: templates/tutors/lista.html:7
-msgid "Tutores"
-msgstr ""
-
-#: apps/tutors/models.py:222
+#: apps/tutors/models.py:276
 msgid "es el responsable"
 msgstr ""
 
-#: apps/tutors/models.py:231
+#: apps/tutors/models.py:285
 msgid "Vínculo"
 msgstr ""
 
-#: apps/tutors/models.py:232
+#: apps/tutors/models.py:286
 msgid "Vínculos"
 msgstr ""
 
-#: apps/tutors/models.py:293
+#: apps/tutors/models.py:347
 #, python-format
 msgid ""
 "%(paciente)s se quedaría sin nadie que responda por él: diga antes quién lo "
 "releva."
+msgstr ""
+
+#: apps/tutors/models.py:405
+msgid "canal"
+msgstr ""
+
+#: apps/tutors/models.py:406
+msgid "autoriza"
+msgstr ""
+
+#: apps/tutors/models.py:413 templates/tutors/consentimiento.html:4
+#: templates/tutors/consentimiento.html:7 templates/tutors/ficha.html:42
+msgid "Consentimiento de contacto"
+msgstr ""
+
+#: apps/tutors/models.py:414
+msgid "Consentimientos de contacto"
 msgstr ""
 
 #: apps/tutors/mostrador.py:172
@@ -714,7 +965,7 @@ msgstr ""
 msgid "%(tutor)s ya responde por %(paciente)s."
 msgstr ""
 
-#: apps/tutors/views.py:167 templates/tutors/lista.html:9
+#: apps/tutors/views.py:181 templates/tutors/lista.html:9
 msgid "Registrar Tutor"
 msgstr ""
 
@@ -779,6 +1030,176 @@ msgstr ""
 msgid "Gestión clínica para clínicas veterinarias."
 msgstr ""
 
+#: templates/imports/tutores.html:4
+msgid "Importar Tutores"
+msgstr ""
+
+#: templates/imports/tutores.html:7
+msgid "Importar Tutores desde una planilla"
+msgstr ""
+
+#: templates/imports/tutores.html:10
+msgid ""
+"Sube la planilla con la que llevas tus Tutores hoy. Antes de guardar nada se "
+"enseña qué filas entrarían y cuáles no, y por qué."
+msgstr ""
+
+#: templates/imports/tutores.html:16
+msgid "Ver qué entraría"
+msgstr ""
+
+#: templates/imports/tutores.html:20
+msgid "Lo que se importó antes"
+msgstr ""
+
+#: templates/imports/tutores.html:25
+msgid "Cuándo"
+msgstr ""
+
+#: templates/imports/tutores.html:26
+msgid "Quién"
+msgstr ""
+
+#: templates/imports/tutores.html:28
+msgid "Filas"
+msgstr ""
+
+#: templates/imports/tutores.html:29
+msgid "Creadas"
+msgstr ""
+
+#: templates/imports/tutores.html:30
+msgid "Ya estaban"
+msgstr ""
+
+#: templates/imports/tutores.html:31
+msgid "Con error"
+msgstr ""
+
+#: templates/imports/tutores.html:50
+msgid "Cómo tiene que ser la planilla"
+msgstr ""
+
+#: templates/imports/tutores.html:53
+msgid ""
+"Un archivo CSV con una fila de cabecera. Las columnas pueden ir en cualquier "
+"orden, y las que no aparecen aquí se ignoran."
+msgstr ""
+
+#: templates/imports/tutores.html:66
+msgid "Columna"
+msgstr ""
+
+#: templates/imports/tutores.html:67
+msgid "Qué trae"
+msgstr ""
+
+#: templates/imports/tutores.html:68
+msgid "¿Obligatoria?"
+msgstr ""
+
+#: templates/imports/tutores.html:69
+msgid "También se acepta"
+msgstr ""
+
+#: templates/imports/tutores.html:77
+msgid "sí"
+msgstr ""
+
+#: templates/imports/tutores.html:77
+msgid "no"
+msgstr ""
+
+#: templates/imports/tutores.html:85
+msgid ""
+"El RUT se escribe como se dicte —con puntos, con guion o de corrido— y el "
+"teléfono también: se guardan como el sistema los guarda. Una fila sin RUT y "
+"sin teléfono no se importa, porque no habría manera de reconocerla si "
+"vuelves a subir la planilla."
+msgstr ""
+
+#: templates/imports/tutores.html:89
+msgid "Descargar una planilla de ejemplo"
+msgstr ""
+
+#: templates/imports/tutores.html:93
+msgid ""
+"Puedes importar por tandas y volver a subir la misma planilla las veces que "
+"haga falta: quien ya está en la Clínica no se duplica."
+msgstr ""
+
+#: templates/imports/vista_previa.html:4 templates/imports/vista_previa.html:7
+msgid "Qué entraría de la planilla"
+msgstr ""
+
+#: templates/imports/vista_previa.html:9
+#, python-format
+msgid "Planilla: %(archivo)s. Todavía no se ha guardado nada."
+msgstr ""
+
+#: templates/imports/vista_previa.html:12
+#, python-format
+msgid "Se crearía %(cuantas)s Tutor."
+msgid_plural "Se crearían %(cuantas)s Tutores."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/imports/vista_previa.html:13
+#, python-format
+msgid "Se saltaría %(cuantas)s fila que ya estaba."
+msgid_plural "Se saltarían %(cuantas)s filas que ya estaban."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/imports/vista_previa.html:14
+#, python-format
+msgid "Hay %(cuantas)s fila con algún error."
+msgid_plural "Hay %(cuantas)s filas con algún error."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/imports/vista_previa.html:20
+msgid "Importar lo que entra"
+msgstr ""
+
+#: templates/imports/vista_previa.html:26
+msgid "Descartar esta planilla"
+msgstr ""
+
+#: templates/imports/vista_previa.html:30
+msgid "Filas que no se crearían"
+msgstr ""
+
+#: templates/imports/vista_previa.html:33
+msgid "Descargar este informe como planilla"
+msgstr ""
+
+#: templates/imports/vista_previa.html:34
+msgid ""
+"— para abrirlo al lado del archivo y corregirlo. Descárgalo ahora: al "
+"importar se descarta la planilla, y recuperarlo pasa por volver a subirla."
+msgstr ""
+
+#: templates/imports/vista_previa.html:40
+msgid "Línea"
+msgstr ""
+
+#: templates/imports/vista_previa.html:41
+msgid "Fila"
+msgstr ""
+
+#: templates/imports/vista_previa.html:42
+msgid "Qué pasa"
+msgstr ""
+
+#: templates/imports/vista_previa.html:43
+msgid "Motivo"
+msgstr ""
+
+#: templates/imports/vista_previa.html:59
+msgid "Volver a subir otra planilla"
+msgstr ""
+
 #: templates/mfa/authenticate.html:9
 msgid "Escriba el número que le muestra ahora su aplicación de autenticación."
 msgstr ""
@@ -827,13 +1248,14 @@ msgstr ""
 #: templates/tenancy/formulario_de_derivacion.html:12
 #: templates/tenancy/formulario_de_usuario.html:12
 #: templates/tenancy/horario_de_la_sede.html:80
-#: templates/tutors/formulario.html:25
+#: templates/tutors/consentimiento.html:24 templates/tutors/formulario.html:25
 msgid "Guardar"
 msgstr ""
 
 #: templates/patients/cerrar_vinculo.html:25 templates/patients/estado.html:27
 #: templates/patients/formulario.html:63 templates/patients/traspaso.html:31
-#: templates/patients/vincular.html:17 templates/tutors/formulario.html:29
+#: templates/patients/vincular.html:17 templates/tutors/consentimiento.html:49
+#: templates/tutors/formulario.html:29
 msgid "Volver a la ficha"
 msgstr ""
 
@@ -927,7 +1349,7 @@ msgstr ""
 msgid "Antes respondían por él"
 msgstr ""
 
-#: templates/patients/ficha.html:130 templates/tutors/ficha.html:90
+#: templates/patients/ficha.html:130 templates/tutors/ficha.html:120
 #, python-format
 msgid "hasta el %(fecha)s"
 msgstr ""
@@ -1010,15 +1432,19 @@ msgstr ""
 msgid "Configuración"
 msgstr ""
 
-#: templates/tenancy/base_panel.html:55
+#: templates/tenancy/base_panel.html:49
+msgid "Importar"
+msgstr ""
+
+#: templates/tenancy/base_panel.html:56
 msgid "Salir"
 msgstr ""
 
-#: templates/tenancy/base_panel.html:71
+#: templates/tenancy/base_panel.html:72
 msgid "Su sesión está por caducar. Lo que no haya guardado se perderá."
 msgstr ""
 
-#: templates/tenancy/base_panel.html:74
+#: templates/tenancy/base_panel.html:75
 msgid "Sigo aquí"
 msgstr ""
 
@@ -1144,15 +1570,48 @@ msgstr ""
 msgid "Desactivar"
 msgstr ""
 
-#: templates/tutors/ficha.html:69
+#: templates/tutors/consentimiento.html:9
+#, python-format
+msgid "Por qué canales acepta %(tutor)s recibir mensajes de la clínica."
+msgstr ""
+
+#: templates/tutors/consentimiento.html:18
+msgid ""
+"Se registra lo que el Tutor diga, con la fecha de hoy. Lo anterior no se "
+"borra: queda cuándo lo otorgó y cuándo lo revocó."
+msgstr ""
+
+#: templates/tutors/consentimiento.html:19
+msgid ""
+"El canal que se deje en blanco se queda como está: en blanco no es una "
+"negativa, es que de ese canal no se habló."
+msgstr ""
+
+#: templates/tutors/consentimiento.html:37
+msgid "Lo que ha dicho"
+msgstr ""
+
+#: templates/tutors/ficha.html:49
+msgid "Se le puede contactar"
+msgstr ""
+
+#: templates/tutors/ficha.html:51
+msgid "No se le puede contactar"
+msgstr ""
+
+#: templates/tutors/ficha.html:58
+msgid "Registrar el consentimiento"
+msgstr ""
+
+#: templates/tutors/ficha.html:99
 msgid "No se hace cargo de ningún Paciente en esta lista."
 msgstr ""
 
-#: templates/tutors/ficha.html:84
+#: templates/tutors/ficha.html:114
 msgid "Fueron suyos"
 msgstr ""
 
-#: templates/tutors/ficha.html:96 templates/tutors/formulario.html:31
+#: templates/tutors/ficha.html:126 templates/tutors/formulario.html:31
 msgid "Volver a Tutores"
 msgstr ""
 

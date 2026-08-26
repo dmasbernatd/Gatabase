@@ -172,6 +172,14 @@ USE_I18N = True
 TIME_ZONE = "America/Santiago"
 USE_TZ = True
 
+# Dónde espera la planilla que alguien acaba de subir, entre la vista previa y
+# la confirmación (`apps/imports/almacen.py`). Va al disco y no a la base de
+# datos porque es una copia de los datos personales de cientos de Tutores, y el
+# `.gitignore` excluye el directorio desde antes de que existiera el importador.
+DIRECTORIO_DE_IMPORTACIONES = Path(
+    _env("GATABASE_DIRECTORIO_DE_IMPORTACIONES", str(BASE_DIR / "imports"))
+)
+
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # `static/` guarda también lo de terceros (htmx), versionado en el repositorio y

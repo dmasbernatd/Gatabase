@@ -29,4 +29,7 @@ urlpatterns = [
     path("panel/tutores/", include("apps.tutors.urls")),
     path("panel/pacientes/", include("apps.patients.urls")),
     path("panel/registro/", include("apps.audit.urls")),
+    # La importación de planillas: es del admin, y escribe en las dos apps de
+    # dominio a la vez, así que cuelga del panel y no de ninguna de ellas.
+    path("panel/importar/", include("apps.imports.urls")),
 ]

@@ -443,3 +443,94 @@ que alguien la quite. No hay forma de saberlo desde aquí: no existe un registro
 público de clínicas veterinarias consultable por API.
 _Cuándo se paga_: no se paga. Se anota para que nadie espere una validación que
 no puede existir.
+
+## El importador de planillas
+
+Lo que el **17** dejó decidido a medias, y por qué se dejó así.
+
+**La planilla subida vive en el disco hasta que se confirma o caduca la sesión.**
+Es una copia de los datos personales de cientos de Tutores fuera de la base, en
+`DIRECTORIO_DE_IMPORTACIONES`. No podía estar dentro: el derecho de supresión del
+**20** se cumple vaciando `DATOS_PERSONALES` de la tabla del Tutor «sin tocar
+ninguna otra», y una copia en la base sobreviviría a eso en silencio. Lo que la
+recoge es un barrido de los archivos más viejos que la sesión, que corre al subir
+la siguiente planilla; una instalación donde nadie vuelva a importar nunca se
+queda con el último archivo en el disco hasta que alguien lo borre.
+_Cuándo se paga_: si el **19** monta un proceso periódico para lo suyo —las
+exportaciones tienen el mismo problema y con archivos más grandes—, el barrido se
+va allí y deja de depender de que alguien suba algo.
+
+**Un `bulk_create` de tres mil filas es una sola sentencia y no pasa por
+`save()`.** Hoy da igual —el Tutor no tiene `save()` propio y los campos
+normalizan en `get_prep_value` (`apps/campos.py`), que sí corre— pero es la clase
+de atajo que se rompe en silencio el día que el Tutor gane un `save()` con algo
+dentro.
+_Cuándo se paga_: cuando el Tutor tenga `save()`. Entonces es `batch_size` y un
+bucle, o mover lo que ese `save()` haga a donde el importador también pase.
+
+**La vista previa se calcula dos veces: al enseñarla y al confirmar.** Es
+deliberado —confirmar sobre un examen guardado sería confirmar algo que ya no es
+cierto, porque entre las dos páginas alguien pudo dar de alta a mano al mismo
+Tutor— y cuesta leer la Clínica entera dos veces. Con tres mil Tutores y tres mil
+filas son dos pasadas de un par de segundos.
+_Cuándo se paga_: si una migración de verdad tarda lo bastante como para que el
+admin crea que se colgó. La respuesta entonces no es cachear el examen, es
+enseñar el avance.
+
+**El informe de errores no se guarda en ninguna parte.** Se descarga desde la
+vista previa y desaparece al confirmar. Quien confirme sin descargarlo tiene que
+volver a subir la misma planilla para recuperarlo, lo cual funciona —la
+importación es idempotente y el informe se vuelve a calcular igual— pero es un
+gesto que nadie espera tener que hacer.
+_Pagado a medias_: la vista previa lo dice al lado del enlace («descárgalo
+ahora»), que era la mitad barata.
+_Lo que queda vivo_: quien lo lea después de haber importado sigue teniendo que
+volver a subir el archivo. Guardar el informe sería una segunda copia de datos
+personales envejeciendo en el disco, así que no se hace salvo que aparezca la
+queja.
+
+**Solo hay un ejemplo del importador, así que no hay importador genérico.**
+`planilla.py` e `informe.py` no saben de dominio y los dos sirven al **18** tal
+como están, pero el bucle que los une —examinar fila a fila, reconocer lo
+repetido, componer el informe— vive en `tutores.py` y el **18** va a escribir uno
+que se le parece. Se dejó así por lo mismo que no se extrajo la vista genérica de
+`crear`/`editar`: con un solo ejemplo, lo que un módulo común recibiría por
+parámetro es justamente todo lo que decide.
+_Cuándo se paga_: en el **18**, con los dos bucles escritos delante. Lo que hay
+que mirar entonces es si el segundo difiere solo en «qué es la misma ficha» —y
+entonces sale limpio— o también en cuándo se rechaza y con qué se compara, que es
+lo que pinta: el Paciente resuelve su Tutor por tres vías y puede quedar
+ambiguo, y eso no tiene equivalente aquí.
+
+**El importador puede escribir fichas que el formulario dejaría escribir, y ni
+una más** — que era lo que el **12** temía para el **18**. `FilaDeTutorForm` son
+los campos del Tutor sin `PARECIDOS`, así que el RUT y el teléfono se validan con
+las mismas reglas y lo único que cambia es qué se hace con el duplicado: en el
+mostrador es un error al lado del campo, aquí es una fila que se salta. Lo que el
+**18** tiene que revisar es la otra mitad de esa nota: el Estado de
+identificación de un Paciente con chip.
+
+**Reconocer a la misma persona son dos reglas y no una, y no es la misma idea que
+la del mostrador.** `tutores.claves_de` reconoce a un Tutor por su RUT **y** por
+su nombre completo con su teléfono, porque la segunda tanda casi nunca trae las
+mismas columnas que la primera; cuando las dos discrepan manda el RUT, para no
+fundir a una madre y una hija del mismo nombre. Al lado vive
+`apps/coincidencias.py`, que es la otra idea de «esta ficha ya existe»: compara
+campo a campo, avisa por el teléfono repetido e impide guardar por el RUT. Son
+dos porque hacen cosas distintas —una salta filas en silencio, la otra pone la
+ficha que ya existe delante de recepción— pero son dos, y pueden separarse.
+_Cuándo se paga_: cuando el **18** escriba la tercera —el Paciente resuelve su
+Tutor por RUT, teléfono o nombre, y puede quedar ambiguo—. Con tres delante se ve
+si «quién es la misma persona» es una pieza de `apps/` a secas, junto a
+`coincidencias.py`, o tres respuestas legítimamente distintas a tres preguntas
+distintas.
+
+**«Cuántas filas» se lee en la página de importar y no en el Registro de
+acceso.** El Registro anota que hubo una importación y apunta a la `Importacion`;
+las cuentas están en ella, y quien las quiera ver las ve en la lista de las diez
+últimas, en la página de subida. Desde el Registro de acceso no se puede pinchar
+una anotación para ver a qué apuntaba — no se puede para ninguna, porque el
+Registro guarda el tipo como texto a propósito (ADR-0004).
+_Cuándo se paga_: si alguien tiene que auditar de verdad una importación desde el
+Registro. Entonces es un enlace desde la anotación al objeto cuando el tipo se
+sepa resolver, y eso sirve para todas las anotaciones y no solo para estas.

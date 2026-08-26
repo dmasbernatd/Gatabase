@@ -124,6 +124,20 @@ Los datos son verosímiles y no de relleno: RUT con dígito verificador que cuad
 
 **No se ejecuta contra un despliegue.** Con `DJANGO_DEBUG` apagado se niega, y si además hay Clínicas que no son las suyas se niega sin apelación: eso es una base con clientes. El despliegue de la demostración —configuración de producción y ni un cliente dentro— se pide a mano con `--aunque-no-sea-desarrollo`. En desarrollo corre sin preguntar y no toca las Clínicas que haya hechas a mano.
 
+## Importar la planilla de una clínica que llega
+
+Lo primero que hace una clínica nueva: subir el archivador de sus Tutores, en el CSV que ya tenía. Es del admin, en **Importar**, y son dos páginas — porque la pregunta no es «¿se importó?» sino «¿qué va a entrar y qué no?».
+
+**La vista previa no guarda nada** y es literalmente el mismo examen que después confirma: cuántas fichas se crearían, cuántas se saltarían y, fila a fila, con su número de línea y su motivo, las que no entran. El informe se descarga como planilla —con punto y coma y marca de orden de bytes, para que lo abra el mismo Excel que exportó el original— y se pone al lado del archivo para corregirlo.
+
+**Se puede importar por tandas y volver a subir la misma planilla las veces que haga falta.** Quien ya está en la Clínica no se duplica: se le reconoce por su RUT, y cuando no lo tiene, por su nombre completo junto con su teléfono. De ahí sale la única fila que se rechaza sin estar mal escrita — la que no trae ni RUT ni teléfono, porque no habría manera de reconocerla en la segunda subida, y aceptarla sería prometer que no se duplica y no cumplirlo.
+
+**Lo que es un dato bueno no se decide dos veces.** El RUT lo sigue leyendo `apps/tutors/rut.py` y el teléfono `apps/telefono.py`, por los mismos campos que el formulario del mostrador: un importador con reglas propias —siempre más laxas, para que «la migración entre entera»— dejaría en la base fichas que después nadie podría guardar.
+
+Del archivo no se guarda copia en la base: espera en disco entre las dos páginas, colgado de la sesión de quien lo subió (`apps/imports/almacen.py`). Del formato sabe `apps/imports/planilla.py`, que adivina el separador y la codificación en vez de preguntárselos a nadie; qué es la misma persona lo decide `apps/imports/tutores.py`, que es también de donde salen a la vez la documentación del formato, el archivo de ejemplo descargable y el reconocimiento de la cabecera.
+
+La importación queda en el Registro de acceso: **una anotación y no una por ficha**, apuntando a la `Importacion` que lleva las cuentas — quién importó, cuándo, qué planilla y cuántas filas.
+
 ## Aislamiento por Clínica
 
 La Clínica es la frontera de todos los datos ([ADR-0003](docs/adr/0003-tenancy-por-clave-ajena-y-manager.md)). La garantía no es acordarse de filtrar: es que filtrar sea lo que pasa por defecto.
