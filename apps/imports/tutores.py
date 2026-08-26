@@ -40,54 +40,28 @@ columna de la planilla que pueda decir otra cosa (ADR-0003).
 """
 
 from dataclasses import dataclass
+from functools import partial
 
 from django.db import transaction
 from django.utils.translation import gettext as _
 
-from apps.audit.models import Accion
-from apps.audit.registro import anotar
 from apps.busqueda import sin_tildes
-from apps.imports.informe import FilaExaminada, Informe
+from apps.imports.informe import FilaExaminada, Informe, lo_que_esta_mal
 from apps.imports.models import Importacion, LoQueSeImporta
-from apps.imports.planilla import Planilla, como_la_lee_un_excel
+from apps.imports.planilla import Columna, Planilla, ejemplo_de
 from apps.tenancy.aislamiento import FormularioDeLaClinica
 from apps.tutors.models import Tutor
 from apps.tutors.rut import digito_verificador
 
 
-@dataclass(frozen=True)
-class Columna:
-    """Una columna de la planilla: cómo se llama, qué dato trae y cómo se ve.
-
-    Lo sabe todo de sí misma para que la documentación del formato, el archivo de
-    ejemplo y el reconocimiento de la cabecera salgan del mismo sitio. Si no,
-    documentar una columna que el lector no reconoce es un error que nadie ve
-    hasta que alguien se descarga el ejemplo y no le entra.
-
-    El rótulo no se escribe: sale del campo del Tutor, que es quien sabe cómo se
-    llama ese dato en el dominio.
-    """
-
-    nombre: str
-    dato: str
-    ejemplos: tuple
-    obligatoria: bool = False
-    # Cómo más lo puede haber escrito quien exportó la planilla. Ya plegados como
-    # los pliega `planilla.py`: en minúsculas, sin tildes y con guion bajo.
-    alias: tuple = ()
-
-    @property
-    def etiqueta(self):
-        return Tutor._meta.get_field(self.dato).verbose_name
-
-    @property
-    def como_se_puede_llamar(self):
-        return (self.nombre, *self.alias)
-
-
 def _rut_de_ejemplo(cuerpo):
     """Un RUT que cuadra de verdad, para que el archivo de ejemplo se pueda importar."""
     return f"{cuerpo}{digito_verificador(cuerpo)}"
+
+
+# El rótulo de cada columna sale del campo del Tutor, que es quien sabe cómo se
+# llama ese dato en el dominio (`Columna.etiqueta`).
+DelTutor = partial(Columna, modelo=Tutor)
 
 
 # El formato de la planilla, y la única definición que hay de él. El orden es el
@@ -97,33 +71,38 @@ def _rut_de_ejemplo(cuerpo):
 # planilla de clínica trae filas a medias, y exigir el resto obligaría a
 # rellenarlas con cualquier cosa antes de subirlas.
 COLUMNAS_DE_LA_PLANILLA = (
-    Columna(
+    DelTutor(
         "nombre",
         "nombre",
         ("Camila", "Diego", "Ignacia"),
         obligatoria=True,
         alias=("nombres",),
     ),
-    Columna("apellidos", "apellidos", ("Rojas Pizarro", "Muñoz Soto", "Vera"), alias=("apellido",)),
-    Columna(
+    DelTutor(
+        "apellidos",
+        "apellidos",
+        ("Rojas Pizarro", "Muñoz Soto", "Vera"),
+        alias=("apellido",),
+    ),
+    DelTutor(
         "rut",
         "rut",
         (_rut_de_ejemplo("12345678"), _rut_de_ejemplo("9876543"), ""),
         alias=("run", "cedula"),
     ),
-    Columna(
+    DelTutor(
         "telefono",
         "telefono",
         ("+56 9 1234 5678", "912345679", "22 345 6789"),
         alias=("fono", "celular", "movil"),
     ),
-    Columna(
+    DelTutor(
         "correo",
         "email",
         ("camila.rojas@correo.example", "", "ignacia.vera@correo.example"),
         alias=("email", "mail", "e_mail"),
     ),
-    Columna(
+    DelTutor(
         "direccion",
         "direccion",
         ("Av. Providencia 1234, depto. 52, Santiago", "Los Alerces 88, Ñuñoa", ""),
@@ -131,17 +110,16 @@ COLUMNAS_DE_LA_PLANILLA = (
     ),
 )
 
-# Lo que `planilla.py` necesita para reconocer la cabecera: de cada nombre con
-# que se la pueda haber escrito, qué dato trae.
-COLUMNAS = {
-    como_se_llame: columna.dato
-    for columna in COLUMNAS_DE_LA_PLANILLA
-    for como_se_llame in columna.como_se_puede_llamar
-}
-
-OBLIGATORIAS = tuple(
-    columna.dato for columna in COLUMNAS_DE_LA_PLANILLA if columna.obligatoria
-)
+# Lo que este módulo es para las vistas: un importador de Tutores. El contrato
+# —qué nombres tiene que declarar— lo cuenta `importadores.py`.
+QUE = LoQueSeImporta.TUTORES
+MODELO = Tutor
+PLANTILLA = "imports/tutores.html"
+URL_DE_LA_SUBIDA = "imports:tutores"
+URL_DEL_EJEMPLO = "imports:ejemplo_de_tutores"
+# Adonde se vuelve al confirmar: al fichero de Tutores, que es lo que el admin
+# acaba de llenar.
+VUELVE_A = "tutors:lista"
 
 # Cómo se llama el archivo de ejemplo cuando se descarga.
 EJEMPLO = "planilla-de-tutores-de-ejemplo.csv"
@@ -243,14 +221,6 @@ def _resumen(valores):
     return " ".join(filter(None, (valores.get("nombre", ""), valores.get("apellidos", ""))))
 
 
-def _lo_que_esta_mal(formulario):
-    """Los errores de la fila, en una línea y con el nombre del dato delante."""
-    return " ".join(
-        "%s: %s" % (formulario.fields[campo].label or campo, " ".join(fallos))
-        for campo, fallos in formulario.errors.items()
-    )
-
-
 def _los_que_ya_estan(clinica):
     """Por qué se reconoce a cada Tutor que la Clínica ya tiene.
 
@@ -276,12 +246,12 @@ def examinar(contenido, clinica):
     conocidos = _los_que_ya_estan(clinica)
     examinadas = []
 
-    for fila in Planilla.leer(contenido, columnas=COLUMNAS, obligatorias=OBLIGATORIAS):
+    for fila in Planilla.leer(contenido, columnas=COLUMNAS_DE_LA_PLANILLA):
         resumen = _resumen(fila.valores)
         formulario = FilaDeTutorForm(fila.valores, clinica=clinica)
         if not formulario.is_valid():
             examinadas.append(
-                FilaExaminada(fila.numero, resumen, _lo_que_esta_mal(formulario), es_un_error=True)
+                FilaExaminada(fila.numero, resumen, lo_que_esta_mal(formulario), es_un_error=True)
             )
             continue
 
@@ -317,6 +287,11 @@ def examinar(contenido, clinica):
                     fila.numero,
                     resumen,
                     _("Ya está en la Clínica: %(quien)s.") % {"quien": conocido.tutor},
+                    # El motivo dice cómo se llama un Tutor que ya estaba, y eso
+                    # es servir un dato personal suyo (ADR-0004). La línea de
+                    # arriba no nombra a nadie de la Clínica: las dos filas que
+                    # compara son las dos de la planilla que se acaba de subir.
+                    nombra=(Tutor,),
                 )
             )
 
@@ -332,31 +307,9 @@ def importar(informe, clinica, usuario, planilla):
     """
     with transaction.atomic():
         Tutor.de_todas_las_clinicas.bulk_create([fila.ficha for fila in informe.creables])
-        importacion = Importacion.de_todas_las_clinicas.create(
-            clinic=clinica,
-            usuario=usuario,
-            que_se_importo=LoQueSeImporta.TUTORES,
-            planilla=planilla,
-            filas_leidas=len(informe.filas),
-            filas_creadas=len(informe.creables),
-            filas_repetidas=len(informe.repetidas),
-            filas_con_error=len(informe.erroneas),
-        )
-        anotar(usuario, Accion.CREACION, importacion)
-    return importacion
+        return Importacion.de_lo_que_entro(QUE, clinica, usuario, planilla, informe)
 
 
 def ejemplo():
-    """El archivo de ejemplo, escrito desde la misma definición que se documenta.
-
-    Se genera y no se guarda como archivo suelto para que no pueda envejecer: una
-    columna que se añada aquí sale documentada, reconocida y en el ejemplo a la
-    vez, y el test comprueba que el ejemplo entra entero.
-    """
-    return como_la_lee_un_excel([
-        [columna.nombre for columna in COLUMNAS_DE_LA_PLANILLA],
-        *(
-            [columna.ejemplos[cual] for columna in COLUMNAS_DE_LA_PLANILLA]
-            for cual in range(len(COLUMNAS_DE_LA_PLANILLA[0].ejemplos))
-        ),
-    ])
+    """El archivo de ejemplo. Tres personas inventadas, en el formato de arriba."""
+    return ejemplo_de(COLUMNAS_DE_LA_PLANILLA)

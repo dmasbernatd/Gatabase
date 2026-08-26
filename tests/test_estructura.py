@@ -5,6 +5,7 @@ Clínica. Esa comprobación recorre los modelos de verdad, así que un modelo nu
 sin `clinic` rompe este test el día que se escriba, no el día que filtre datos.
 """
 
+import pytest
 from django.apps import apps
 from django.core.management import call_command
 from django.db import models
@@ -88,3 +89,46 @@ def test_un_modelo_que_hereda_de_modelo_de_la_clinica_pasa_la_comprobacion():
             app_label = "tenancy"
 
     assert fallos_de_aislamiento([Vacuna]) == []
+
+
+# --- El contrato de los importadores de planillas --------------------------
+
+# Lo que cada importador tiene que declarar para que las vistas de `imports`
+# —las mismas para las dos planillas— sepan servirlo. Está aquí y no en un test
+# de la app porque es lo mismo que el resto de este archivo: una comprobación
+# que rompe el día que se escribe el importador que se salta la convención, no
+# el día que alguien abre su página.
+CONTRATO_DE_UN_IMPORTADOR = (
+    "QUE",
+    "MODELO",
+    "COLUMNAS_DE_LA_PLANILLA",
+    "PLANTILLA",
+    "EJEMPLO",
+    "URL_DE_LA_SUBIDA",
+    "URL_DEL_EJEMPLO",
+    "VUELVE_A",
+    "examinar",
+    "importar",
+    "ejemplo",
+)
+
+
+def test_hay_importadores_que_revisar():
+    from apps.imports.importadores import IMPORTADORES
+
+    assert len(IMPORTADORES) >= 2
+
+
+@pytest.mark.parametrize("nombre", CONTRATO_DE_UN_IMPORTADOR)
+def test_todo_importador_declara_lo_que_las_vistas_le_piden(nombre):
+    from apps.imports.importadores import IMPORTADORES
+
+    assert all(hasattr(importador, nombre) for importador in IMPORTADORES.values())
+
+
+def test_cada_importador_se_declara_bajo_lo_que_dice_importar():
+    """La clave del mapa sale del propio módulo: dos importadores no pueden
+    quedarse el mismo sitio sin que se note."""
+    from apps.imports.importadores import IMPORTADORES
+
+    assert all(que == importador.QUE for que, importador in IMPORTADORES.items())

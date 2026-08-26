@@ -45,7 +45,8 @@
       {% if user.es_admin %}
         <a href="{% url 'tenancy:usuarios' %}">{% translate "Usuarios" %}</a>
         <a href="{% url 'tenancy:configuracion' %}">{% translate "Configuración" %}</a>
-        <a href="{% url 'imports:tutores' %}">{% translate "Importar" %}</a>
+        <a href="{% url 'imports:tutores' %}">{% translate "Importar Tutores" %}</a>
+        <a href="{% url 'imports:pacientes' %}">{% translate "Importar Pacientes" %}</a>
         <a href="{% url 'audit:registro' %}">{% translate "Registro de acceso" %}</a>
       {% endif %}
     </nav>

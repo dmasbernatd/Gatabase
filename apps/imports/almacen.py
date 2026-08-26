@@ -30,6 +30,7 @@ barrido se llevaría por delante justo la planilla que esa persona está a punto
 confirmar.
 """
 
+from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
@@ -43,6 +44,20 @@ CLAVE_EN_LA_SESION = "planilla_por_confirmar"
 # directorio no lo sirve nadie, pero un `.html` subido y guardado con su nombre
 # es la clase de cosa que un día se acaba sirviendo.
 EXTENSION = ".csv"
+
+
+@dataclass(frozen=True)
+class Esperando:
+    """La planilla que espera confirmación: qué decía traer, cómo llegó y qué trae.
+
+    Los tres viajan juntos siempre —quien la lee necesita saber quién sabe
+    leerla— y por eso son un tipo y no una tupla que cada vista desempaqueta a su
+    manera.
+    """
+
+    que: str
+    nombre: str
+    contenido: bytes
 
 
 def _directorio():
@@ -65,19 +80,28 @@ def _barrer_lo_que_ya_no_alcanza_nadie(directorio):
             archivo.unlink(missing_ok=True)
 
 
-def guardar(request, subido):
-    """Deja la planilla a la espera y la cuelga de la sesión de quien la subió."""
+def guardar(request, subido, que):
+    """Deja la planilla a la espera y la cuelga de la sesión de quien la subió.
+
+    `que` es lo que decía traer —Tutores o Pacientes—, y se guarda con ella
+    porque las tres páginas que vienen después son las mismas para las dos: sin
+    esto, confirmar una planilla de animales la leería como si fuera de personas.
+    """
     olvidar(request)
     directorio = _directorio()
     _barrer_lo_que_ya_no_alcanza_nadie(directorio)
 
     guardada = uuid4().hex + EXTENSION
     (directorio / guardada).write_bytes(subido.read())
-    request.session[CLAVE_EN_LA_SESION] = {"guardada": guardada, "nombre": subido.name}
+    request.session[CLAVE_EN_LA_SESION] = {
+        "guardada": guardada,
+        "nombre": subido.name,
+        "que": que,
+    }
 
 
 def recuperar(request):
-    """La planilla que espera confirmación: `(nombre con que llegó, bytes)`, o `None`.
+    """La planilla que espera: `(qué traía, nombre con que llegó, bytes)`, o `None`.
 
     `None` también cuando el archivo ya no está —la sesión sobrevivió a un
     barrido, o al despliegue que se llevó el disco—, porque para quien está
@@ -93,7 +117,18 @@ def recuperar(request):
     # Mirarla cuenta como tocarla, igual que para la sesión: quien lleva media
     # hora leyendo su vista previa no puede perder la planilla por leerla.
     archivo.touch()
-    return esperando["nombre"], archivo.read_bytes()
+    return Esperando(esperando.get("que"), esperando["nombre"], archivo.read_bytes())
+
+
+def que_espera(request):
+    """Qué decía traer la planilla que espera, o `None` si no hay ninguna.
+
+    Se responde desde la sesión y sin tocar el disco: quien solo necesita saber
+    de qué era —para volver a su página después de descartarla— no tiene por qué
+    leerse el archivo entero ni rejuvenecerlo.
+    """
+    esperando = request.session.get(CLAVE_EN_LA_SESION)
+    return esperando.get("que") if esperando else None
 
 
 def olvidar(request):

@@ -29,9 +29,15 @@ trae columnas que aquí no significan nada —«observaciones», «saldo»— y 
 por eso sería obligar a recortarla antes de subirla.
 
 Y lo que **no** se adivina es qué columnas tiene que haber. Eso lo dice quien
-lee, y sin ellas la planilla no se lee: importar media planilla porque el nombre
-se llamaba de otra manera es peor que no importar nada, porque quedan fichas
-mudas que alguien tendrá que borrar a mano.
+lee, con una `Columna` por cada una, y sin ellas la planilla no se lee: importar
+media planilla porque el nombre se llamaba de otra manera es peor que no importar
+nada, porque quedan fichas mudas que alguien tendrá que borrar a mano.
+
+La `Columna` vive aquí y no en cada importador porque es la misma definición para
+todos —cómo se llama, de cuántas maneras se la puede haber escrito, si hace
+falta— y porque de ella salen a la vez tres cosas que tienen que coincidir: el
+reconocimiento de la cabecera, la tabla que documenta el formato en la página y
+el archivo de ejemplo que se descarga.
 
 El número de fila es el de la línea del archivo, contando la cabecera como la
 uno. No es un contador de filas válidas: es lo que hay que teclear en el Excel
@@ -73,6 +79,74 @@ MARCA_DE_ORDEN = "\ufeff"
 # recortar, y adivinar dónde empiezan los datos de verdad acabaría importando un
 # rótulo como si fuera un Tutor.
 LINEA_DE_LA_CABECERA = 1
+
+
+@dataclass(frozen=True)
+class Columna:
+    """Una columna de la planilla: cómo se llama, qué dato trae y cómo se ve.
+
+    Lo sabe todo de sí misma para que la documentación del formato, el archivo de
+    ejemplo y el reconocimiento de la cabecera salgan del mismo sitio. Si no,
+    documentar una columna que el lector no reconoce es un error que nadie ve
+    hasta que alguien se descarga el ejemplo y no le entra.
+
+    El rótulo no se escribe cuando el dato es de un modelo: sale del campo, que
+    es quien sabe cómo se llama ese dato en el dominio. Se escribe —`rotulo`—
+    solo para las columnas que no son un campo de nadie, como la que dice de
+    quién es el animal en la planilla de Pacientes.
+    """
+
+    nombre: str
+    dato: str
+    ejemplos: tuple
+    obligatoria: bool = False
+    # Cómo más lo puede haber escrito quien exportó la planilla. Ya plegados como
+    # los pliega este módulo: en minúsculas, sin tildes y con guion bajo.
+    alias: tuple = ()
+    # De qué modelo es el dato, para sacar de él el rótulo.
+    modelo: object = None
+    rotulo: str = ""
+    # Cuando el dato se puede dar de varias maneras y basta con una, todas las
+    # que valen llevan aquí el mismo nombre de grupo: la planilla se lee si trae
+    # alguna, y no se lee si no trae ninguna. Es lo que separa «falta una
+    # columna» de «esta planilla no dice de quién es cada animal».
+    alguna_de: str = ""
+
+    @property
+    def etiqueta(self):
+        return self.rotulo or self.modelo._meta.get_field(self.dato).verbose_name
+
+    @property
+    def como_se_puede_llamar(self):
+        return (self.nombre, *self.alias)
+
+
+def _mapa_de(columnas):
+    """De cada nombre con que se pueda haber escrito una columna, qué dato trae."""
+    return {
+        como_se_llame: columna.dato
+        for columna in columnas
+        for como_se_llame in columna.como_se_puede_llamar
+    }
+
+
+def _lo_que_falta(columnas, cabecera):
+    """Los nombres de las columnas sin las cuales la planilla no significa nada.
+
+    Dos maneras de faltar, y las dos son del archivo entero y no de una fila: la
+    columna obligatoria que no está, y el grupo del que no llegó ninguna.
+    """
+    faltan = [
+        [columna.nombre]
+        for columna in columnas
+        if columna.obligatoria and columna.dato not in cabecera
+    ]
+    grupos = {columna.alguna_de for columna in columnas if columna.alguna_de}
+    for grupo in sorted(grupos):
+        cuales = [columna for columna in columnas if columna.alguna_de == grupo]
+        if not any(columna.dato in cabecera for columna in cuales):
+            faltan.append([columna.nombre for columna in cuales])
+    return faltan
 
 
 class PlanillaIlegible(Exception):
@@ -132,12 +206,13 @@ class Planilla:
         return iter(self._filas)
 
     @classmethod
-    def leer(cls, contenido, *, columnas, obligatorias):
+    def leer(cls, contenido, *, columnas):
         """Lee los bytes subidos, o dice por qué no se puede leer ninguna fila.
 
-        `columnas` es el mapa de nombre escrito a nombre del dato —varios nombres
-        pueden llevar al mismo—, y `obligatorias` los datos sin los cuales la
-        planilla no significa nada.
+        `columnas` es la definición del formato: las `Columna` que quien lee sabe
+        reconocer, con cuáles hacen falta. Se pasa entera y no partida en un mapa
+        y una lista de obligatorias porque es una sola cosa —cómo es esa
+        planilla—, y partirla dejaba a quien llama componiendo dos veces lo mismo.
         """
         # `newline=""` y no `splitlines()`: las líneas conservan su salto, que es
         # lo que `csv` necesita para reconstruir una dirección escrita entre
@@ -149,13 +224,14 @@ class Planilla:
 
         papel.seek(0)
         lector = csv.reader(papel, delimiter=_separador(primera))
-        cabecera = [columnas.get(_como_se_llama(celda)) for celda in next(lector)]
+        mapa = _mapa_de(columnas)
+        cabecera = [mapa.get(_como_se_llama(celda)) for celda in next(lector)]
 
-        faltan = [obligatoria for obligatoria in obligatorias if obligatoria not in cabecera]
+        faltan = _lo_que_falta(columnas, cabecera)
         if faltan:
             raise PlanillaIlegible(
                 _("A la planilla le falta la columna %(cuales)s.")
-                % {"cuales": ", ".join(faltan)}
+                % {"cuales": "; ".join(" o ".join(grupo) for grupo in faltan)}
             )
 
         filas = []
@@ -197,3 +273,20 @@ def como_la_lee_un_excel(filas):
     planilla = csv.writer(papel, delimiter=SEPARADOR_DE_EXCEL, lineterminator=SALTO_DE_EXCEL)
     planilla.writerows(filas)
     return MARCA_DE_ORDEN + papel.getvalue()
+
+
+def ejemplo_de(columnas):
+    """El archivo de ejemplo de ese formato, escrito desde la misma definición.
+
+    Se genera y no se guarda como archivo suelto para que no pueda envejecer: una
+    columna que se añada a la definición sale documentada, reconocida y en el
+    ejemplo a la vez. Cada importador comprueba en sus tests que su ejemplo entra
+    entero, que es lo que hace que la promesa valga.
+    """
+    return como_la_lee_un_excel([
+        [columna.nombre for columna in columnas],
+        *(
+            [columna.ejemplos[cual] for columna in columnas]
+            for cual in range(len(columnas[0].ejemplos))
+        ),
+    ])

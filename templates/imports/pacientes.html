@@ -1,0 +1,23 @@
+{% extends "imports/_subida.html" %}
+{% load i18n %}
+
+{% block explicacion %}
+  <p>
+    {% translate "Sube la planilla con la que llevas tus animales hoy. Cada fila dice de quién es el animal, así que los Tutores tienen que estar importados antes." %}
+  </p>
+  <p>
+    <a href="{% url 'imports:tutores' %}">{% translate "Importar Tutores primero" %}</a>
+  </p>
+{% endblock %}
+
+{% block notas %}
+  <p>
+    {% translate "De quién es cada animal se dice de una de tres maneras, y basta con una: su RUT, su teléfono o su nombre. El RUT es el único que nunca se confunde; cuando dos Tutores podrían ser el de la fila, la fila no se importa y se dice entre cuáles se dudó, para que puedas poner el RUT y volver a subirla." %}
+  </p>
+  <p>
+    {% translate "La especie tiene que ser una de las del catálogo, porque de ella dependen los protocolos. La raza no: la que no esté en el catálogo se guarda tal como venga escrita." %}
+  </p>
+  <p>
+    {% translate "El histórico clínico no se importa. Las Consultas, las vacunas y los tratamientos anteriores se quedan donde están: la Historia clínica del sistema empieza en la primera Consulta nueva." %}
+  </p>
+{% endblock %}

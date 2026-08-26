@@ -501,6 +501,18 @@ que mirar entonces es si el segundo difiere solo en «qué es la misma ficha» �
 entonces sale limpio— o también en cuándo se rechaza y con qué se compara, que es
 lo que pinta: el Paciente resuelve su Tutor por tres vías y puede quedar
 ambiguo, y eso no tiene equivalente aquí.
+_Resuelto el 25 de agosto de 2026, y era lo segundo_: los dos bucles se parecen
+de lejos y no coinciden en nada que se pueda pasar por parámetro — el de
+Pacientes resuelve el Tutor, duda entre dos y rechaza por un chip que ya es de
+otro animal. Así que el bucle se escribió dos veces a propósito y lo que se
+compartió es lo de fuera: las tres páginas de en medio, que ahora sirven a las
+dos planillas sin saber de ninguna (`importadores.py`), `planilla.Columna`, que
+era la misma definición de formato escrita en dos sitios, y las tres piezas que
+sí salían idénticas — `informe.lo_que_esta_mal`, `planilla.ejemplo_de` y
+`Importacion.de_lo_que_entro`, que es la constancia con sus cuentas.
+_Lo que queda vivo_: el tercer importador dirá si el bucle tenía forma después de
+todo. Con dos ejemplos y ninguna línea repetida entre ellos, extraerlo ahora
+sería inventarse la abstracción antes de tener el caso.
 
 **El importador puede escribir fichas que el formulario dejaría escribir, y ni
 una más** — que era lo que el **12** temía para el **18**. `FilaDeTutorForm` son
@@ -534,3 +546,15 @@ Registro guarda el tipo como texto a propósito (ADR-0004).
 _Cuándo se paga_: si alguien tiene que auditar de verdad una importación desde el
 Registro. Entonces es un enlace desde la anotación al objeto cuando el tipo se
 sepa resolver, y eso sirve para todas las anotaciones y no solo para estas.
+
+## Fechas de prueba calculadas al importar el módulo
+
+**`test_estados_del_paciente.py` falla si la suite cruza la medianoche.** `MANANA`
+y `AYER` se calculan al importar el archivo, y las reglas que prueban —«esa fecha
+todavía no ha llegado»— preguntan por `timezone.localdate()` en el momento de la
+petición. Una suite que empieza a las 23:58 y llega a ese test a las 00:01 ve
+«mañana» como hoy y lo da por bueno. Pasó el 25 de agosto de 2026 y el test pasa
+solo en cuanto se vuelve a correr.
+_Cuándo se paga_: cuando estorbe de verdad —en CI, donde no hay nadie mirando
+para saber que fue eso—. El arreglo es calcular la fecha dentro del test, o
+congelar el reloj.

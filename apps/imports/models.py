@@ -25,13 +25,22 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from apps.audit.models import Accion
+from apps.audit.registro import anotar
 from apps.tenancy.aislamiento import ModeloDeLaClinica
 
 
 class LoQueSeImporta(models.TextChoices):
-    """Qué traía la planilla. El ticket 18 añade los Pacientes."""
+    """Qué traía la planilla.
+
+    Son dos planillas y no una porque son dos gestos: la clínica sube primero
+    sus Tutores y después sus animales, que es el único orden en que se puede
+    hacer —un Paciente se importa vinculado al Tutor que ya está—, y entre las
+    dos tandas pueden pasar días.
+    """
 
     TUTORES = "tutores", _("Tutores")
+    PACIENTES = "pacientes", _("Pacientes")
 
 
 class Importacion(ModeloDeLaClinica):
@@ -64,6 +73,33 @@ class Importacion(ModeloDeLaClinica):
         indexes = [
             models.Index(fields=["clinic", "-momento"], name="importacion_por_fecha"),
         ]
+
+    @classmethod
+    def de_lo_que_entro(cls, que, clinica, usuario, planilla, informe):
+        """Anota que esa planilla se importó, con sus cuentas, y lo deja en el Registro.
+
+        Las cuentas salen del informe y no de quien importa: son exactamente las
+        tres que la vista previa enseñó, y sacarlas de otro sitio dejaría a la
+        página y a la constancia diciendo cosas distintas de lo mismo.
+
+        Va aquí y no en cada importador porque es lo único que los dos hacen
+        igual —lo que cambia es qué se guardó, no cómo se anota—, y quien la
+        llama la envuelve en la misma transacción que sus escrituras: una
+        importación que constara sin haber entrado, o que entrara sin constar,
+        valdría lo mismo que ninguna de las dos (ADR-0004).
+        """
+        importacion = cls.de_todas_las_clinicas.create(
+            clinic=clinica,
+            usuario=usuario,
+            que_se_importo=que,
+            planilla=planilla,
+            filas_leidas=len(informe.filas),
+            filas_creadas=len(informe.creables),
+            filas_repetidas=len(informe.repetidas),
+            filas_con_error=len(informe.erroneas),
+        )
+        anotar(usuario, Accion.CREACION, importacion)
+        return importacion
 
     def __str__(self):
         return _("%(que)s desde %(planilla)s: %(creadas)s de %(leidas)s filas") % {

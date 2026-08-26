@@ -9,7 +9,13 @@
   <p>{% blocktranslate with archivo=planilla %}Planilla: {{ archivo }}. Todavía no se ha guardado nada.{% endblocktranslate %}</p>
 
   <ul>
-    <li>{% blocktranslate count cuantas=informe.creables|length %}Se crearía {{ cuantas }} Tutor.{% plural %}Se crearían {{ cuantas }} Tutores.{% endblocktranslate %}</li>
+    {% comment %}
+      «ficha de Paciente» y no «Paciente» a secas para que el singular y el
+      plural lleven la misma variable: gettext no admite un plural que nombre
+      algo que el singular no nombra, y el nombre del modelo en plural sería
+      justamente eso.
+    {% endcomment %}
+    <li>{% blocktranslate count cuantas=informe.creables|length with que=que_entra %}Se crearía {{ cuantas }} ficha de {{ que }}.{% plural %}Se crearían {{ cuantas }} fichas de {{ que }}.{% endblocktranslate %}</li>
     <li>{% blocktranslate count cuantas=informe.repetidas|length %}Se saltaría {{ cuantas }} fila que ya estaba.{% plural %}Se saltarían {{ cuantas }} filas que ya estaban.{% endblocktranslate %}</li>
     <li>{% blocktranslate count cuantas=informe.erroneas|length %}Hay {{ cuantas }} fila con algún error.{% plural %}Hay {{ cuantas }} filas con algún error.{% endblocktranslate %}</li>
   </ul>

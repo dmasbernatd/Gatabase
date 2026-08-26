@@ -28,6 +28,19 @@ from django.utils.translation import gettext as _
 from apps.imports.planilla import como_la_lee_un_excel
 
 
+def lo_que_esta_mal(formulario):
+    """Los errores de una fila, en una línea y con el nombre del dato delante.
+
+    En una línea porque el informe es una celda de un Excel, no un formulario:
+    quien lo lee tiene delante la planilla y necesita saber qué casilla arreglar,
+    no cómo se llama el campo por dentro.
+    """
+    return " ".join(
+        "%s: %s" % (formulario.fields[campo].label or campo, " ".join(fallos))
+        for campo, fallos in formulario.errors.items()
+    )
+
+
 @dataclass(frozen=True)
 class FilaExaminada:
     """Lo que pasaría con una línea de la planilla, y por qué.
@@ -35,6 +48,13 @@ class FilaExaminada:
     `ficha` es el objeto que se crearía —sin guardar todavía—, y va aquí y no en
     una lista aparte para que la vista previa y la importación no puedan discrepar:
     lo que se enseña es exactamente lo que se guardaría.
+
+    `nombra` son los modelos de los que el motivo dice algo: «ya está en la
+    Clínica: Camila Rojas» sirve el nombre de un Tutor que nadie pidió ver, y eso
+    se anota en el Registro de acceso (ADR-0004). Lo dice la fila y no la vista
+    porque es quien examina la planilla el único que sabe de dónde salió cada
+    motivo — de la Clínica, o de otra línea del propio archivo, que no es dato de
+    nadie que haya que servir.
     """
 
     numero: int
@@ -42,6 +62,7 @@ class FilaExaminada:
     motivo: str = ""
     es_un_error: bool = False
     ficha: object = None
+    nombra: tuple = ()
 
     @property
     def se_crea(self):
@@ -81,6 +102,17 @@ class Informe:
     @property
     def trae_algo_que_crear(self):
         return bool(self.creables)
+
+    @property
+    def lo_que_nombra(self):
+        """Los modelos cuyas fichas nombra este informe, sin repetir y en orden.
+
+        Es lo que hay que anotar en el Registro de acceso cuando la página se
+        sirve: la vista previa de una planilla de Pacientes puede nombrar al
+        animal que ya estaba y a los Tutores entre los que dudó, y son dos
+        lecturas distintas.
+        """
+        return tuple(dict.fromkeys(modelo for fila in self.filas for modelo in fila.nombra))
 
     def como_csv(self):
         """El informe como planilla, para abrirlo al lado del archivo que se corrige."""

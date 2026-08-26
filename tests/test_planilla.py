@@ -9,15 +9,19 @@ que entra por HTTP con un archivo bien formado.
 
 import pytest
 
-from apps.imports.planilla import Planilla, PlanillaIlegible
+from apps.imports.planilla import Columna, Planilla, PlanillaIlegible
 
-COLUMNAS = {"nombre": "nombre", "apellidos": "apellidos", "fono": "telefono"}
+# Un formato inventado, con lo justo para probar cómo se lee un archivo: una
+# columna obligatoria, una que no lo es y una que se escribe de dos maneras.
+COLUMNAS = (
+    Columna("nombre", "nombre", (), obligatoria=True),
+    Columna("apellidos", "apellidos", ()),
+    Columna("fono", "telefono", ()),
+)
 
 
-def leer(texto, codificacion="utf-8", obligatorias=("nombre",)):
-    return Planilla.leer(
-        texto.encode(codificacion), columnas=COLUMNAS, obligatorias=obligatorias
-    )
+def leer(texto, codificacion="utf-8", columnas=COLUMNAS):
+    return Planilla.leer(texto.encode(codificacion), columnas=columnas)
 
 
 def test_una_planilla_separada_por_comas_se_lee():
@@ -86,7 +90,7 @@ def test_una_planilla_guardada_desde_excel_en_windows_se_lee_igual():
     """`cp1252` es lo que escribe un Excel en español que no guarda en UTF-8, y
     llega sin ninguna marca que lo anuncie."""
     filas = list(Planilla.leer(
-        "nombre\nMuñoz\n".encode("cp1252"), columnas=COLUMNAS, obligatorias=("nombre",)
+        "nombre\nMuñoz\n".encode("cp1252"), columnas=COLUMNAS
     ))
 
     assert filas[0].valores["nombre"] == "Muñoz"
@@ -103,6 +107,34 @@ def test_una_planilla_sin_una_columna_obligatoria_no_se_lee():
         leer("apellidos\nRojas\n")
 
     assert "nombre" in str(ilegible.value)
+
+
+def test_una_planilla_a_la_que_le_falta_el_grupo_entero_no_se_lee():
+    """Hay datos que se pueden dar de varias maneras y basta con una —de quién es
+    el animal, en la planilla de Pacientes—: la planilla se lee si trae alguna, y
+    no se lee si no trae ninguna."""
+    columnas = (
+        *COLUMNAS,
+        Columna("rut_tutor", "rut_tutor", (), alguna_de="de quién es"),
+        Columna("tutor", "tutor", (), alguna_de="de quién es"),
+    )
+
+    with pytest.raises(PlanillaIlegible) as ilegible:
+        leer("nombre\nRocky\n", columnas=columnas)
+
+    assert "rut_tutor o tutor" in str(ilegible.value)
+
+
+def test_basta_con_una_columna_del_grupo_para_que_la_planilla_se_lea():
+    columnas = (
+        *COLUMNAS,
+        Columna("rut_tutor", "rut_tutor", (), alguna_de="de quién es"),
+        Columna("tutor", "tutor", (), alguna_de="de quién es"),
+    )
+
+    filas = list(leer("nombre,tutor\nRocky,Camila Rojas\n", columnas=columnas))
+
+    assert filas[0].valores == {"nombre": "Rocky", "tutor": "Camila Rojas"}
 
 
 def test_una_planilla_vacia_no_se_lee():

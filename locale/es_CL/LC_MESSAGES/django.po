@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 20:10-0400\n"
+"POT-Creation-Date: 2026-08-26 00:16-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: apps/audit/forms.py:35 apps/audit/models.py:63 apps/imports/models.py:46
+#: apps/audit/forms.py:35 apps/audit/models.py:63 apps/imports/models.py:55
 #: apps/tenancy/models.py:135 templates/audit/registro.html:27
 msgid "Usuario"
 msgstr ""
@@ -70,12 +70,12 @@ msgstr ""
 msgid "acción"
 msgstr ""
 
-#: apps/audit/models.py:71 apps/imports/models.py:54
+#: apps/audit/models.py:71 apps/imports/models.py:63
 msgid "momento"
 msgstr ""
 
 #: apps/audit/models.py:74 templates/audit/registro.html:4
-#: templates/audit/registro.html:7 templates/tenancy/base_panel.html:50
+#: templates/audit/registro.html:7 templates/tenancy/base_panel.html:51
 msgid "Registro de acceso"
 msgstr ""
 
@@ -83,7 +83,7 @@ msgstr ""
 msgid "Registros de acceso"
 msgstr ""
 
-#: apps/imports/forms.py:27 templates/imports/tutores.html:27
+#: apps/imports/forms.py:27 templates/imports/_subida.html:33
 msgid "Planilla"
 msgstr ""
 
@@ -97,27 +97,27 @@ msgstr ""
 msgid "La planilla ocupa más de %(maximo)s MB. ¿Seguro que es la planilla?"
 msgstr ""
 
-#: apps/imports/informe.py:88
+#: apps/imports/informe.py:120
 msgid "línea"
 msgstr ""
 
-#: apps/imports/informe.py:88
+#: apps/imports/informe.py:120
 msgid "fila"
 msgstr ""
 
-#: apps/imports/informe.py:88
+#: apps/imports/informe.py:120
 msgid "qué pasa"
 msgstr ""
 
-#: apps/imports/informe.py:88 apps/tenancy/models.py:208
+#: apps/imports/informe.py:120 apps/tenancy/models.py:208
 msgid "motivo"
 msgstr ""
 
-#: apps/imports/informe.py:93 templates/imports/vista_previa.html:51
+#: apps/imports/informe.py:125 templates/imports/vista_previa.html:58
 msgid "hay que corregirla"
 msgstr ""
 
-#: apps/imports/informe.py:93 templates/imports/vista_previa.html:51
+#: apps/imports/informe.py:125 templates/imports/vista_previa.html:58
 msgid "ya estaba"
 msgstr ""
 
@@ -211,88 +211,153 @@ msgstr ""
 msgid "Tutor del que no consta nada del contacto"
 msgstr ""
 
-#: apps/imports/models.py:34 apps/tutors/models.py:106
+#: apps/imports/models.py:42 apps/tutors/models.py:106
 #: templates/patients/ficha.html:73 templates/tenancy/base_panel.html:45
 #: templates/tutors/lista.html:4 templates/tutors/lista.html:7
 msgid "Tutores"
 msgstr ""
 
-#: apps/imports/models.py:49
-msgid "qué se importó"
-msgstr ""
-
-#: apps/imports/models.py:53
-msgid "planilla"
-msgstr ""
-
-#: apps/imports/models.py:55
-msgid "filas leídas"
-msgstr ""
-
-#: apps/imports/models.py:56
-msgid "filas creadas"
-msgstr ""
-
-#: apps/imports/models.py:57
-msgid "filas repetidas"
+#: apps/imports/models.py:43 apps/patients/models.py:131
+#: apps/tutors/models.py:71 templates/tutors/ficha.html:60
+msgid "Pacientes"
 msgstr ""
 
 #: apps/imports/models.py:58
-msgid "filas con error"
-msgstr ""
-
-#: apps/imports/models.py:61
-msgid "Importación"
+msgid "qué se importó"
 msgstr ""
 
 #: apps/imports/models.py:62
+msgid "planilla"
+msgstr ""
+
+#: apps/imports/models.py:64
+msgid "filas leídas"
+msgstr ""
+
+#: apps/imports/models.py:65
+msgid "filas creadas"
+msgstr ""
+
+#: apps/imports/models.py:66
+msgid "filas repetidas"
+msgstr ""
+
+#: apps/imports/models.py:67
+msgid "filas con error"
+msgstr ""
+
+#: apps/imports/models.py:70
+msgid "Importación"
+msgstr ""
+
+#: apps/imports/models.py:71
 msgid "Importaciones"
 msgstr ""
 
-#: apps/imports/models.py:69
+#: apps/imports/models.py:105
 #, python-format
 msgid "%(que)s desde %(planilla)s: %(creadas)s de %(leidas)s filas"
 msgstr ""
 
-#: apps/imports/planilla.py:102
+#: apps/imports/pacientes.py:125 apps/imports/pacientes.py:227
+msgid "RUT del Tutor"
+msgstr ""
+
+#: apps/imports/pacientes.py:133 apps/imports/pacientes.py:228
+msgid "teléfono del Tutor"
+msgstr ""
+
+#: apps/imports/pacientes.py:141 apps/imports/pacientes.py:229
+msgid "nombre del Tutor"
+msgstr ""
+
+#: apps/imports/pacientes.py:249
+#, python-format
+msgid ""
+"«%(escrita)s» no es una especie del catálogo. Las que hay son: %(cuales)s."
+msgstr ""
+
+#: apps/imports/pacientes.py:271
+#, python-format
+msgid "«%(escrito)s» no dice el sexo. Se escribe macho o hembra."
+msgstr ""
+
+#: apps/imports/pacientes.py:380
+#, python-format
+msgid "Ningún Tutor de la Clínica tiene el RUT %(rut)s."
+msgstr ""
+
+#: apps/imports/pacientes.py:402
+msgid ""
+"La fila no dice de quién es el animal: pon el RUT, el teléfono o el nombre "
+"de su Tutor."
+msgstr ""
+
+#: apps/imports/pacientes.py:408
+#, python-format
+msgid "No hay ningún Tutor que se llame o conteste así: %(cual)s."
+msgstr ""
+
+#: apps/imports/pacientes.py:413
+#, python-format
+msgid ""
+"Hay %(cuantos)s Tutores que podrían ser: %(cuales)s. Pon el RUT en la fila."
+msgstr ""
+
+#: apps/imports/pacientes.py:552
+#, python-format
+msgid "Ese microchip ya es el de %(cual)s."
+msgstr ""
+
+#: apps/imports/pacientes.py:562
+#, python-format
+msgid "El mismo animal ya venía en la línea %(cual)s de esta planilla."
+msgstr ""
+
+#: apps/imports/pacientes.py:571
+#, python-format
+msgid "Ya está en la Clínica: %(cual)s."
+msgstr ""
+
+#: apps/imports/planilla.py:176
 msgid "No se entiende con qué codificación está escrita la planilla."
 msgstr ""
 
-#: apps/imports/planilla.py:148
+#: apps/imports/planilla.py:223
 msgid "La planilla está vacía: no trae ni siquiera la cabecera."
 msgstr ""
 
-#: apps/imports/planilla.py:157
+#: apps/imports/planilla.py:233
 #, python-format
 msgid "A la planilla le falta la columna %(cuales)s."
 msgstr ""
 
-#: apps/imports/tutores.py:295
+#: apps/imports/tutores.py:265
 msgid ""
 "Sin RUT y sin teléfono no hay manera de reconocer esta fila si la planilla "
 "se vuelve a subir. Añade uno de los dos, o registra la ficha a mano."
 msgstr ""
 
-#: apps/imports/tutores.py:310
+#: apps/imports/tutores.py:280
 #, python-format
 msgid "La misma persona ya venía en la línea %(cual)s de esta planilla."
 msgstr ""
 
-#: apps/imports/tutores.py:319
+#: apps/imports/tutores.py:289
 #, python-format
 msgid "Ya está en la Clínica: %(quien)s."
 msgstr ""
 
-#: apps/imports/views.py:72
+#: apps/imports/views.py:103
 msgid "No hay ninguna planilla esperando. Vuelve a subirla."
 msgstr ""
 
-#: apps/imports/views.py:173
+#: apps/imports/views.py:228
 #, python-format
-msgid "Importados %(creados)s Tutores de %(leidas)s filas."
+msgid "Importados %(creados)s %(que)s de %(leidas)s filas."
 msgstr ""
 
-#: apps/imports/views.py:182
+#: apps/imports/views.py:238
 #, python-format
 msgid ""
 "%(cuantas)s filas quedaron sin importar por algún error. Corrígelas en la "
@@ -502,11 +567,6 @@ msgstr ""
 #: apps/patients/models.py:130 apps/tutors/models.py:274
 #: templates/mostrador/_resultados.html:14
 msgid "Paciente"
-msgstr ""
-
-#: apps/patients/models.py:131 apps/tutors/models.py:71
-#: templates/tutors/ficha.html:60
-msgid "Pacientes"
 msgstr ""
 
 #: apps/patients/models.py:287
@@ -1030,102 +1090,140 @@ msgstr ""
 msgid "Gestión clínica para clínicas veterinarias."
 msgstr ""
 
-#: templates/imports/tutores.html:4
-msgid "Importar Tutores"
+#: templates/imports/_subida.html:12
+#, python-format
+msgid "Importar %(que)s"
 msgstr ""
 
-#: templates/imports/tutores.html:7
-msgid "Importar Tutores desde una planilla"
+#: templates/imports/_subida.html:15
+#, python-format
+msgid "Importar %(que)s desde una planilla"
 msgstr ""
 
-#: templates/imports/tutores.html:10
-msgid ""
-"Sube la planilla con la que llevas tus Tutores hoy. Antes de guardar nada se "
-"enseña qué filas entrarían y cuáles no, y por qué."
-msgstr ""
-
-#: templates/imports/tutores.html:16
+#: templates/imports/_subida.html:22
 msgid "Ver qué entraría"
 msgstr ""
 
-#: templates/imports/tutores.html:20
+#: templates/imports/_subida.html:26
 msgid "Lo que se importó antes"
 msgstr ""
 
-#: templates/imports/tutores.html:25
+#: templates/imports/_subida.html:31
 msgid "Cuándo"
 msgstr ""
 
-#: templates/imports/tutores.html:26
+#: templates/imports/_subida.html:32
 msgid "Quién"
 msgstr ""
 
-#: templates/imports/tutores.html:28
+#: templates/imports/_subida.html:34
 msgid "Filas"
 msgstr ""
 
-#: templates/imports/tutores.html:29
+#: templates/imports/_subida.html:35
 msgid "Creadas"
 msgstr ""
 
-#: templates/imports/tutores.html:30
+#: templates/imports/_subida.html:36
 msgid "Ya estaban"
 msgstr ""
 
-#: templates/imports/tutores.html:31
+#: templates/imports/_subida.html:37
 msgid "Con error"
 msgstr ""
 
-#: templates/imports/tutores.html:50
+#: templates/imports/_subida.html:56
 msgid "Cómo tiene que ser la planilla"
 msgstr ""
 
-#: templates/imports/tutores.html:53
+#: templates/imports/_subida.html:59
 msgid ""
 "Un archivo CSV con una fila de cabecera. Las columnas pueden ir en cualquier "
 "orden, y las que no aparecen aquí se ignoran."
 msgstr ""
 
-#: templates/imports/tutores.html:66
+#: templates/imports/_subida.html:72
 msgid "Columna"
 msgstr ""
 
-#: templates/imports/tutores.html:67
+#: templates/imports/_subida.html:73
 msgid "Qué trae"
 msgstr ""
 
-#: templates/imports/tutores.html:68
+#: templates/imports/_subida.html:74
 msgid "¿Obligatoria?"
 msgstr ""
 
-#: templates/imports/tutores.html:69
+#: templates/imports/_subida.html:75
 msgid "También se acepta"
 msgstr ""
 
-#: templates/imports/tutores.html:77
+#: templates/imports/_subida.html:83
 msgid "sí"
 msgstr ""
 
-#: templates/imports/tutores.html:77
+#: templates/imports/_subida.html:83
+msgid "hace falta alguna de estas"
+msgstr ""
+
+#: templates/imports/_subida.html:83
 msgid "no"
 msgstr ""
 
-#: templates/imports/tutores.html:85
+#: templates/imports/_subida.html:93
+msgid "Descargar una planilla de ejemplo"
+msgstr ""
+
+#: templates/imports/_subida.html:97
+msgid ""
+"Puedes importar por tandas y volver a subir la misma planilla las veces que "
+"haga falta: lo que ya está en la Clínica no se duplica."
+msgstr ""
+
+#: templates/imports/pacientes.html:6
+msgid ""
+"Sube la planilla con la que llevas tus animales hoy. Cada fila dice de quién "
+"es el animal, así que los Tutores tienen que estar importados antes."
+msgstr ""
+
+#: templates/imports/pacientes.html:9
+msgid "Importar Tutores primero"
+msgstr ""
+
+#: templates/imports/pacientes.html:15
+msgid ""
+"De quién es cada animal se dice de una de tres maneras, y basta con una: su "
+"RUT, su teléfono o su nombre. El RUT es el único que nunca se confunde; "
+"cuando dos Tutores podrían ser el de la fila, la fila no se importa y se "
+"dice entre cuáles se dudó, para que puedas poner el RUT y volver a subirla."
+msgstr ""
+
+#: templates/imports/pacientes.html:18
+msgid ""
+"La especie tiene que ser una de las del catálogo, porque de ella dependen "
+"los protocolos. La raza no: la que no esté en el catálogo se guarda tal como "
+"venga escrita."
+msgstr ""
+
+#: templates/imports/pacientes.html:21
+msgid ""
+"El histórico clínico no se importa. Las Consultas, las vacunas y los "
+"tratamientos anteriores se quedan donde están: la Historia clínica del "
+"sistema empieza en la primera Consulta nueva."
+msgstr ""
+
+#: templates/imports/tutores.html:6
+msgid ""
+"Sube la planilla con la que llevas tus Tutores hoy. Antes de guardar nada se "
+"enseña qué filas entrarían y cuáles no, y por qué."
+msgstr ""
+
+#: templates/imports/tutores.html:12
 msgid ""
 "El RUT se escribe como se dicte —con puntos, con guion o de corrido— y el "
 "teléfono también: se guardan como el sistema los guarda. Una fila sin RUT y "
 "sin teléfono no se importa, porque no habría manera de reconocerla si "
 "vuelves a subir la planilla."
-msgstr ""
-
-#: templates/imports/tutores.html:89
-msgid "Descargar una planilla de ejemplo"
-msgstr ""
-
-#: templates/imports/tutores.html:93
-msgid ""
-"Puedes importar por tandas y volver a subir la misma planilla las veces que "
-"haga falta: quien ya está en la Clínica no se duplica."
 msgstr ""
 
 #: templates/imports/vista_previa.html:4 templates/imports/vista_previa.html:7
@@ -1137,66 +1235,66 @@ msgstr ""
 msgid "Planilla: %(archivo)s. Todavía no se ha guardado nada."
 msgstr ""
 
-#: templates/imports/vista_previa.html:12
+#: templates/imports/vista_previa.html:19
 #, python-format
-msgid "Se crearía %(cuantas)s Tutor."
-msgid_plural "Se crearían %(cuantas)s Tutores."
+msgid "Se crearía %(cuantas)s ficha de %(que)s."
+msgid_plural "Se crearían %(cuantas)s fichas de %(que)s."
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/imports/vista_previa.html:13
+#: templates/imports/vista_previa.html:20
 #, python-format
 msgid "Se saltaría %(cuantas)s fila que ya estaba."
 msgid_plural "Se saltarían %(cuantas)s filas que ya estaban."
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/imports/vista_previa.html:14
+#: templates/imports/vista_previa.html:21
 #, python-format
 msgid "Hay %(cuantas)s fila con algún error."
 msgid_plural "Hay %(cuantas)s filas con algún error."
 msgstr[0] ""
 msgstr[1] ""
 
-#: templates/imports/vista_previa.html:20
+#: templates/imports/vista_previa.html:27
 msgid "Importar lo que entra"
 msgstr ""
 
-#: templates/imports/vista_previa.html:26
+#: templates/imports/vista_previa.html:33
 msgid "Descartar esta planilla"
 msgstr ""
 
-#: templates/imports/vista_previa.html:30
+#: templates/imports/vista_previa.html:37
 msgid "Filas que no se crearían"
 msgstr ""
 
-#: templates/imports/vista_previa.html:33
+#: templates/imports/vista_previa.html:40
 msgid "Descargar este informe como planilla"
 msgstr ""
 
-#: templates/imports/vista_previa.html:34
+#: templates/imports/vista_previa.html:41
 msgid ""
 "— para abrirlo al lado del archivo y corregirlo. Descárgalo ahora: al "
 "importar se descarta la planilla, y recuperarlo pasa por volver a subirla."
 msgstr ""
 
-#: templates/imports/vista_previa.html:40
+#: templates/imports/vista_previa.html:47
 msgid "Línea"
 msgstr ""
 
-#: templates/imports/vista_previa.html:41
+#: templates/imports/vista_previa.html:48
 msgid "Fila"
 msgstr ""
 
-#: templates/imports/vista_previa.html:42
+#: templates/imports/vista_previa.html:49
 msgid "Qué pasa"
 msgstr ""
 
-#: templates/imports/vista_previa.html:43
+#: templates/imports/vista_previa.html:50
 msgid "Motivo"
 msgstr ""
 
-#: templates/imports/vista_previa.html:59
+#: templates/imports/vista_previa.html:66
 msgid "Volver a subir otra planilla"
 msgstr ""
 
@@ -1433,18 +1531,22 @@ msgid "Configuración"
 msgstr ""
 
 #: templates/tenancy/base_panel.html:49
-msgid "Importar"
+msgid "Importar Tutores"
 msgstr ""
 
-#: templates/tenancy/base_panel.html:56
+#: templates/tenancy/base_panel.html:50
+msgid "Importar Pacientes"
+msgstr ""
+
+#: templates/tenancy/base_panel.html:57
 msgid "Salir"
 msgstr ""
 
-#: templates/tenancy/base_panel.html:72
+#: templates/tenancy/base_panel.html:73
 msgid "Su sesión está por caducar. Lo que no haya guardado se perderá."
 msgstr ""
 
-#: templates/tenancy/base_panel.html:75
+#: templates/tenancy/base_panel.html:76
 msgid "Sigo aquí"
 msgstr ""
 

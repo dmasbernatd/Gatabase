@@ -1,15 +1,22 @@
 """La importación de una planilla, en dos pasos: primero se enseña, luego se guarda.
 
 Los dos pasos son el ticket entero. Una clínica sube el archivador de sus
-Tutores una vez, con las manos del admin y sin nadie que sepa deshacerlo, así
-que la pregunta no es «¿se importó?» sino «¿qué va a entrar y qué no?». La vista
-previa la responde sin escribir nada, y es literalmente el mismo `examinar` que
-después confirma: una vista previa que no fuera el ensayo exacto de la
-importación sería peor que no tenerla.
+Tutores y el de sus animales una vez, con las manos del admin y sin nadie que
+sepa deshacerlo, así que la pregunta no es «¿se importó?» sino «¿qué va a entrar
+y qué no?». La vista previa la responde sin escribir nada, y es literalmente el
+mismo `examinar` que después confirma: una vista previa que no fuera el ensayo
+exacto de la importación sería peor que no tenerla.
+
+**Aquí no se sabe qué es un Tutor ni qué es un Paciente.** Estas vistas son las
+mismas para las dos planillas —y para la que venga—: lo que cambia de una a otra
+lo declara su módulo, y quién es quién lo dice `importadores.py`. Es lo que hace
+que la página de subida de Pacientes no sea una copia de la de Tutores con las
+palabras cambiadas.
 
 Entre las dos páginas la planilla espera en el disco, colgada de la sesión de
-quien la subió (`almacen.py`). Ninguna URL de aquí lleva identificador de nada,
-y por eso no hay forma de pedir la planilla de otro.
+quien la subió (`almacen.py`), y con ella qué decía traer: confirmar es una sola
+página para las dos. Ninguna URL de aquí lleva identificador de nada, y por eso
+no hay forma de pedir la planilla de otro.
 
 **Todo esto es del admin**, no del mostrador: escribe cientos de fichas de un
 golpe, y quien atiende no tiene por qué poder hacerlo sin querer.
@@ -21,6 +28,8 @@ guardado sería una segunda copia de datos personales envejeciendo en el disco
 para responder a algo que se puede volver a preguntar.
 """
 
+from dataclasses import dataclass
+
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
@@ -31,12 +40,10 @@ from apps.audit.models import Accion
 from apps.audit.registro import anotando
 from apps.imports import almacen
 from apps.imports.forms import PlanillaForm
+from apps.imports.importadores import IMPORTADORES, el_de
 from apps.imports.models import Importacion
 from apps.imports.planilla import PlanillaIlegible
-from apps.imports.tutores import COLUMNAS_DE_LA_PLANILLA, EJEMPLO, examinar, importar
-from apps.imports.tutores import ejemplo as planilla_de_ejemplo
 from apps.tenancy.permisos import solo_admin
-from apps.tutors.models import Tutor
 
 # Cómo se llama el informe cuando se descarga. Lleva la palabra «errores» porque
 # es lo que el admin va a buscar en su carpeta de descargas dentro de un rato.
@@ -53,6 +60,27 @@ ULTIMAS = 10
 DESCARGA = "text/csv; charset=utf-8"
 
 
+@dataclass(frozen=True)
+class LoQueEspera:
+    """La planilla que espera, ya examinada: quién sabe leerla, cómo llegó y qué
+    pasaría con ella. Los tres viajan juntos a las tres páginas que la usan."""
+
+    importador: object
+    planilla: str
+    informe: object
+
+
+def _como_se_llama_lo_que_entra(importador):
+    """El nombre en singular y en plural de lo que esa planilla crea.
+
+    Sale del modelo, que es quien sabe cómo se llama en el dominio, y se
+    pregunta aquí una vez para que no haya tres sitios andando por dentro de su
+    `_meta`.
+    """
+    modelo = importador.MODELO._meta
+    return modelo.verbose_name, modelo.verbose_name_plural
+
+
 def _descarga(texto, nombre):
     respuesta = HttpResponse(texto, content_type=DESCARGA)
     respuesta["Content-Disposition"] = f'attachment; filename="{nombre}"'
@@ -62,19 +90,26 @@ def _descarga(texto, nombre):
 def _lo_que_espera(request):
     """La planilla que espera confirmación ya examinada, o `None` si no hay ninguna.
 
+    Quién sabe leerla sale de lo que ella misma decía traer, no de por qué
+    página se entró.
+
     Devolver `None` es lo mismo para los tres sitios que lo llaman: se avisa y se
     vuelve al principio. Pasa cuando la sesión caducó, cuando alguien pidió la
     vista previa sin haber subido nada, y cuando lo subido no se deja leer — y
     entonces se descarta, porque volver a intentarlo daría el mismo error.
     """
     esperando = almacen.recuperar(request)
-    if not esperando:
+    if not esperando or esperando.que not in IMPORTADORES:
         messages.error(request, _("No hay ninguna planilla esperando. Vuelve a subirla."))
         return None
 
-    nombre, contenido = esperando
+    importador = el_de(esperando.que)
     try:
-        return nombre, examinar(contenido, request.user.clinic)
+        return LoQueEspera(
+            importador,
+            esperando.nombre,
+            importador.examinar(esperando.contenido, request.user.clinic),
+        )
     except PlanillaIlegible as ilegible:
         almacen.olvidar(request)
         messages.error(request, str(ilegible))
@@ -84,51 +119,61 @@ def _lo_que_espera(request):
 def _anotando_a_quienes_nombra(respuesta, request, informe):
     """Deja constancia de las fichas que la página enseña, si enseña alguna.
 
-    La vista previa nombra a los Tutores que ya están en la Clínica —«ya está en
-    la Clínica: Camila Rojas»—, y eso es servir un dato personal suyo aunque
-    nadie haya abierto su ficha (ADR-0004). Se anota el conjunto, como la caja
-    del mostrador: una planilla puede nombrar a cientos.
+    La vista previa nombra a quien ya está en la Clínica —«ya está en la Clínica:
+    Camila Rojas», «hay dos Tutores que podrían ser»—, y eso es servir un dato
+    personal suyo aunque nadie haya abierto su ficha (ADR-0004). Se anota el
+    conjunto, como la caja del mostrador: una planilla puede nombrar a cientos.
 
-    Cuando no se repite ninguna, la página no enseña a nadie que ya estuviera, y
-    lo que no se llegó a servir no se anota.
+    Qué se nombró lo dice el informe y no esta vista (`Informe.lo_que_nombra`):
+    aquí no se sabe de qué era la planilla, y una fila que solo se compara con
+    otra fila del mismo archivo no ha servido el dato de nadie.
     """
-    if not informe.repetidas:
+    nombrados = informe.lo_que_nombra
+    if not nombrados:
         return respuesta
-    return anotando(respuesta, request.user, Accion.LECTURA, Tutor)
+    return anotando(respuesta, request.user, Accion.LECTURA, *nombrados)
 
 
 @solo_admin
-def tutores(request):
-    """Sube la planilla de Tutores. No guarda ninguna ficha: lleva a la vista previa."""
+def subida(request, que):
+    """Sube una planilla. No guarda ninguna ficha: lleva a la vista previa."""
+    importador = el_de(que)
+    que_entra, que_entran = _como_se_llama_lo_que_entra(importador)
     formulario = PlanillaForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and formulario.is_valid():
-        almacen.guardar(request, formulario.cleaned_data["archivo"])
+        almacen.guardar(request, formulario.cleaned_data["archivo"], que)
         return redirect("imports:vista_previa")
     return render(
         request,
-        "imports/tutores.html",
+        importador.PLANTILLA,
         {
             "formulario": formulario,
-            "columnas": COLUMNAS_DE_LA_PLANILLA,
-            # Lo que se importó antes, que es donde «cuántas filas» se puede
-            # leer: el Registro de acceso anota **que** hubo una importación y
-            # apunta a ella, pero no sabe guardar «ciento veinte filas». Y es lo
-            # que hace falta para importar por tandas sin llevar la cuenta a
-            # mano de por dónde iba la migración.
-            "importaciones": Importacion.objects.select_related("usuario")[:ULTIMAS],
+            "columnas": importador.COLUMNAS_DE_LA_PLANILLA,
+            "que_entra": que_entra,
+            "que_entran": que_entran,
+            "url_del_ejemplo": importador.URL_DEL_EJEMPLO,
+            # Lo que se importó antes **de esto mismo**, que es donde «cuántas
+            # filas» se puede leer: el Registro de acceso anota **que** hubo una
+            # importación y apunta a ella, pero no sabe guardar «ciento veinte
+            # filas». Y es lo que hace falta para importar por tandas sin llevar
+            # la cuenta a mano de por dónde iba la migración.
+            "importaciones": Importacion.objects.filter(que_se_importo=que).select_related(
+                "usuario"
+            )[:ULTIMAS],
         },
     )
 
 
 @solo_admin
-def ejemplo_de_tutores(request):
+def ejemplo(request, que):
     """La planilla de ejemplo, con el formato que se documenta al lado.
 
     Se genera de la misma definición que documenta la página y que lee el
-    importador (`tutores.COLUMNAS_DE_LA_PLANILLA`), así que no puede quedarse
-    atrás. No trae datos de nadie: son tres personas inventadas.
+    importador (`COLUMNAS_DE_LA_PLANILLA`), así que no puede quedarse atrás. No
+    trae datos de nadie: son tres personas y tres animales inventados.
     """
-    return _descarga(planilla_de_ejemplo(), EJEMPLO)
+    importador = el_de(que)
+    return _descarga(importador.ejemplo(), importador.EJEMPLO)
 
 
 @solo_admin
@@ -138,11 +183,18 @@ def vista_previa(request):
     if not esperando:
         return redirect("imports:tutores")
 
-    planilla, informe = esperando
+    que_entra, que_entran = _como_se_llama_lo_que_entra(esperando.importador)
     respuesta = render(
-        request, "imports/vista_previa.html", {"informe": informe, "planilla": planilla}
+        request,
+        "imports/vista_previa.html",
+        {
+            "informe": esperando.informe,
+            "planilla": esperando.planilla,
+            "que_entra": que_entra,
+            "que_entran": que_entran,
+        },
     )
-    return _anotando_a_quienes_nombra(respuesta, request, informe)
+    return _anotando_a_quienes_nombra(respuesta, request, esperando.informe)
 
 
 @solo_admin
@@ -152,7 +204,7 @@ def informe(request):
     if not esperando:
         return redirect("imports:tutores")
 
-    _, examinado = esperando
+    examinado = esperando.informe
     return _anotando_a_quienes_nombra(_descarga(examinado.como_csv(), INFORME), request, examinado)
 
 
@@ -164,14 +216,18 @@ def confirmar(request):
     if not esperando:
         return redirect("imports:tutores")
 
-    planilla, examinado = esperando
-    importacion = importar(examinado, request.user.clinic, request.user, planilla)
+    importador = esperando.importador
+    importacion = importador.importar(
+        esperando.informe, request.user.clinic, request.user, esperando.planilla
+    )
     almacen.olvidar(request)
 
+    en_plural = _como_se_llama_lo_que_entra(importador)[1]
     messages.success(
         request,
-        _("Importados %(creados)s Tutores de %(leidas)s filas.") % {
+        _("Importados %(creados)s %(que)s de %(leidas)s filas.") % {
             "creados": importacion.filas_creadas,
+            "que": en_plural,
             "leidas": importacion.filas_leidas,
         },
     )
@@ -183,12 +239,20 @@ def confirmar(request):
                 "planilla y vuelve a subirla: lo que ya entró no se duplica."
             ) % {"cuantas": importacion.filas_con_error},
         )
-    return redirect("tutors:lista")
+    return redirect(importador.VUELVE_A)
 
 
 @solo_admin
 @require_POST
 def descartar(request):
-    """Tira la planilla que esperaba, sin importar nada."""
+    """Tira la planilla que esperaba, sin importar nada.
+
+    Se vuelve a la página de la planilla que se acaba de tirar, que es donde se
+    sube la siguiente. Cuando no había ninguna —o ya no se sabe qué era— se
+    vuelve a la de Tutores, que es por donde empieza toda migración.
+    """
+    que = almacen.que_espera(request)
     almacen.olvidar(request)
+    if que in IMPORTADORES:
+        return redirect(el_de(que).URL_DE_LA_SUBIDA)
     return redirect("imports:tutores")

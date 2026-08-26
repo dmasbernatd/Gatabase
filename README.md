@@ -126,7 +126,7 @@ Los datos son verosímiles y no de relleno: RUT con dígito verificador que cuad
 
 ## Importar la planilla de una clínica que llega
 
-Lo primero que hace una clínica nueva: subir el archivador de sus Tutores, en el CSV que ya tenía. Es del admin, en **Importar**, y son dos páginas — porque la pregunta no es «¿se importó?» sino «¿qué va a entrar y qué no?».
+Lo primero que hace una clínica nueva: subir el archivador que ya tenía. Son dos planillas y en este orden —primero los Tutores, después los animales, que entran vinculados a ellos—, las dos del admin, en **Importar Tutores** e **Importar Pacientes**. Cada una son dos páginas, porque la pregunta no es «¿se importó?» sino «¿qué va a entrar y qué no?».
 
 **La vista previa no guarda nada** y es literalmente el mismo examen que después confirma: cuántas fichas se crearían, cuántas se saltarían y, fila a fila, con su número de línea y su motivo, las que no entran. El informe se descarga como planilla —con punto y coma y marca de orden de bytes, para que lo abra el mismo Excel que exportó el original— y se pone al lado del archivo para corregirlo.
 
@@ -135,6 +135,10 @@ Lo primero que hace una clínica nueva: subir el archivador de sus Tutores, en e
 **Lo que es un dato bueno no se decide dos veces.** El RUT lo sigue leyendo `apps/tutors/rut.py` y el teléfono `apps/telefono.py`, por los mismos campos que el formulario del mostrador: un importador con reglas propias —siempre más laxas, para que «la migración entre entera»— dejaría en la base fichas que después nadie podría guardar.
 
 Del archivo no se guarda copia en la base: espera en disco entre las dos páginas, colgado de la sesión de quien lo subió (`apps/imports/almacen.py`). Del formato sabe `apps/imports/planilla.py`, que adivina el separador y la codificación en vez de preguntárselos a nadie; qué es la misma persona lo decide `apps/imports/tutores.py`, que es también de donde salen a la vez la documentación del formato, el archivo de ejemplo descargable y el reconocimiento de la cabecera.
+
+**La planilla de animales identifica al dueño por un nombre escrito a mano**, y eso es lo difícil de la migración. `apps/imports/pacientes.py` resuelve al Tutor por su RUT, por su teléfono o por su nombre —y por la intersección de los que la fila traiga, porque una familia comparte número y el nombre es lo que desempata—. Cuando quedan dos, la fila **no entra** y se dice entre cuáles se dudó, con el RUT de cada uno al lado: elegir al primero colgaría el animal de la persona equivocada, y quien lo descubriría es el veterinario que llama a un número que no contesta. La especie tiene que estar en el catálogo cerrado; la raza que no esté se guarda tal como venga escrita. **El histórico clínico no se importa** y no hay columna que lo traiga: migrar historias en texto libre es un pozo sin fondo, y la Historia clínica empieza en la primera Consulta nueva.
+
+Las tres páginas de en medio —vista previa, informe y confirmación— son las mismas para las dos planillas y no saben de Tutores ni de Pacientes: lo que cambia de una a otra lo declara su módulo, y el contrato lo cuenta `apps/imports/importadores.py`.
 
 La importación queda en el Registro de acceso: **una anotación y no una por ficha**, apuntando a la `Importacion` que lleva las cuentas — quién importó, cuándo, qué planilla y cuántas filas.
 
