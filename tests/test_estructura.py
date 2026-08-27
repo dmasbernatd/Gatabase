@@ -1,4 +1,4 @@
-"""Las nueve apps del dominio existen, están instaladas y el proyecto arranca.
+"""Las diez apps del dominio existen, están instaladas y el proyecto arranca.
 
 Y, sobre todo (ADR-0003): ningún modelo de dominio se salta el aislamiento por
 Clínica. Esa comprobación recorre los modelos de verdad, así que un modelo nuevo
@@ -29,10 +29,11 @@ APPS_DEL_DOMINIO = [
     "notices",
     "audit",
     "imports",
+    "exports",
 ]
 
 
-def test_las_nueve_apps_estan_instaladas():
+def test_las_diez_apps_estan_instaladas():
     instaladas = {app.label for app in apps.get_app_configs()}
 
     assert set(APPS_DEL_DOMINIO) <= instaladas

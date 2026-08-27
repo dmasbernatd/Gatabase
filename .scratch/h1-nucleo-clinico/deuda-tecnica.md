@@ -46,6 +46,9 @@ casilla en el **16** (limpiar es rehacer la base, no borrar la Clínica) y en el
 **19** (una Clínica que se va se exporta y se cierra). Lo que falta es decidir
 **qué significa cerrar una Clínica** — desactivar a sus Usuarios, dejarla sin
 acceso, algo más —, y eso se decide al hacer el 19.
+_Pagado del todo el 26 de agosto de 2026_ con el **19**: cerrar una Clínica es
+anotar cuándo (`Clinica.cerrada`) y desactivar a todos sus Usuarios, y el sistema
+lo ofrece desde la página de exportación (`apps/exports/cierre.py`).
 
 **`.gitignore` se llevaba por delante la app `apps/imports/`.** La regla
 `imports/`, escrita para los ficheros de importación de la clínica (tickets
@@ -456,9 +459,11 @@ ninguna otra», y una copia en la base sobreviviría a eso en silencio. Lo que l
 recoge es un barrido de los archivos más viejos que la sesión, que corre al subir
 la siguiente planilla; una instalación donde nadie vuelva a importar nunca se
 queda con el último archivo en el disco hasta que alguien lo borre.
-_Cuándo se paga_: si el **19** monta un proceso periódico para lo suyo —las
-exportaciones tienen el mismo problema y con archivos más grandes—, el barrido se
-va allí y deja de depender de que alguien suba algo.
+_Cuándo se paga_: sigue pendiente, y el **19** no lo pagó — no monta ningún
+proceso periódico porque no guarda nada: la exportación se compone mientras sale
+hacia el navegador y no llega a existir como archivo
+(`apps/exports/paquete.py`). El barrido de importaciones sigue dependiendo de que
+alguien suba la siguiente planilla.
 
 **Un `bulk_create` de tres mil filas es una sola sentencia y no pasa por
 `save()`.** Hoy da igual —el Tutor no tiene `save()` propio y los campos
@@ -558,3 +563,38 @@ solo en cuanto se vuelve a correr.
 _Cuándo se paga_: cuando estorbe de verdad —en CI, donde no hay nadie mirando
 para saber que fue eso—. El arreglo es calcular la fecha dentro del test, o
 congelar el reloj.
+
+## La exportación de la Clínica
+
+Lo que el **19** dejó decidido, y lo que queda vivo detrás.
+
+**Cerrar una Clínica no tiene vuelta desde la aplicación.** Se desactivan todos
+sus Usuarios, el del admin incluido, así que no queda nadie que pueda reabrirla:
+hace falta reactivar un Usuario en la base de datos, con alguien delante de una
+consola. Es deliberado —cerrar es para la clínica que se va— y la vista pide
+escribir el nombre de la Clínica antes de hacerlo, pero no hay red debajo del
+admin que se equivoque de pestaña teniendo dos Clínicas.
+_Cuándo se paga_: si llega a pasar una vez, con un comando `reabrir_clinica` al
+lado de `restablecer_segundo_factor`, que existe por el mismo motivo — la
+aplicación puede dejarte fuera y la consola es la única puerta que queda.
+
+**Una Clínica cerrada solo se nota en el login.** El acceso se corta porque sus
+Usuarios quedan inactivos, no porque nada mire `Clinica.cerrada`: un Usuario que
+se reactivara a mano volvería a entrar en una Clínica que consta cerrada. Hoy da
+igual —reactivar a mano es exactamente lo que se haría para reabrirla— pero la
+bandera y el acceso son dos hechos que nadie obliga a coincidir.
+_Cuándo se paga_: cuando exista el comando de reabrir, que es quien tendría que
+ocuparse de las dos cosas a la vez.
+
+**El zip se comprueba con volumen a mano, no en la suite.** Con 3000 Tutores y
+3000 Pacientes el pico de memoria de la exportación entera queda en algo más de un mega —1155 KiB en la última medición—,
+medido con `tracemalloc` el 26 de agosto de 2026, y el trozo mayor en 44 KiB. La
+suite comprueba de verdad la mitad de arriba —que el zip sale por trozos y que
+ninguno es el archivo entero— y **no puede** comprobar la de abajo: que un lector
+lea de a tandas en vez de traerse la tabla no se distingue desde fuera, porque
+las dos formas son una sola consulta y la diferencia está en el cursor. Lo que sí
+queda atado es la costura: `_de_la_clinica` es el único sitio con `.iterator()`,
+así que un lector nuevo lo hereda sin acordarse.
+_Cuándo se paga_: no se paga. Se anota para que quien cambie `paquete.py` o
+`hojas.py` sepa que hay una promesa que ningún test va a defender por él, y cuál
+es el número que tiene que volver a salir.

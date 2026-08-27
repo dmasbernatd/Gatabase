@@ -261,18 +261,35 @@ def _reunir(cabecera, celdas):
     return valores
 
 
-def como_la_lee_un_excel(filas):
-    """Esas filas escritas como la planilla que el admin va a abrir con su Excel.
+def escrita_como_la_lee_un_excel(filas):
+    """Esas filas escritas como la planilla que el admin va a abrir con su Excel,
+    de a una y a medida que llegan.
 
     Vive aquí y no en quien la escribe porque es la misma decisión que la de
     arriba vista del revés —qué formato entiende un Excel chileno— y porque la
-    escriben dos: el informe de errores y el archivo de ejemplo. Copiada en los
-    dos sitios, cambiar de idea en uno dejaría al otro abriéndose torcido.
+    escriben tres: el informe de errores, el archivo de ejemplo y la exportación
+    de la Clínica. Copiada en los tres sitios, cambiar de idea en uno dejaría a
+    los otros abriéndose torcidos.
+
+    De a una y no de un golpe porque quien exporta una Clínica entera no tiene
+    las filas en la mano: son miles, salen de la base de datos según se leen, y
+    juntarlas para escribirlas sería tener la planilla entera en memoria justo
+    para no tenerla (`apps/exports/paquete.py`). El papel se vacía después de
+    cada fila, así que lo que ocupa esto es una fila, no un archivo.
     """
     papel = io.StringIO()
     planilla = csv.writer(papel, delimiter=SEPARADOR_DE_EXCEL, lineterminator=SALTO_DE_EXCEL)
-    planilla.writerows(filas)
-    return MARCA_DE_ORDEN + papel.getvalue()
+    yield MARCA_DE_ORDEN
+    for fila in filas:
+        planilla.writerow(fila)
+        yield papel.getvalue()
+        papel.seek(0)
+        papel.truncate(0)
+
+
+def como_la_lee_un_excel(filas):
+    """Lo mismo de arriba, ya junto, para quien sí tiene todas las filas."""
+    return "".join(escrita_como_la_lee_un_excel(filas))
 
 
 def ejemplo_de(columnas):

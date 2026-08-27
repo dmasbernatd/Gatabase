@@ -32,4 +32,8 @@ urlpatterns = [
     # La importación de planillas: es del admin, y escribe en las dos apps de
     # dominio a la vez, así que cuelga del panel y no de ninguna de ellas.
     path("panel/importar/", include("apps.imports.urls")),
+    # La exportación de la Clínica entera y su cierre: del admin, y lee de todas
+    # las apps de dominio a la vez, así que cuelga del panel igual que la
+    # importación y por el mismo motivo.
+    path("panel/exportar/", include("apps.exports.urls")),
 ]

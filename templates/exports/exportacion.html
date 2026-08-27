@@ -1,0 +1,61 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Exportar la Clínica" %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Exportar la Clínica" %}</h1>
+
+  <p>
+    {% translate "Los datos de la Clínica son de la Clínica. Se descargan cuando quiera y sin pedirle permiso a nadie, en planillas que se abren con Excel o LibreOffice." %}
+  </p>
+
+  <form method="post" action="{% url 'exports:descarga' %}">
+    {% csrf_token %}
+    <button type="submit">{% translate "Descargar todo" %}</button>
+  </form>
+
+  <h2>{% translate "Qué va dentro" %}</h2>
+
+  {% comment %}
+    Las hojas salen de `hojas.HOJAS`, que es de donde sale también el archivo: una
+    página que documentara una lista escrita a mano quedaría desfasada el día que
+    la exportación gane una columna, y nadie se enteraría hasta abrir el zip.
+  {% endcomment %}
+  <table>
+    <thead>
+      <tr>
+        <th>{% translate "Archivo" %}</th>
+        <th>{% translate "Columnas" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for hoja in hojas %}
+        <tr>
+          <td><code>{{ hoja.nombre }}</code></td>
+          <td>{% for columna in hoja.cabecera %}{{ columna }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p>
+    {% translate "No van dentro los Usuarios de la Clínica ni el Registro de acceso: los primeros son las cuentas con que entra su gente, y el segundo es la evidencia de quién vio qué, que se consulta en su propia página." %}
+  </p>
+
+  <h2>{% translate "Cerrar la Clínica" %}</h2>
+
+  <p>
+    {% translate "Una Clínica que se va se exporta y se cierra; no se borra. Sus Tutores, sus Pacientes y su Registro de acceso se quedan guardados tal como están, y deja de entrar nadie: se desactivan todos sus Usuarios, incluido el suyo." %}
+  </p>
+
+  <p>
+    {% translate "Descargue antes el archivo. Después de cerrar no hay ninguna pantalla que vuelva a abrirla: hay que pedírselo a quien administra el servidor." %}
+  </p>
+
+  <form method="post" action="{% url 'exports:cerrar' %}">
+    {% csrf_token %}
+    {{ formulario.as_p }}
+    <button type="submit">{% blocktranslate with clinica=clinica %}Cerrar {{ clinica }}{% endblocktranslate %}</button>
+  </form>
+{% endblock %}

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-26 00:16-0400\n"
+"POT-Creation-Date: 2026-08-26 21:19-0400\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: apps/audit/forms.py:35 apps/audit/models.py:63 apps/imports/models.py:55
-#: apps/tenancy/models.py:135 templates/audit/registro.html:27
+#: apps/tenancy/models.py:150 templates/audit/registro.html:27
 msgid "Usuario"
 msgstr ""
 
@@ -75,12 +75,225 @@ msgid "momento"
 msgstr ""
 
 #: apps/audit/models.py:74 templates/audit/registro.html:4
-#: templates/audit/registro.html:7 templates/tenancy/base_panel.html:51
+#: templates/audit/registro.html:7 templates/tenancy/base_panel.html:52
 msgid "Registro de acceso"
 msgstr ""
 
 #: apps/audit/models.py:75
 msgid "Registros de acceso"
+msgstr ""
+
+#: apps/exports/forms.py:17
+msgid "Escriba el nombre de la Clínica para confirmar"
+msgstr ""
+
+#: apps/exports/forms.py:35
+msgid "Eso no es el nombre de la Clínica. No se ha cerrado nada."
+msgstr ""
+
+#: apps/exports/hojas.py:66 templates/imports/_subida.html:83
+msgid "sí"
+msgstr ""
+
+#: apps/exports/hojas.py:67 templates/imports/_subida.html:83
+msgid "no"
+msgstr ""
+
+#: apps/exports/hojas.py:286 apps/exports/hojas.py:293
+msgid "id"
+msgstr ""
+
+#: apps/exports/hojas.py:286 apps/exports/hojas.py:294
+#: apps/exports/hojas.py:330 apps/exports/hojas.py:345
+#: apps/patients/models.py:79 apps/tenancy/models.py:35
+#: apps/tenancy/models.py:64 apps/tenancy/models.py:135
+#: apps/tenancy/models.py:271 apps/tutors/models.py:47
+msgid "nombre"
+msgstr ""
+
+#: apps/exports/hojas.py:286 apps/tenancy/models.py:136
+#: apps/tutors/models.py:48
+msgid "apellidos"
+msgstr ""
+
+#: apps/exports/hojas.py:286 apps/tutors/listado.py:98 apps/tutors/models.py:55
+#: templates/tutors/ficha.html:15
+msgid "RUT"
+msgstr ""
+
+#: apps/exports/hojas.py:286 apps/exports/hojas.py:345
+#: apps/tenancy/models.py:272 apps/tutors/consentimiento.py:42
+#: apps/tutors/models.py:59
+msgid "teléfono"
+msgstr ""
+
+#: apps/exports/hojas.py:286 apps/tenancy/models.py:134
+#: apps/tutors/consentimiento.py:43 apps/tutors/models.py:60
+msgid "correo"
+msgstr ""
+
+#: apps/exports/hojas.py:286 apps/exports/hojas.py:330
+#: apps/exports/hojas.py:345 apps/tenancy/models.py:65
+#: apps/tenancy/models.py:273 apps/tutors/models.py:61
+msgid "dirección"
+msgstr ""
+
+#: apps/exports/hojas.py:295 apps/exports/hojas.py:348
+#: apps/exports/hojas.py:349 apps/patients/models.py:80
+msgid "especie"
+msgstr ""
+
+#: apps/exports/hojas.py:296 apps/exports/hojas.py:349
+#: apps/patients/models.py:85
+msgid "raza"
+msgstr ""
+
+#: apps/exports/hojas.py:297 apps/patients/models.py:86
+msgid "sexo"
+msgstr ""
+
+#: apps/exports/hojas.py:298 apps/patients/models.py:87
+msgid "fecha de nacimiento"
+msgstr ""
+
+#: apps/exports/hojas.py:299 apps/patients/models.py:88
+msgid "color"
+msgstr ""
+
+#: apps/exports/hojas.py:300 apps/patients/models.py:96
+msgid "microchip"
+msgstr ""
+
+#: apps/exports/hojas.py:301 apps/patients/models.py:98
+msgid "estado de identificación"
+msgstr ""
+
+#: apps/exports/hojas.py:302 apps/patients/models.py:108
+msgid "estado"
+msgstr ""
+
+#: apps/exports/hojas.py:303 apps/patients/models.py:116
+msgid "fecha de fallecimiento"
+msgstr ""
+
+#: apps/exports/hojas.py:304 apps/patients/models.py:89
+msgid "observaciones"
+msgstr ""
+
+#: apps/exports/hojas.py:312 apps/exports/hojas.py:324
+msgid "id del Tutor"
+msgstr ""
+
+#: apps/exports/hojas.py:313 apps/exports/hojas.py:324
+#: apps/patients/forms.py:210 apps/tutors/models.py:105
+#: apps/tutors/models.py:268 apps/tutors/models.py:403
+msgid "Tutor"
+msgstr ""
+
+#: apps/exports/hojas.py:314
+msgid "id del Paciente"
+msgstr ""
+
+#: apps/exports/hojas.py:315 apps/patients/models.py:130
+#: apps/tutors/models.py:274 templates/mostrador/_resultados.html:14
+msgid "Paciente"
+msgstr ""
+
+#: apps/exports/hojas.py:316 apps/tutors/models.py:276
+msgid "es el responsable"
+msgstr ""
+
+#: apps/exports/hojas.py:317 apps/exports/hojas.py:335
+#: apps/exports/hojas.py:340 apps/tenancy/models.py:180
+#: apps/tenancy/models.py:225 apps/tutors/models.py:282
+msgid "hasta"
+msgstr ""
+
+#: apps/exports/hojas.py:324 apps/tutors/models.py:405
+msgid "canal"
+msgstr ""
+
+#: apps/exports/hojas.py:324 apps/tutors/models.py:406
+msgid "autoriza"
+msgstr ""
+
+#: apps/exports/hojas.py:324 apps/exports/hojas.py:340
+#: apps/tenancy/models.py:220 apps/tutors/models.py:410
+msgid "fecha"
+msgstr ""
+
+#: apps/exports/hojas.py:330 apps/tenancy/models.py:70
+#: templates/tenancy/configuracion.html:22
+msgid "atiende urgencias"
+msgstr ""
+
+#: apps/exports/hojas.py:330 apps/tenancy/models.py:75
+msgid "teléfono de urgencias"
+msgstr ""
+
+#: apps/exports/hojas.py:335 apps/exports/hojas.py:340
+#: apps/tenancy/models.py:79 apps/tenancy/models.py:176
+#: apps/tenancy/models.py:218 templates/tenancy/base_panel.html:8
+msgid "Sede"
+msgstr ""
+
+#: apps/exports/hojas.py:335 apps/tenancy/models.py:178
+msgid "día"
+msgstr ""
+
+#: apps/exports/hojas.py:335 apps/exports/hojas.py:340
+#: apps/tenancy/models.py:179 apps/tenancy/models.py:224
+msgid "desde"
+msgstr ""
+
+#: apps/exports/hojas.py:340 apps/imports/informe.py:120
+#: apps/tenancy/models.py:223
+msgid "motivo"
+msgstr ""
+
+#: apps/exports/hojas.py:348
+msgid "código"
+msgstr ""
+
+#: apps/exports/paquete.py:102
+#, python-format
+msgid "Exportación de los datos de la Clínica %(clinica)s"
+msgstr ""
+
+#: apps/exports/paquete.py:105
+#, python-format
+msgid "Hecha el %(momento)s."
+msgstr ""
+
+#: apps/exports/paquete.py:109
+msgid ""
+"Cada archivo es una planilla CSV separada por punto y coma, escrita en UTF-8 "
+"con marca de orden de bytes: se abre haciendo doble clic desde Excel o "
+"LibreOffice. La primera fila es la cabecera."
+msgstr ""
+
+#: apps/exports/paquete.py:114
+msgid "Los archivos que van dentro:"
+msgstr ""
+
+#: apps/exports/paquete.py:120
+msgid ""
+"Los Tutores y los Pacientes se cruzan por la columna «id», que es la que usa "
+"vinculos.csv para decir quién responde por qué animal. Un Vínculo con fecha "
+"en la columna «hasta» es el Tutor que tuvo al animal hasta ese día."
+msgstr ""
+
+#: apps/exports/paquete.py:125
+msgid ""
+"Las columnas de especie, sexo, estado y estado de identificación traen el "
+"código tal como se guarda; especies.csv dice cuáles hay y cómo se llaman."
+msgstr ""
+
+#: apps/exports/views.py:96
+#, python-format
+msgid ""
+"La Clínica %(clinica)s queda cerrada. Sus datos siguen guardados, pero ya no "
+"entra nadie: para reabrirla hay que pedírselo a quien administra el servidor."
 msgstr ""
 
 #: apps/imports/forms.py:27 templates/imports/_subida.html:33
@@ -107,10 +320,6 @@ msgstr ""
 
 #: apps/imports/informe.py:120
 msgid "qué pasa"
-msgstr ""
-
-#: apps/imports/informe.py:120 apps/tenancy/models.py:208
-msgid "motivo"
 msgstr ""
 
 #: apps/imports/informe.py:125 templates/imports/vista_previa.html:58
@@ -392,7 +601,7 @@ msgstr ""
 msgid "hurón"
 msgstr ""
 
-#: apps/patients/estados.py:38 apps/tenancy/models.py:126
+#: apps/patients/estados.py:38 apps/tenancy/models.py:141
 #: templates/tenancy/usuarios.html:30
 msgid "activo"
 msgstr ""
@@ -444,11 +653,6 @@ msgstr ""
 
 #: apps/patients/forms.py:176
 msgid "Tiene un microchip apuntado: no puede estar «sin chip»."
-msgstr ""
-
-#: apps/patients/forms.py:210 apps/tutors/models.py:105
-#: apps/tutors/models.py:268 apps/tutors/models.py:403
-msgid "Tutor"
 msgstr ""
 
 #: apps/patients/forms.py:211 apps/patients/forms.py:376
@@ -518,57 +722,6 @@ msgstr ""
 msgid "todavía no se ha preguntado"
 msgstr ""
 
-#: apps/patients/models.py:79 apps/tenancy/models.py:28
-#: apps/tenancy/models.py:49 apps/tenancy/models.py:120
-#: apps/tenancy/models.py:256 apps/tutors/models.py:47
-msgid "nombre"
-msgstr ""
-
-#: apps/patients/models.py:80
-msgid "especie"
-msgstr ""
-
-#: apps/patients/models.py:85
-msgid "raza"
-msgstr ""
-
-#: apps/patients/models.py:86
-msgid "sexo"
-msgstr ""
-
-#: apps/patients/models.py:87
-msgid "fecha de nacimiento"
-msgstr ""
-
-#: apps/patients/models.py:88
-msgid "color"
-msgstr ""
-
-#: apps/patients/models.py:89
-msgid "observaciones"
-msgstr ""
-
-#: apps/patients/models.py:96
-msgid "microchip"
-msgstr ""
-
-#: apps/patients/models.py:98
-msgid "estado de identificación"
-msgstr ""
-
-#: apps/patients/models.py:108
-msgid "estado"
-msgstr ""
-
-#: apps/patients/models.py:116
-msgid "fecha de fallecimiento"
-msgstr ""
-
-#: apps/patients/models.py:130 apps/tutors/models.py:274
-#: templates/mostrador/_resultados.html:14
-msgid "Paciente"
-msgstr ""
-
 #: apps/patients/models.py:287
 msgid "Falta inscribirlo en el Registro Nacional de Mascotas."
 msgstr ""
@@ -618,8 +771,8 @@ msgstr ""
 msgid "Un teléfono se escribe con números."
 msgstr ""
 
-#: apps/tenancy/aislamiento.py:70 apps/tenancy/models.py:32
-#: apps/tenancy/models.py:47 apps/tenancy/models.py:115
+#: apps/tenancy/aislamiento.py:70 apps/tenancy/models.py:43
+#: apps/tenancy/models.py:62 apps/tenancy/models.py:130
 msgid "Clínica"
 msgstr ""
 
@@ -758,127 +911,82 @@ msgstr ""
 msgid "Segundo factor retirado. «%s» lo dará de alta la próxima vez que entre."
 msgstr ""
 
-#: apps/tenancy/models.py:29
+#: apps/tenancy/models.py:36
 msgid "creada"
 msgstr ""
 
-#: apps/tenancy/models.py:33
+#: apps/tenancy/models.py:40
+msgid "cerrada"
+msgstr ""
+
+#: apps/tenancy/models.py:44
 msgid "Clínicas"
 msgstr ""
 
-#: apps/tenancy/models.py:50 apps/tenancy/models.py:258
-#: apps/tutors/models.py:61
-msgid "dirección"
-msgstr ""
-
-#: apps/tenancy/models.py:55 templates/tenancy/configuracion.html:22
-msgid "atiende urgencias"
-msgstr ""
-
-#: apps/tenancy/models.py:60
-msgid "teléfono de urgencias"
-msgstr ""
-
-#: apps/tenancy/models.py:64 apps/tenancy/models.py:161
-#: apps/tenancy/models.py:203 templates/tenancy/base_panel.html:8
-msgid "Sede"
-msgstr ""
-
-#: apps/tenancy/models.py:65 apps/tenancy/models.py:124
+#: apps/tenancy/models.py:80 apps/tenancy/models.py:139
 #: templates/tenancy/configuracion.html:17 templates/tenancy/usuarios.html:17
 msgid "Sedes"
 msgstr ""
 
-#: apps/tenancy/models.py:86
+#: apps/tenancy/models.py:101
 msgid "veterinario"
 msgstr ""
 
-#: apps/tenancy/models.py:87
+#: apps/tenancy/models.py:102
 msgid "recepción"
 msgstr ""
 
-#: apps/tenancy/models.py:88
+#: apps/tenancy/models.py:103
 msgid "admin"
 msgstr ""
 
-#: apps/tenancy/models.py:100
+#: apps/tenancy/models.py:115
 msgid "Un Usuario necesita un correo para entrar."
 msgstr ""
 
-#: apps/tenancy/models.py:119 apps/tutors/consentimiento.py:43
-#: apps/tutors/models.py:60
-msgid "correo"
-msgstr ""
-
-#: apps/tenancy/models.py:121 apps/tutors/models.py:48
-msgid "apellidos"
-msgstr ""
-
-#: apps/tenancy/models.py:122
+#: apps/tenancy/models.py:137
 msgid "rol"
 msgstr ""
 
-#: apps/tenancy/models.py:127
+#: apps/tenancy/models.py:142
 msgid "alta"
 msgstr ""
 
-#: apps/tenancy/models.py:136 templates/tenancy/base_panel.html:47
+#: apps/tenancy/models.py:151 templates/tenancy/base_panel.html:47
 msgid "Usuarios"
 msgstr ""
 
-#: apps/tenancy/models.py:163
-msgid "día"
-msgstr ""
-
-#: apps/tenancy/models.py:164 apps/tenancy/models.py:209
-msgid "desde"
-msgstr ""
-
-#: apps/tenancy/models.py:165 apps/tenancy/models.py:210
-#: apps/tutors/models.py:282
-msgid "hasta"
-msgstr ""
-
-#: apps/tenancy/models.py:168
+#: apps/tenancy/models.py:183
 msgid "Franja de atención"
 msgstr ""
 
-#: apps/tenancy/models.py:169
+#: apps/tenancy/models.py:184
 msgid "Franjas de atención"
 msgstr ""
 
-#: apps/tenancy/models.py:205 apps/tutors/models.py:410
-msgid "fecha"
-msgstr ""
-
-#: apps/tenancy/models.py:213
+#: apps/tenancy/models.py:228
 msgid "Excepción de atención"
 msgstr ""
 
-#: apps/tenancy/models.py:214
+#: apps/tenancy/models.py:229
 msgid "Excepciones de atención"
 msgstr ""
 
-#: apps/tenancy/models.py:232
+#: apps/tenancy/models.py:247
 #, python-format
 msgid "%(fecha)s: cerrado"
 msgstr ""
 
-#: apps/tenancy/models.py:233
+#: apps/tenancy/models.py:248
 #, python-format
 msgid "%(fecha)s: de %(desde)s a %(hasta)s"
 msgstr ""
 
-#: apps/tenancy/models.py:257 apps/tutors/consentimiento.py:42
-#: apps/tutors/models.py:59
-msgid "teléfono"
-msgstr ""
-
-#: apps/tenancy/models.py:261
+#: apps/tenancy/models.py:276
 msgid "Clínica de derivación"
 msgstr ""
 
-#: apps/tenancy/models.py:262 templates/tenancy/configuracion.html:27
+#: apps/tenancy/models.py:277 templates/tenancy/configuracion.html:27
 #: templates/tenancy/derivaciones.html:4 templates/tenancy/derivaciones.html:7
 msgid "Clínicas de derivación"
 msgstr ""
@@ -948,11 +1056,6 @@ msgstr ""
 msgid "Nombre"
 msgstr ""
 
-#: apps/tutors/listado.py:98 apps/tutors/models.py:55
-#: templates/tutors/ficha.html:15
-msgid "RUT"
-msgstr ""
-
 #: apps/tutors/listado.py:99 templates/mostrador/_resultados.html:17
 #: templates/tenancy/derivaciones.html:17 templates/tutors/ficha.html:18
 msgid "Teléfono"
@@ -961,10 +1064,6 @@ msgstr ""
 #: apps/tutors/listado.py:100 templates/tenancy/usuarios.html:15
 #: templates/tutors/ficha.html:21
 msgid "Correo"
-msgstr ""
-
-#: apps/tutors/models.py:276
-msgid "es el responsable"
 msgstr ""
 
 #: apps/tutors/models.py:285
@@ -980,14 +1079,6 @@ msgstr ""
 msgid ""
 "%(paciente)s se quedaría sin nadie que responda por él: diga antes quién lo "
 "releva."
-msgstr ""
-
-#: apps/tutors/models.py:405
-msgid "canal"
-msgstr ""
-
-#: apps/tutors/models.py:406
-msgid "autoriza"
 msgstr ""
 
 #: apps/tutors/models.py:413 templates/tutors/consentimiento.html:4
@@ -1086,6 +1177,62 @@ msgstr ""
 msgid "Gatabase"
 msgstr ""
 
+#: templates/exports/exportacion.html:4 templates/exports/exportacion.html:7
+#: templates/tenancy/base_panel.html:51
+msgid "Exportar la Clínica"
+msgstr ""
+
+#: templates/exports/exportacion.html:10
+msgid ""
+"Los datos de la Clínica son de la Clínica. Se descargan cuando quiera y sin "
+"pedirle permiso a nadie, en planillas que se abren con Excel o LibreOffice."
+msgstr ""
+
+#: templates/exports/exportacion.html:15
+msgid "Descargar todo"
+msgstr ""
+
+#: templates/exports/exportacion.html:18
+msgid "Qué va dentro"
+msgstr ""
+
+#: templates/exports/exportacion.html:29
+msgid "Archivo"
+msgstr ""
+
+#: templates/exports/exportacion.html:30
+msgid "Columnas"
+msgstr ""
+
+#: templates/exports/exportacion.html:44
+msgid ""
+"No van dentro los Usuarios de la Clínica ni el Registro de acceso: los "
+"primeros son las cuentas con que entra su gente, y el segundo es la "
+"evidencia de quién vio qué, que se consulta en su propia página."
+msgstr ""
+
+#: templates/exports/exportacion.html:47
+msgid "Cerrar la Clínica"
+msgstr ""
+
+#: templates/exports/exportacion.html:50
+msgid ""
+"Una Clínica que se va se exporta y se cierra; no se borra. Sus Tutores, sus "
+"Pacientes y su Registro de acceso se quedan guardados tal como están, y deja "
+"de entrar nadie: se desactivan todos sus Usuarios, incluido el suyo."
+msgstr ""
+
+#: templates/exports/exportacion.html:54
+msgid ""
+"Descargue antes el archivo. Después de cerrar no hay ninguna pantalla que "
+"vuelva a abrirla: hay que pedírselo a quien administra el servidor."
+msgstr ""
+
+#: templates/exports/exportacion.html:60
+#, python-format
+msgid "Cerrar %(clinica)s"
+msgstr ""
+
 #: templates/home.html:8
 msgid "Gestión clínica para clínicas veterinarias."
 msgstr ""
@@ -1159,15 +1306,7 @@ msgid "También se acepta"
 msgstr ""
 
 #: templates/imports/_subida.html:83
-msgid "sí"
-msgstr ""
-
-#: templates/imports/_subida.html:83
 msgid "hace falta alguna de estas"
-msgstr ""
-
-#: templates/imports/_subida.html:83
-msgid "no"
 msgstr ""
 
 #: templates/imports/_subida.html:93
@@ -1538,15 +1677,15 @@ msgstr ""
 msgid "Importar Pacientes"
 msgstr ""
 
-#: templates/tenancy/base_panel.html:57
+#: templates/tenancy/base_panel.html:58
 msgid "Salir"
 msgstr ""
 
-#: templates/tenancy/base_panel.html:73
+#: templates/tenancy/base_panel.html:74
 msgid "Su sesión está por caducar. Lo que no haya guardado se perderá."
 msgstr ""
 
-#: templates/tenancy/base_panel.html:76
+#: templates/tenancy/base_panel.html:77
 msgid "Sigo aquí"
 msgstr ""
 

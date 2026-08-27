@@ -23,10 +23,21 @@ from apps.tenancy.horarios import Dia
 
 
 class Clinica(models.Model):
-    """La organización que contrata el sistema."""
+    """La organización que contrata el sistema.
+
+    Una Clínica que se va **se exporta y se cierra, no se borra**: su Registro de
+    acceso no admite `DELETE` (ADR-0004), así que el borrado en cascada falla, y
+    tiene que fallar — la evidencia de quién vio qué sobrevive a que la clínica
+    deje de ser cliente. Cerrar es lo que se hace en su lugar, y qué significa lo
+    dice `apps/exports/cierre.py`: aquí solo consta desde cuándo.
+    """
 
     nombre = models.CharField(_("nombre"), max_length=120, unique=True)
     creada = models.DateTimeField(_("creada"), default=timezone.now)
+    # Cuándo dejó de operar, o vacío mientras siga abierta. Es un instante y no
+    # una bandera de sí o no porque la pregunta que viene después es desde
+    # cuándo: qué se pudo haber hecho en el sistema y qué ya no.
+    cerrada = models.DateTimeField(_("cerrada"), null=True, blank=True)
 
     class Meta:
         verbose_name = _("Clínica")
@@ -35,6 +46,10 @@ class Clinica(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    @property
+    def esta_cerrada(self):
+        return self.cerrada is not None
 
 
 class Sede(models.Model):
