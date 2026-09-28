@@ -18,4 +18,10 @@ urlpatterns = [
     # corrección de la ficha: no es un dato que se teclea, es algo que el Tutor
     # dijo, y lo que se guarda es la declaración con su fecha.
     path("<int:pk>/consentimiento/", views.consentimiento, name="consentimiento"),
+    # Los derechos del titular, que son del admin. El documento y la
+    # anonimización van por POST: el primero no queda en ninguna parte, y la
+    # segunda no es algo que ocurra por seguir un enlace.
+    path("<int:pk>/derechos/", views.derechos, name="derechos"),
+    path("<int:pk>/derechos/datos/", views.datos_del_titular, name="datos_del_titular"),
+    path("<int:pk>/derechos/anonimizar/", views.anonimizar, name="anonimizar"),
 ]

@@ -598,3 +598,34 @@ así que un lector nuevo lo hereda sin acordarse.
 _Cuándo se paga_: no se paga. Se anota para que quien cambie `paquete.py` o
 `hojas.py` sepa que hay una promesa que ningún test va a defender por él, y cuál
 es el número que tiene que volver a salir.
+
+## Los derechos del titular
+
+Lo que el **20** dejó decidido a medias, y por qué se dejó así.
+
+**Los Tutores anonimizados salen los primeros en el fichero.** El listado ordena
+por apellidos, y los suyos están en blanco: una Clínica con muchas supresiones
+los tendrá en la primera página. No rompe nada —la celda del nombre dice «Tutor
+anonimizado» y enlaza su ficha— pero es ruido justo donde recepción empieza a
+mirar.
+_Cuándo se paga_: cuando alguien lo note. Es mandarlos al final en
+`Orden.campos` (`apps/tutors/listado.py`) o sacarlos del fichero con un filtro
+propio, y ninguna de las dos cosas se decide sin ver cuántos hay.
+
+**El documento del titular no desglosa los accesos al conjunto.** Trae lo
+anotado sobre **su** ficha —abrirla, corregirla, su consentimiento, el propio
+documento—, no los listados, las búsquedas del mostrador ni la exportación de la
+Clínica, porque esas anotaciones no dicen qué filas se vieron. El documento lo
+dice con todas sus letras en vez de callarlo. Si la autoridad llega a pedir que
+se le atribuya a cada persona cada listado en que salió, el Registro de hoy no lo
+puede responder: haría falta anotar las filas servidas, y eso es rehacer la
+decisión de `mostrador` y del listado de anotar el conjunto (ADR-0004).
+_Cuándo se paga_: si lo pide alguien con autoridad para pedirlo.
+
+**La planilla importada puede seguir en el disco.** La anonimización vacía la
+tabla del Tutor, pero no mira `DIRECTORIO_DE_IMPORTACIONES`: una planilla subida y
+nunca confirmada que traía a este Tutor sigue ahí hasta que el barrido del
+importador se la lleve, que es la deuda del **17** de más arriba vista desde el
+otro lado.
+_Cuándo se paga_: con el barrido periódico del importador. Ese mismo proceso
+cierra las dos.

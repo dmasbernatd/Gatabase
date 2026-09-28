@@ -1,0 +1,108 @@
+{% load i18n %}<!doctype html>
+{% comment %}
+  El documento que se le entrega al Tutor que pide saber qué se guarda de él.
+  No hereda de `base.html` a propósito: viaja solo —por correo, impreso, en un
+  pendrive— y tiene que abrirse sin la aplicación delante, así que no carga
+  ningún guion ni ninguna hoja de estilos que no lleve dentro.
+
+  Las tablas van con `border` y nada más: el documento se imprime, y una tabla
+  sin líneas impresa no se lee.
+{% endcomment %}
+<html lang="{{ LANGUAGE_CODE|default:'es-cl' }}">
+  <head>
+    <meta charset="utf-8">
+    <title>{% blocktranslate with clinica=clinica %}Datos personales que guarda {{ clinica }}{% endblocktranslate %}</title>
+  </head>
+  <body style="font-family: sans-serif; max-width: 50rem; margin: 2rem auto; padding: 0 1rem;">
+    <h1>{% blocktranslate with clinica=clinica %}Datos personales que guarda {{ clinica }}{% endblocktranslate %}</h1>
+
+    <p>{% blocktranslate with momento=momento %}Documento emitido el {{ momento }}, a petición del titular de los datos.{% endblocktranslate %}</p>
+
+    {% if consta.tutor.esta_anonimizado %}
+      <p>
+        {% blocktranslate with fecha=consta.tutor.anonimizado %}Los datos personales de este Tutor se suprimieron el {{ fecha }}. Lo que sigue es lo que se conserva: la relación con sus Pacientes, que forma parte de la Historia clínica del animal, y el registro de quién consultó sus datos mientras existieron.{% endblocktranslate %}
+      </p>
+    {% endif %}
+
+    <h2>{% translate "Datos personales" %}</h2>
+    <table border="1" cellpadding="4" style="border-collapse: collapse; width: 100%;">
+      <tbody>
+        {% for rotulo, valor in consta.datos %}
+          <tr>
+            <th scope="row">{{ rotulo|capfirst }}</th>
+            <td>{{ valor|default:"—" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>{% translate "Pacientes" %}</h2>
+    <table border="1" cellpadding="4" style="border-collapse: collapse; width: 100%;">
+      <thead>
+        <tr>
+          <th>{% translate "Paciente" %}</th>
+          <th>{% translate "Especie" %}</th>
+          <th>{% translate "Es el responsable" %}</th>
+          <th>{% translate "Responde por él hasta" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for vinculo in consta.vinculos %}
+          <tr>
+            <td>{{ vinculo.paciente.nombre }}</td>
+            <td>{{ vinculo.paciente.get_especie_display }}</td>
+            <td>{{ vinculo.responsable|yesno:_("sí,no") }}</td>
+            <td>{{ vinculo.fecha_de_cierre|default:_("hoy") }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">{% translate "No responde ni ha respondido por ningún Paciente." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>{% translate "Consentimiento de contacto" %}</h2>
+    <table border="1" cellpadding="4" style="border-collapse: collapse; width: 100%;">
+      <thead>
+        <tr>
+          <th>{% translate "Fecha" %}</th>
+          <th>{% translate "Canal" %}</th>
+          <th>{% translate "Lo que dijo" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dicho in consta.consentimientos %}
+          <tr>
+            <td>{{ dicho.fecha }}</td>
+            <td>{{ dicho.get_canal_display }}</td>
+            <td>{{ dicho.a_la_vista }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">{% translate "No consta que se le haya preguntado." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>{% translate "Quién ha consultado sus datos" %}</h2>
+    <table border="1" cellpadding="4" style="border-collapse: collapse; width: 100%;">
+      <thead>
+        <tr>
+          <th>{% translate "Momento" %}</th>
+          <th>{% translate "Usuario" %}</th>
+          <th>{% translate "Acción" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for acceso in consta.accesos %}
+          <tr>
+            <td>{{ acceso.momento }}</td>
+            <td>{{ acceso.usuario }}</td>
+            <td>{{ acceso.get_accion_display }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">{% translate "Nadie ha consultado su ficha." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p>{{ sin_lo_del_conjunto }}</p>
+  </body>
+</html>

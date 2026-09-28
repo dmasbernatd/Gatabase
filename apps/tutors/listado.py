@@ -44,8 +44,14 @@ class Columna:
     salir dos veces o ninguna.
     """
 
-    def __init__(self, clave, etiqueta, desempata_por=(), enlaza_a_la_ficha=False, presenta=str):
+    def __init__(
+        self, clave, etiqueta, desempata_por=(), enlaza_a_la_ficha=False, presenta=str, lee=None
+    ):
         self.clave = clave
+        # De dónde sale lo que se pinta, si no es del mismo campo por el que se
+        # ordena. El nombre de un Tutor anonimizado está en blanco, y su celda es
+        # la que enlaza la ficha: tiene que decir algo que se pueda pulsar.
+        self.lee = lee or clave
         self.etiqueta = etiqueta
         # La columna ordena primero por su propio campo; lo demás es desempate.
         self.campos = [clave, *desempata_por, "pk"]
@@ -56,7 +62,7 @@ class Columna:
 
     def celda_de(self, tutor):
         """La celda de este Tutor en esta columna."""
-        valor = getattr(tutor, self.clave)
+        valor = getattr(tutor, self.lee)
         return Celda(
             self.presenta(valor) if valor else valor,
             tutor.pk if self.enlaza_a_la_ficha else None,
@@ -94,7 +100,13 @@ class Celda:
 # abrirse igual.
 COLUMNAS = (
     Columna("apellidos", _("Apellidos"), desempata_por=["nombre"]),
-    Columna("nombre", _("Nombre"), desempata_por=["apellidos"], enlaza_a_la_ficha=True),
+    Columna(
+        "nombre",
+        _("Nombre"),
+        desempata_por=["apellidos"],
+        enlaza_a_la_ficha=True,
+        lee="nombre_a_la_vista",
+    ),
     Columna("rut", _("RUT"), desempata_por=["apellidos", "nombre"], presenta=formateado),
     Columna("telefono", _("Teléfono"), desempata_por=["apellidos", "nombre"]),
     Columna("email", _("Correo"), desempata_por=["apellidos", "nombre"]),

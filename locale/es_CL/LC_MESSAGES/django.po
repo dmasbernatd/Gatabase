@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-26 21:19-0400\n"
+"POT-Creation-Date: 2026-09-28 17:08-0300\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -17,8 +17,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: apps/audit/forms.py:35 apps/audit/models.py:63 apps/imports/models.py:55
+#: apps/audit/forms.py:35 apps/audit/models.py:67 apps/imports/models.py:55
 #: apps/tenancy/models.py:150 templates/audit/registro.html:27
+#: templates/tutors/datos_del_titular.html:90
 msgid "Usuario"
 msgstr ""
 
@@ -38,7 +39,7 @@ msgstr ""
 msgid "Desde"
 msgstr ""
 
-#: apps/audit/forms.py:44 apps/patients/forms.py:320
+#: apps/audit/forms.py:44 apps/patients/forms.py:322
 msgid "Hasta"
 msgstr ""
 
@@ -58,28 +59,32 @@ msgstr ""
 msgid "modificación"
 msgstr ""
 
-#: apps/audit/models.py:65
+#: apps/audit/models.py:50
+msgid "anonimización"
+msgstr ""
+
+#: apps/audit/models.py:69
 msgid "tipo de objeto"
 msgstr ""
 
-#: apps/audit/models.py:66
+#: apps/audit/models.py:70
 msgid "identificador"
 msgstr ""
 
-#: apps/audit/models.py:67
+#: apps/audit/models.py:71
 msgid "acción"
 msgstr ""
 
-#: apps/audit/models.py:71 apps/imports/models.py:63
+#: apps/audit/models.py:75 apps/imports/models.py:63
 msgid "momento"
 msgstr ""
 
-#: apps/audit/models.py:74 templates/audit/registro.html:4
+#: apps/audit/models.py:78 templates/audit/registro.html:4
 #: templates/audit/registro.html:7 templates/tenancy/base_panel.html:52
 msgid "Registro de acceso"
 msgstr ""
 
-#: apps/audit/models.py:75
+#: apps/audit/models.py:79
 msgid "Registros de acceso"
 msgstr ""
 
@@ -107,34 +112,34 @@ msgstr ""
 #: apps/exports/hojas.py:330 apps/exports/hojas.py:345
 #: apps/patients/models.py:79 apps/tenancy/models.py:35
 #: apps/tenancy/models.py:64 apps/tenancy/models.py:135
-#: apps/tenancy/models.py:271 apps/tutors/models.py:47
+#: apps/tenancy/models.py:271 apps/tutors/models.py:52
 msgid "nombre"
 msgstr ""
 
 #: apps/exports/hojas.py:286 apps/tenancy/models.py:136
-#: apps/tutors/models.py:48
+#: apps/tutors/models.py:53
 msgid "apellidos"
 msgstr ""
 
-#: apps/exports/hojas.py:286 apps/tutors/listado.py:98 apps/tutors/models.py:55
-#: templates/tutors/ficha.html:15
+#: apps/exports/hojas.py:286 apps/tutors/listado.py:110
+#: apps/tutors/models.py:60 templates/tutors/ficha.html:29
 msgid "RUT"
 msgstr ""
 
 #: apps/exports/hojas.py:286 apps/exports/hojas.py:345
 #: apps/tenancy/models.py:272 apps/tutors/consentimiento.py:42
-#: apps/tutors/models.py:59
+#: apps/tutors/models.py:64
 msgid "teléfono"
 msgstr ""
 
 #: apps/exports/hojas.py:286 apps/tenancy/models.py:134
-#: apps/tutors/consentimiento.py:43 apps/tutors/models.py:60
+#: apps/tutors/consentimiento.py:43 apps/tutors/models.py:65
 msgid "correo"
 msgstr ""
 
 #: apps/exports/hojas.py:286 apps/exports/hojas.py:330
 #: apps/exports/hojas.py:345 apps/tenancy/models.py:65
-#: apps/tenancy/models.py:273 apps/tutors/models.py:61
+#: apps/tenancy/models.py:273 apps/tutors/models.py:66
 msgid "dirección"
 msgstr ""
 
@@ -185,8 +190,8 @@ msgid "id del Tutor"
 msgstr ""
 
 #: apps/exports/hojas.py:313 apps/exports/hojas.py:324
-#: apps/patients/forms.py:210 apps/tutors/models.py:105
-#: apps/tutors/models.py:268 apps/tutors/models.py:403
+#: apps/patients/forms.py:210 apps/tutors/models.py:120
+#: apps/tutors/models.py:299 apps/tutors/models.py:434
 msgid "Tutor"
 msgstr ""
 
@@ -195,30 +200,31 @@ msgid "id del Paciente"
 msgstr ""
 
 #: apps/exports/hojas.py:315 apps/patients/models.py:130
-#: apps/tutors/models.py:274 templates/mostrador/_resultados.html:14
+#: apps/tutors/models.py:305 templates/mostrador/_resultados.html:14
+#: templates/tutors/datos_del_titular.html:43
 msgid "Paciente"
 msgstr ""
 
-#: apps/exports/hojas.py:316 apps/tutors/models.py:276
+#: apps/exports/hojas.py:316 apps/tutors/models.py:307
 msgid "es el responsable"
 msgstr ""
 
 #: apps/exports/hojas.py:317 apps/exports/hojas.py:335
 #: apps/exports/hojas.py:340 apps/tenancy/models.py:180
-#: apps/tenancy/models.py:225 apps/tutors/models.py:282
+#: apps/tenancy/models.py:225 apps/tutors/models.py:313
 msgid "hasta"
 msgstr ""
 
-#: apps/exports/hojas.py:324 apps/tutors/models.py:405
+#: apps/exports/hojas.py:324 apps/tutors/models.py:436
 msgid "canal"
 msgstr ""
 
-#: apps/exports/hojas.py:324 apps/tutors/models.py:406
+#: apps/exports/hojas.py:324 apps/tutors/models.py:437
 msgid "autoriza"
 msgstr ""
 
 #: apps/exports/hojas.py:324 apps/exports/hojas.py:340
-#: apps/tenancy/models.py:220 apps/tutors/models.py:410
+#: apps/tenancy/models.py:220 apps/tutors/models.py:441
 msgid "fecha"
 msgstr ""
 
@@ -420,14 +426,15 @@ msgstr ""
 msgid "Tutor del que no consta nada del contacto"
 msgstr ""
 
-#: apps/imports/models.py:42 apps/tutors/models.py:106
+#: apps/imports/models.py:42 apps/tutors/models.py:121
 #: templates/patients/ficha.html:73 templates/tenancy/base_panel.html:45
 #: templates/tutors/lista.html:4 templates/tutors/lista.html:7
 msgid "Tutores"
 msgstr ""
 
 #: apps/imports/models.py:43 apps/patients/models.py:131
-#: apps/tutors/models.py:71 templates/tutors/ficha.html:60
+#: apps/tutors/models.py:81 templates/tutors/datos_del_titular.html:39
+#: templates/tutors/ficha.html:82
 msgid "Pacientes"
 msgstr ""
 
@@ -655,36 +662,36 @@ msgstr ""
 msgid "Tiene un microchip apuntado: no puede estar «sin chip»."
 msgstr ""
 
-#: apps/patients/forms.py:211 apps/patients/forms.py:376
+#: apps/patients/forms.py:211 apps/patients/forms.py:378
 msgid "Elija un Tutor"
 msgstr ""
 
-#: apps/patients/forms.py:213
+#: apps/patients/forms.py:213 templates/tutors/datos_del_titular.html:45
 msgid "Es el responsable"
 msgstr ""
 
-#: apps/patients/forms.py:245 templates/patients/ficha.html:56
+#: apps/patients/forms.py:247 templates/patients/ficha.html:56
 #: templates/tenancy/usuarios.html:18
 msgid "Estado"
 msgstr ""
 
-#: apps/patients/forms.py:247
+#: apps/patients/forms.py:249
 msgid "Fecha de fallecimiento"
 msgstr ""
 
-#: apps/patients/forms.py:253
+#: apps/patients/forms.py:255
 msgid "Si no se sabe, déjela en blanco."
 msgstr ""
 
-#: apps/patients/forms.py:288
+#: apps/patients/forms.py:290
 msgid "Nadie responde por él: súmele antes el Tutor que lo trae."
 msgstr ""
 
-#: apps/patients/forms.py:298
+#: apps/patients/forms.py:300
 msgid "Esa fecha es anterior a la de nacimiento."
 msgstr ""
 
-#: apps/patients/forms.py:375
+#: apps/patients/forms.py:377
 msgid "Ahora responde"
 msgstr ""
 
@@ -748,16 +755,16 @@ msgstr ""
 msgid "%(paciente)s consta como fallecido: no se le pueden dar Citas."
 msgstr ""
 
-#: apps/patients/views.py:140 templates/tutors/ficha.html:103
+#: apps/patients/views.py:142 templates/tutors/ficha.html:126
 msgid "Registrar Paciente"
 msgstr ""
 
-#: apps/patients/views.py:159
+#: apps/patients/views.py:161
 msgid "La ficha de un Paciente fallecido no se corrige: queda tal como estaba."
 msgstr ""
 
-#: apps/patients/views.py:171 apps/tutors/views.py:201
-#: templates/patients/ficha.html:68 templates/tutors/ficha.html:28
+#: apps/patients/views.py:173 apps/tutors/views.py:214
+#: templates/patients/ficha.html:68 templates/tutors/ficha.html:43
 msgid "Corregir la ficha"
 msgstr ""
 
@@ -1037,6 +1044,14 @@ msgstr ""
 msgid "Revocado el %(fecha)s."
 msgstr ""
 
+#: apps/tutors/derechos.py:150
+msgid ""
+"Además de estos accesos, su nombre aparece en el fichero de Tutores, en la "
+"búsqueda del mostrador y en las exportaciones de la Clínica. Esas consultas "
+"se registran como consultas al conjunto y no dicen qué fichas se vieron, así "
+"que no se le atribuyen aquí."
+msgstr ""
+
 #: apps/tutors/forms.py:45
 #, python-brace-format
 msgid "Este RUT ya es el de {ficha}, en esta misma Clínica."
@@ -1047,46 +1062,63 @@ msgstr ""
 msgid "Este teléfono es también el de {ficha}."
 msgstr ""
 
-#: apps/tutors/listado.py:96
+#: apps/tutors/forms.py:117
+msgid "Escriba el nombre completo del Tutor para confirmar"
+msgstr ""
+
+#: apps/tutors/forms.py:132
+msgid "Ese no es el nombre del Tutor. No se ha anonimizado nada."
+msgstr ""
+
+#: apps/tutors/listado.py:102
 msgid "Apellidos"
 msgstr ""
 
-#: apps/tutors/listado.py:97 templates/tenancy/derivaciones.html:16
+#: apps/tutors/listado.py:105 templates/tenancy/derivaciones.html:16
 #: templates/tenancy/usuarios.html:14
 msgid "Nombre"
 msgstr ""
 
-#: apps/tutors/listado.py:99 templates/mostrador/_resultados.html:17
-#: templates/tenancy/derivaciones.html:17 templates/tutors/ficha.html:18
+#: apps/tutors/listado.py:111 templates/mostrador/_resultados.html:17
+#: templates/tenancy/derivaciones.html:17 templates/tutors/ficha.html:32
 msgid "Teléfono"
 msgstr ""
 
-#: apps/tutors/listado.py:100 templates/tenancy/usuarios.html:15
-#: templates/tutors/ficha.html:21
+#: apps/tutors/listado.py:112 templates/tenancy/usuarios.html:15
+#: templates/tutors/ficha.html:35
 msgid "Correo"
 msgstr ""
 
-#: apps/tutors/models.py:285
+#: apps/tutors/models.py:43
+msgid "Tutor anonimizado"
+msgstr ""
+
+#: apps/tutors/models.py:71
+msgid "anonimizado"
+msgstr ""
+
+#: apps/tutors/models.py:316
 msgid "Vínculo"
 msgstr ""
 
-#: apps/tutors/models.py:286
+#: apps/tutors/models.py:317
 msgid "Vínculos"
 msgstr ""
 
-#: apps/tutors/models.py:347
+#: apps/tutors/models.py:378
 #, python-format
 msgid ""
 "%(paciente)s se quedaría sin nadie que responda por él: diga antes quién lo "
 "releva."
 msgstr ""
 
-#: apps/tutors/models.py:413 templates/tutors/consentimiento.html:4
-#: templates/tutors/consentimiento.html:7 templates/tutors/ficha.html:42
+#: apps/tutors/models.py:444 templates/tutors/consentimiento.html:4
+#: templates/tutors/consentimiento.html:7
+#: templates/tutors/datos_del_titular.html:63 templates/tutors/ficha.html:63
 msgid "Consentimiento de contacto"
 msgstr ""
 
-#: apps/tutors/models.py:414
+#: apps/tutors/models.py:445
 msgid "Consentimientos de contacto"
 msgstr ""
 
@@ -1116,8 +1148,14 @@ msgstr ""
 msgid "%(tutor)s ya responde por %(paciente)s."
 msgstr ""
 
-#: apps/tutors/views.py:181 templates/tutors/lista.html:9
+#: apps/tutors/views.py:194 templates/tutors/lista.html:9
 msgid "Registrar Tutor"
+msgstr ""
+
+#: apps/tutors/views.py:345
+msgid ""
+"Los datos personales del Tutor se han suprimido. Sus Pacientes siguen como "
+"estaban, a cargo de un Tutor anonimizado."
 msgstr ""
 
 #: templates/account/login.html:4 templates/account/login.html:7
@@ -1144,7 +1182,7 @@ msgstr ""
 msgid "Quitar el filtro"
 msgstr ""
 
-#: templates/audit/registro.html:26
+#: templates/audit/registro.html:26 templates/tutors/datos_del_titular.html:89
 msgid "Momento"
 msgstr ""
 
@@ -1152,7 +1190,7 @@ msgstr ""
 msgid "Objeto"
 msgstr ""
 
-#: templates/audit/registro.html:30
+#: templates/audit/registro.html:30 templates/tutors/datos_del_titular.html:91
 msgid "Acción"
 msgstr ""
 
@@ -1442,6 +1480,7 @@ msgid "Escriba el número que le muestra ahora su aplicación de autenticación.
 msgstr ""
 
 #: templates/mostrador/_resultados.html:15 templates/patients/ficha.html:24
+#: templates/tutors/datos_del_titular.html:44
 msgid "Especie"
 msgstr ""
 
@@ -1586,7 +1625,7 @@ msgstr ""
 msgid "Antes respondían por él"
 msgstr ""
 
-#: templates/patients/ficha.html:130 templates/tutors/ficha.html:120
+#: templates/patients/ficha.html:130 templates/tutors/ficha.html:144
 #, python-format
 msgid "hasta el %(fecha)s"
 msgstr ""
@@ -1710,7 +1749,7 @@ msgid ""
 "suya: nadie de fuera sabe con quién tiene trato."
 msgstr ""
 
-#: templates/tenancy/derivaciones.html:18 templates/tutors/ficha.html:24
+#: templates/tenancy/derivaciones.html:18 templates/tutors/ficha.html:38
 msgid "Dirección"
 msgstr ""
 
@@ -1832,27 +1871,158 @@ msgstr ""
 msgid "Lo que ha dicho"
 msgstr ""
 
-#: templates/tutors/ficha.html:49
+#: templates/tutors/datos_del_titular.html:14
+#: templates/tutors/datos_del_titular.html:17
+#, python-format
+msgid "Datos personales que guarda %(clinica)s"
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:19
+#, python-format
+msgid "Documento emitido el %(momento)s, a petición del titular de los datos."
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:23
+#, python-format
+msgid ""
+"Los datos personales de este Tutor se suprimieron el %(fecha)s. Lo que sigue "
+"es lo que se conserva: la relación con sus Pacientes, que forma parte de la "
+"Historia clínica del animal, y el registro de quién consultó sus datos "
+"mientras existieron."
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:27
+msgid "Datos personales"
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:46
+msgid "Responde por él hasta"
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:54
+msgid "sí,no"
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:55
+msgid "hoy"
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:58
+msgid "No responde ni ha respondido por ningún Paciente."
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:67
+msgid "Fecha"
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:68
+msgid "Canal"
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:69
+msgid "Lo que dijo"
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:80
+msgid "No consta que se le haya preguntado."
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:85
+msgid "Quién ha consultado sus datos"
+msgstr ""
+
+#: templates/tutors/datos_del_titular.html:102
+msgid "Nadie ha consultado su ficha."
+msgstr ""
+
+#: templates/tutors/derechos.html:4
+#, python-format
+msgid "Derechos del titular: %(tutor)s"
+msgstr ""
+
+#: templates/tutors/derechos.html:7
+msgid "Derechos del titular"
+msgstr ""
+
+#: templates/tutors/derechos.html:11
+msgid "Entregarle sus datos"
+msgstr ""
+
+#: templates/tutors/derechos.html:14
+msgid ""
+"Un documento con todo lo que la Clínica guarda de este Tutor: sus datos "
+"personales, los Pacientes de los que responde o respondió, lo que ha dicho "
+"sobre que se le contacte y quién ha consultado su ficha y cuándo. Se abre "
+"con cualquier navegador y se puede imprimir o guardar como PDF."
+msgstr ""
+
+#: templates/tutors/derechos.html:19
+msgid "Descargar sus datos"
+msgstr ""
+
+#: templates/tutors/derechos.html:22
+msgid "Suprimir sus datos"
+msgstr ""
+
+#: templates/tutors/derechos.html:26
+#, python-format
+msgid ""
+"Sus datos personales se suprimieron el %(fecha)s. Quién lo hizo consta en el "
+"Registro de acceso."
+msgstr ""
+
+#: templates/tutors/derechos.html:36
+msgid ""
+"Se borran su nombre, apellidos, RUT, teléfono, correo y dirección, y no se "
+"guarda copia en ninguna parte: no se puede deshacer."
+msgstr ""
+
+#: templates/tutors/derechos.html:39
+msgid ""
+"Sus Pacientes no se tocan. La Historia clínica es del animal y la Clínica "
+"tiene que conservarla: siguen con todos sus datos, a cargo de un Tutor "
+"anonimizado. El Registro de quién vio sus datos también se conserva, porque "
+"es la evidencia de lo que se hizo con ellos."
+msgstr ""
+
+#: templates/tutors/derechos.html:45
+msgid "Anonimizar a este Tutor"
+msgstr ""
+
+#: templates/tutors/ficha.html:18
+#, python-format
+msgid "Sus datos personales se suprimieron el %(fecha)s, a petición suya."
+msgstr ""
+
+#: templates/tutors/ficha.html:19
+msgid "Sus Pacientes siguen con toda su información."
+msgstr ""
+
+#: templates/tutors/ficha.html:47
+msgid "Derechos del titular: entregarle o suprimir sus datos"
+msgstr ""
+
+#: templates/tutors/ficha.html:70
 msgid "Se le puede contactar"
 msgstr ""
 
-#: templates/tutors/ficha.html:51
+#: templates/tutors/ficha.html:72
 msgid "No se le puede contactar"
 msgstr ""
 
-#: templates/tutors/ficha.html:58
+#: templates/tutors/ficha.html:79
 msgid "Registrar el consentimiento"
 msgstr ""
 
-#: templates/tutors/ficha.html:99
+#: templates/tutors/ficha.html:121
 msgid "No se hace cargo de ningún Paciente en esta lista."
 msgstr ""
 
-#: templates/tutors/ficha.html:114
+#: templates/tutors/ficha.html:138
 msgid "Fueron suyos"
 msgstr ""
 
-#: templates/tutors/ficha.html:126 templates/tutors/formulario.html:31
+#: templates/tutors/ficha.html:150 templates/tutors/formulario.html:31
 msgid "Volver a Tutores"
 msgstr ""
 

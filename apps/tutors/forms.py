@@ -101,3 +101,35 @@ class ConsentimientoDeContactoForm(forms.Form):
                 )
             )
         ]
+
+
+class AnonimizacionForm(forms.Form):
+    """Confirma la anonimización de un Tutor escribiendo cómo se llama.
+
+    Por lo mismo que el cierre de una Clínica (`apps/exports/forms.py`): un botón
+    con un «¿seguro?» delante se pulsa dos veces igual de rápido, y esto no tiene
+    vuelta atrás. Escribir el nombre obliga a mirar de quién es la ficha, que es
+    la equivocación que el formulario existe para evitar —la de quien tiene
+    abiertas las fichas de dos hermanos con el mismo apellido—.
+    """
+
+    nombre = forms.CharField(
+        label=_("Escriba el nombre completo del Tutor para confirmar"),
+        max_length=401,
+    )
+
+    def __init__(self, *args, tutor, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tutor = tutor
+
+    def clean_nombre(self):
+        """Tal como consta en la ficha, sin más indulgencia que los espacios."""
+        # Los espacios se aplanan en los dos lados: un nombre importado de una
+        # planilla trae a veces dos seguidos, y nadie los ve para copiarlos.
+        escrito = " ".join(self.cleaned_data["nombre"].split())
+        if escrito != " ".join(str(self.tutor).split()):
+            raise forms.ValidationError(
+                _("Ese no es el nombre del Tutor. No se ha anonimizado nada."),
+                code="no_es_el_nombre",
+            )
+        return escrito

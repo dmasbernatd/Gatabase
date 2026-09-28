@@ -547,7 +547,7 @@ def test_el_paciente_no_guarda_ningun_dato_personal_de_su_tutor():
 
 
 def test_vaciar_los_datos_personales_del_tutor_deja_al_paciente_entero(client):
-    """Lo que hará el ticket 20, comprobado desde ahora: el derecho de supresión
+    """Lo que hace el ticket 20, comprobado por debajo de él: el derecho de supresión
     del Tutor no puede llevarse por delante la ficha del animal, de la que él no
     es titular. Lo que no desaparece es el Vínculo: quién trajo al Paciente es
     parte de su Historia."""

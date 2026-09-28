@@ -147,7 +147,14 @@ def se_puede_contactar(tutor, canal):
     regla de consentimiento repetida en tres sitios es una regla que dentro de un
     año dice tres cosas distintas. La regla misma vive en
     `EstadoDelConsentimiento`; esto es la puerta por la que se llama.
+
+    Antes de la regla, una condición que no es de consentimiento: a un Tutor
+    anonimizado no se le escribe, dijera lo que dijera. Pidió que se suprimieran
+    sus datos, y sus declaraciones se conservan como evidencia de los mensajes
+    que ya salieron (`derechos.py`), no como permiso para los siguientes.
     """
+    if tutor.esta_anonimizado:
+        return False
     return como_esta_el_canal(tutor, canal).se_puede_contactar
 
 

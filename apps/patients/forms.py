@@ -215,8 +215,10 @@ class VinculoForm(forms.Form):
     def __init__(self, *args, clinica, paciente, **kwargs):
         super().__init__(*args, **kwargs)
         self.paciente = paciente
+        # Ni los que ya responden por él ni los anonimizados: sumar a uno de
+        # estos sería atribuirle un animal a alguien que pidió dejar de constar.
         self.fields["tutor"].queryset = Tutor.de_todas_las_clinicas.filter(
-            clinic=clinica
+            Tutor.IDENTIFICABLES, clinic=clinica
         ).exclude(pk__in=paciente.quienes_responden.values("tutor"))
 
     def guardar(self):
@@ -382,8 +384,10 @@ class TraspasoForm(FechaDelCambioForm):
     def __init__(self, *args, clinica, paciente, **kwargs):
         super().__init__(*args, **kwargs)
         self.paciente = paciente
+        # El animal no pasa a manos de un Tutor anonimizado, por lo mismo que
+        # no se le suma a uno (`VinculoForm`).
         self.fields["tutor"].queryset = Tutor.de_todas_las_clinicas.filter(
-            clinic=clinica
+            Tutor.IDENTIFICABLES, clinic=clinica
         ).exclude(pk__in=paciente.quienes_responden.filter(responsable=True).values("tutor"))
 
     def guardar(self):

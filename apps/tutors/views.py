@@ -37,11 +37,22 @@ que anota es distinto: ver su docstring.
 Por dónde acepta el Tutor que se le contacte se enseña en su ficha y se cambia en
 página aparte (`consentimiento`), porque no es un dato que se teclea: es algo que
 él dijo, y lo que se guarda es la declaración con su fecha.
+
+Los derechos del titular —darle lo que consta de él, suprimirlo— son del admin y
+viven en su propia página (`derechos`), a un clic de la ficha: son dos gestos que
+no se hacen atendiendo en el mostrador, y uno de ellos no tiene vuelta atrás. Un
+Tutor anonimizado sigue teniendo ficha, pero ya no se corrige ni se le toma el
+consentimiento: rellenar cualquiera de las dos cosas sería volver a identificarlo.
 """
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_POST
 
 from apps.audit.models import Accion
 from apps.audit.registro import anotando, anotar, deja_constancia
@@ -52,8 +63,10 @@ from apps.coincidencias import (
 )
 from apps.patients.estados import FiltroPorEstado
 from apps.patients.models import Paciente
+from apps.tenancy.permisos import solo_admin
+from apps.tutors import derechos as derechos_del_titular
 from apps.tutors.consentimiento import como_esta
-from apps.tutors.forms import ConsentimientoDeContactoForm, TutorForm
+from apps.tutors.forms import AnonimizacionForm, ConsentimientoDeContactoForm, TutorForm
 from apps.tutors.listado import ListadoDeTutores
 from apps.tutors.models import Tutor
 from apps.tutors.mostrador import BusquedaDelMostrador
@@ -188,7 +201,7 @@ def crear(request):
 
 @login_required
 def editar(request, pk):
-    tutor = get_object_or_404(Tutor, pk=pk)
+    tutor = get_object_or_404(Tutor.objects.filter(Tutor.IDENTIFICABLES), pk=pk)
     formulario = TutorForm(request.POST or None, instance=tutor, clinica=request.user.clinic)
     if request.method == "POST" and formulario.is_valid():
         formulario.save()
@@ -228,7 +241,7 @@ def consentimiento(request, pk):
     el Registro de acceso una modificación que no ocurrió. La lectura sí consta
     siempre, que es lo que de verdad pasó al abrir la página.
     """
-    tutor = get_object_or_404(Tutor, pk=pk)
+    tutor = get_object_or_404(Tutor.objects.filter(Tutor.IDENTIFICABLES), pk=pk)
     formulario = ConsentimientoDeContactoForm(request.POST or None, tutor=tutor)
     if request.method == "POST" and formulario.is_valid():
         if formulario.guardar():
@@ -248,3 +261,89 @@ def consentimiento(request, pk):
     # La página dice de quién se habla, con su nombre y por dónde se le contacta:
     # eso es servir datos personales, y consta aunque no se cambie nada.
     return anotando(respuesta, request.user, Accion.LECTURA, tutor)
+
+
+def _pagina_de_derechos(request, tutor, formulario):
+    respuesta = render(
+        request, "tutors/derechos.html", {"tutor": tutor, "formulario": formulario}
+    )
+    # La página dice de quién se habla, y pide escribir su nombre: es una
+    # lectura de sus datos aunque no se descargue ni se suprima nada.
+    return anotando(respuesta, request.user, Accion.LECTURA, tutor)
+
+
+@solo_admin
+def derechos(request, pk):
+    """Lo que el Tutor puede pedir de sus datos: que se le den, o que se supriman."""
+    tutor = get_object_or_404(Tutor, pk=pk)
+    return _pagina_de_derechos(request, tutor, AnonimizacionForm(tutor=tutor))
+
+
+@solo_admin
+@require_POST
+def datos_del_titular(request, pk):
+    """Entrega lo que consta del Tutor en un documento que se lee sin programas.
+
+    Un HTML autocontenido y no un zip de planillas como el de la Clínica: esto
+    lo lee una persona que pidió saber qué se guarda de ella, no el Excel de
+    otro sistema, y un navegador lo abre, lo imprime y lo guarda como PDF.
+
+    Va por POST y no por un enlace, por lo mismo que la exportación de la
+    Clínica: se compone contra la petición de quien lo pide y no queda en
+    ninguna parte, así que no hay dirección que alguien pueda volver a abrir.
+
+    Se puede pedir también de un Tutor ya anonimizado: sus datos ya no están,
+    pero el Registro de quién los vio mientras estuvieron sí, y es lo que habrá
+    que enseñar si alguien pregunta después qué se hizo con ellos.
+    """
+    tutor = get_object_or_404(Tutor, pk=pk)
+    momento = timezone.now()
+    consta = derechos_del_titular.lo_que_consta_de(tutor)
+    respuesta = HttpResponse(
+        render_to_string(
+            "tutors/datos_del_titular.html",
+            {
+                "consta": consta,
+                "momento": momento,
+                "clinica": tutor.clinic,
+                "sin_lo_del_conjunto": derechos_del_titular.SIN_LO_DEL_CONJUNTO,
+            },
+            request=request,
+        ),
+        content_type="text/html; charset=utf-8",
+    )
+    respuesta["Content-Disposition"] = (
+        f'attachment; filename="{derechos_del_titular.se_llama(tutor, momento)}"'
+    )
+    respuesta["Cache-Control"] = "private, no-store"
+    # El Tutor y los Pacientes que nombra, igual que su ficha: el documento es
+    # la ficha entera y algo más.
+    return anotando(respuesta, request.user, Accion.LECTURA, tutor, *consta.pacientes)
+
+
+@solo_admin
+@require_POST
+def anonimizar(request, pk):
+    """Suprime los datos personales del Tutor, sin tocar a sus Pacientes.
+
+    Qué se borra y qué se queda lo cuenta `derechos.py`. Aquí solo se pide la
+    confirmación —escribir su nombre—, porque es lo único de esta aplicación que
+    no se deshace.
+    """
+    tutor = get_object_or_404(Tutor.objects.filter(Tutor.IDENTIFICABLES), pk=pk)
+    formulario = AnonimizacionForm(request.POST, tutor=tutor)
+    if not formulario.is_valid():
+        return _pagina_de_derechos(request, tutor, formulario)
+
+    derechos_del_titular.anonimizar(tutor, request.user)
+    # El aviso no dice cómo se llamaba, y no por despiste: los avisos esperan en
+    # la sesión, y la sesión se guarda en la base de datos. Nombrarlo aquí sería
+    # dejar una copia del nombre que se acaba de suprimir.
+    messages.success(
+        request,
+        _(
+            "Los datos personales del Tutor se han suprimido. Sus Pacientes "
+            "siguen como estaban, a cargo de un Tutor anonimizado."
+        ),
+    )
+    return redirect("tutors:ficha", pk=tutor.pk)

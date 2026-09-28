@@ -44,6 +44,10 @@ class Accion(models.TextChoices):
     LECTURA = "lectura", _("lectura")
     CREACION = "creacion", _("creación")
     MODIFICACION = "modificacion", _("modificación")
+    # Una modificación, pero no una cualquiera: es la única que no tiene vuelta
+    # atrás, y la que hay que poder encontrar sola cuando alguien pregunte quién
+    # suprimió los datos de un Tutor y cuándo (ticket 20).
+    ANONIMIZACION = "anonimizacion", _("anonimización")
 
 
 class RegistroDeAcceso(ModeloDeLaClinica):

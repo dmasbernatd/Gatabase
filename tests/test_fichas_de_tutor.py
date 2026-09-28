@@ -447,6 +447,10 @@ def test_los_datos_personales_del_tutor_viven_todos_en_su_modelo():
     fue que **no**: de qué animales se hizo cargo no es un dato personal suyo,
     sino parte de la Historia del Paciente —quién lo trajo—, y tiene que
     sobrevivir a la anonimización.
+
+    `anonimizado` es el segundo, y la respuesta también fue que no: es la fecha
+    en que sus datos dejaron de estar, que es justo lo que no desaparece al
+    suprimirlos —explica por qué la ficha está en blanco—.
     """
     campos = {
         campo.name
@@ -456,7 +460,7 @@ def test_los_datos_personales_del_tutor_viven_todos_en_su_modelo():
         for campo in Tutor._meta.local_fields + Tutor._meta.local_many_to_many
     }
 
-    assert campos == {"id", "clinic", "pacientes"} | set(Tutor.DATOS_PERSONALES)
+    assert campos == {"id", "clinic", "pacientes", "anonimizado"} | set(Tutor.DATOS_PERSONALES)
 
 
 # --- RUT ------------------------------------------------------------------

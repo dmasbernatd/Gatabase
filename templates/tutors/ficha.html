@@ -6,6 +6,19 @@
 {% block panel %}
   <h1>{{ tutor }}</h1>
 
+  {% comment %}
+    La ficha de un Tutor anonimizado sigue existiendo: de ella cuelgan sus
+    Pacientes, que siguen a su cargo. Lo que no ofrece es nada que vuelva a
+    llenarla —corregirla, tomarle el consentimiento, registrarle un animal—,
+    porque rellenar cualquiera de esas cosas sería volver a identificarlo.
+  {% endcomment %}
+  {% if tutor.esta_anonimizado %}
+    <p>
+      <strong>{% blocktranslate with fecha=tutor.anonimizado %}Sus datos personales se suprimieron el {{ fecha }}, a petición suya.{% endblocktranslate %}</strong>
+      {% translate "Sus Pacientes siguen con toda su información." %}
+    </p>
+  {% endif %}
+
   <dl>
     {% comment %}
       El RUT sale con puntos y guion, que es como se lee y como se dicta: lo
@@ -24,7 +37,13 @@
     <dd>{{ tutor.direccion|default:"—" }}</dd>
   </dl>
 
-  <p><a href="{% url 'tutors:editar' tutor.pk %}">{% translate "Corregir la ficha" %}</a></p>
+  {% if not tutor.esta_anonimizado %}
+    <p><a href="{% url 'tutors:editar' tutor.pk %}">{% translate "Corregir la ficha" %}</a></p>
+  {% endif %}
+
+  {% if user.es_admin %}
+    <p><a href="{% url 'tutors:derechos' tutor.pk %}">{% translate "Derechos del titular: entregarle o suprimir sus datos" %}</a></p>
+  {% endif %}
 
   {% comment %}
     Por dónde acepta que se le escriba, y desde cuándo. Va aquí arriba, al lado
@@ -37,6 +56,7 @@
     por el mostrador; esconderlo hasta que alguien lo rellene es lo que deja la
     pregunta sin hacer para siempre.
   {% endcomment %}
+  {% if not tutor.esta_anonimizado %}
   <h2>{% translate "Consentimiento de contacto" %}</h2>
 
   <dl>
@@ -54,6 +74,7 @@
   </dl>
 
   <p><a href="{% url 'tutors:consentimiento' tutor.pk %}">{% translate "Registrar el consentimiento" %}</a></p>
+  {% endif %}
 
   <h2>{% translate "Pacientes" %}</h2>
 
@@ -96,7 +117,9 @@
     {% endfor %}
   </ul>
 
-  <p><a href="{% url 'patients:crear' tutor.pk %}">{% translate "Registrar Paciente" %}</a></p>
+  {% if not tutor.esta_anonimizado %}
+    <p><a href="{% url 'patients:crear' tutor.pk %}">{% translate "Registrar Paciente" %}</a></p>
+  {% endif %}
 
   {% comment %}
     Los que fueron suyos, y hasta cuándo. No se esconden ni se mezclan con los de

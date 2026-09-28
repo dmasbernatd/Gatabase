@@ -119,7 +119,9 @@ def crear(request, tutor):
     (`apps/patients/estados.py`). El animal que se está a punto de registrar por
     segunda vez puede ser justamente el que consta inactivo.
     """
-    tutor = get_object_or_404(Tutor, pk=tutor)
+    # Un Tutor anonimizado no trae animales nuevos: registrarle uno sería
+    # volver a atribuirle algo a alguien que pidió dejar de constar.
+    tutor = get_object_or_404(Tutor.objects.filter(Tutor.IDENTIFICABLES), pk=tutor)
     formulario = PacienteForm(request.POST or None, clinica=request.user.clinic)
     if request.method == "POST" and formulario.is_valid():
         paciente = formulario.save()

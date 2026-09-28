@@ -4,8 +4,8 @@ Aquí viven **solo** sus datos personales: cómo se llama y por dónde se le
 contacta. Los datos clínicos son del Paciente y viven en `patients`, y esa
 separación no es cosmética (ADR-0004): un Tutor puede exigir la supresión de sus
 datos personales mientras la Historia clínica de sus Pacientes —de la que es
-titular el animal, no él— tiene que conservarse. Anonimizar (ticket 20) será
-vaciar `DATOS_PERSONALES` de esta tabla sin tocar ninguna otra.
+titular el animal, no él— tiene que conservarse. Anonimizar es vaciar
+`DATOS_PERSONALES` de esta tabla sin tocar ninguna otra (`derechos.py`).
 
 Aquí vive también el **Consentimiento de contacto**: por qué canales acepta
 que se le escriba. Es dato personal suyo y no del Paciente, y se guarda como
@@ -37,6 +37,11 @@ from apps.tutors.rut import como_se_busca as rut_como_se_busca
 from apps.tutors.rut import formateado
 from apps.tutors.rut import normalizado as rut_normalizado
 
+# Cómo se nombra a quien ya no tiene nombre. Se compone al enseñarlo y no se
+# guarda en `nombre`: guardado sería un texto que cualquiera encuentra buscando
+# «anonimizado», y un rótulo que no se traduce.
+ANONIMIZADO = _("Tutor anonimizado")
+
 
 class Tutor(ModeloDeLaClinica):
     """Persona responsable de un Paciente. No es un Usuario del sistema."""
@@ -59,6 +64,11 @@ class Tutor(ModeloDeLaClinica):
     telefono = CampoDeTelefono(_("teléfono"), max_length=16, blank=True)
     email = models.EmailField(_("correo"), blank=True)
     direccion = models.CharField(_("dirección"), max_length=250, blank=True)
+    # Desde cuándo sus datos personales ya no están (`derechos.py`). No es un
+    # dato personal suyo: es lo que explica por qué la ficha está en blanco, y
+    # lo que impide que alguien vuelva a rellenarla. Quién lo hizo no va aquí,
+    # va en el Registro de acceso, que es donde consta quién hizo qué.
+    anonimizado = models.DateTimeField(_("anonimizado"), null=True, blank=True, editable=False)
 
     # De qué Pacientes se hace cargo. Se declara desde aquí y no desde el
     # Paciente porque la dependencia entre apps va en este sentido, y pasa por
@@ -79,6 +89,11 @@ class Tutor(ModeloDeLaClinica):
     # parte de la Historia del Paciente —quién lo trajo— y tiene que sobrevivir a
     # la anonimización.
     DATOS_PERSONALES = ("nombre", "apellidos", "rut", "telefono", "email", "direccion")
+
+    # Los que todavía son alguien. A un Tutor anonimizado no se le corrige la
+    # ficha, no se le toma el consentimiento y no se le vincula ningún animal
+    # nuevo: rellenar cualquiera de esas cosas sería volver a identificarlo.
+    IDENTIFICABLES = models.Q(anonimizado__isnull=True)
 
     # Por dónde se busca a un Tutor: cómo se llama, cómo se identifica y por
     # dónde se le contacta. La dirección queda fuera a propósito —nadie llama
@@ -118,7 +133,23 @@ class Tutor(ModeloDeLaClinica):
         ]
 
     def __str__(self):
+        if self.esta_anonimizado:
+            return str(ANONIMIZADO)
         return f"{self.nombre} {self.apellidos}".strip()
+
+    @property
+    def esta_anonimizado(self):
+        """Si sus datos personales ya se suprimieron. No tiene vuelta atrás."""
+        return self.anonimizado is not None
+
+    @property
+    def nombre_a_la_vista(self):
+        """El nombre, o el rótulo de quien ya no lo tiene.
+
+        Lo usa el fichero de Tutores, que enlaza la ficha desde esta celda: con
+        el nombre en blanco quedaría un enlace sin texto que nadie puede pulsar.
+        """
+        return str(ANONIMIZADO) if self.esta_anonimizado else self.nombre
 
     def get_absolute_url(self):
         """Dónde vive su ficha.

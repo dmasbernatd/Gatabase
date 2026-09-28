@@ -1,0 +1,47 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktranslate with tutor=tutor %}Derechos del titular: {{ tutor }}{% endblocktranslate %}{% endblock %}
+
+{% block panel %}
+  <h1>{% translate "Derechos del titular" %}</h1>
+
+  <p><a href="{% url 'tutors:ficha' tutor.pk %}">{{ tutor }}</a></p>
+
+  <h2>{% translate "Entregarle sus datos" %}</h2>
+
+  <p>
+    {% translate "Un documento con todo lo que la Clínica guarda de este Tutor: sus datos personales, los Pacientes de los que responde o respondió, lo que ha dicho sobre que se le contacte y quién ha consultado su ficha y cuándo. Se abre con cualquier navegador y se puede imprimir o guardar como PDF." %}
+  </p>
+
+  <form method="post" action="{% url 'tutors:datos_del_titular' tutor.pk %}">
+    {% csrf_token %}
+    <button type="submit">{% translate "Descargar sus datos" %}</button>
+  </form>
+
+  <h2>{% translate "Suprimir sus datos" %}</h2>
+
+  {% if tutor.esta_anonimizado %}
+    <p>
+      {% blocktranslate with fecha=tutor.anonimizado %}Sus datos personales se suprimieron el {{ fecha }}. Quién lo hizo consta en el Registro de acceso.{% endblocktranslate %}
+    </p>
+  {% else %}
+    {% comment %}
+      Qué se va y qué se queda, dicho antes de pedir la confirmación: quien
+      anonimiza tiene que saber que los animales no se van con el Tutor, y que
+      no hay manera de deshacerlo.
+    {% endcomment %}
+    <p>
+      {% translate "Se borran su nombre, apellidos, RUT, teléfono, correo y dirección, y no se guarda copia en ninguna parte: no se puede deshacer." %}
+    </p>
+    <p>
+      {% translate "Sus Pacientes no se tocan. La Historia clínica es del animal y la Clínica tiene que conservarla: siguen con todos sus datos, a cargo de un Tutor anonimizado. El Registro de quién vio sus datos también se conserva, porque es la evidencia de lo que se hizo con ellos." %}
+    </p>
+
+    <form method="post" action="{% url 'tutors:anonimizar' tutor.pk %}">
+      {% csrf_token %}
+      {{ formulario.as_p }}
+      <button type="submit">{% translate "Anonimizar a este Tutor" %}</button>
+    </form>
+  {% endif %}
+{% endblock %}
