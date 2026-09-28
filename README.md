@@ -135,7 +135,14 @@ Lo primero que hace una clínica nueva: subir el archivador que ya tenía. Son d
 
 **Lo que es un dato bueno no se decide dos veces.** El RUT lo sigue leyendo `apps/tutors/rut.py` y el teléfono `apps/telefono.py`, por los mismos campos que el formulario del mostrador: un importador con reglas propias —siempre más laxas, para que «la migración entre entera»— dejaría en la base fichas que después nadie podría guardar.
 
-Del archivo no se guarda copia en la base: espera en disco entre las dos páginas, colgado de la sesión de quien lo subió (`apps/imports/almacen.py`). Del formato sabe `apps/imports/planilla.py`, que adivina el separador y la codificación en vez de preguntárselos a nadie; qué es la misma persona lo decide `apps/imports/tutores.py`, que es también de donde salen a la vez la documentación del formato, el archivo de ejemplo descargable y el reconocimiento de la cabecera.
+Del archivo no se guarda copia en la base: espera en disco entre las dos páginas, colgado de la sesión de quien lo subió (`apps/imports/almacen.py`). Cuando la sesión caduca sin confirmar, el archivo ya no lo puede recuperar nadie y se barre: al subir la siguiente planilla y, como una clínica que importa una vez al llegar no sube ninguna más, también desde un cron. **El despliegue tiene que programarlo**, porque es una copia de los datos de cientos de Tutores que el derecho de supresión no alcanza mientras siga en el disco:
+
+```sh
+# cada hora, con el mismo entorno que la aplicación
+.venv/bin/python manage.py barrer_importaciones
+```
+
+Del formato sabe `apps/imports/planilla.py`, que adivina el separador y la codificación en vez de preguntárselos a nadie; qué es la misma persona lo decide `apps/imports/tutores.py`, que es también de donde salen a la vez la documentación del formato, el archivo de ejemplo descargable y el reconocimiento de la cabecera.
 
 **La planilla de animales identifica al dueño por un nombre escrito a mano**, y eso es lo difícil de la migración. `apps/imports/pacientes.py` resuelve al Tutor por su RUT, por su teléfono o por su nombre —y por la intersección de los que la fila traiga, porque una familia comparte número y el nombre es lo que desempata—. Cuando quedan dos, la fila **no entra** y se dice entre cuáles se dudó, con el RUT de cada uno al lado: elegir al primero colgaría el animal de la persona equivocada, y quien lo descubriría es el veterinario que llama a un número que no contesta. La especie tiene que estar en el catálogo cerrado; la raza que no esté se guarda tal como venga escrita. **El histórico clínico no se importa** y no hay columna que lo traiga: migrar historias en texto libre es un pozo sin fondo, y la Historia clínica empieza en la primera Consulta nueva.
 

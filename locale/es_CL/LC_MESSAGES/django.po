@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-28 17:08-0300\n"
+"POT-Creation-Date: 2026-09-28 17:23-0300\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -335,6 +335,17 @@ msgstr ""
 #: apps/imports/informe.py:125 templates/imports/vista_previa.html:58
 msgid "ya estaba"
 msgstr ""
+
+#: apps/imports/management/commands/barrer_importaciones.py:20
+msgid "Borra las planillas subidas cuya sesión ya caducó."
+msgstr ""
+
+#: apps/imports/management/commands/barrer_importaciones.py:26
+#, python-format
+msgid "Se borró %(n)d planilla que ya no podía confirmar nadie."
+msgid_plural "Se borraron %(n)d planillas que ya no podía confirmar nadie."
+msgstr[0] ""
+msgstr[1] ""
 
 #: apps/imports/management/commands/datos_mock.py:16
 msgid "Llena la base con dos Clínicas de demostración y datos verosímiles."

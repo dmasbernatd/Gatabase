@@ -17,10 +17,15 @@ existiera este módulo. De la sesión cuelga solo el nombre inventado del archiv
 —nunca el que escribió el navegador, que puede traer barras—, así que una planilla
 solo la puede leer quien la subió y desde la misma sesión.
 
-**Se barre lo viejo al subir algo nuevo.** Un archivo cuya sesión ya caducó no lo
-puede recuperar nadie —el nombre inventado vivía ahí dentro— y quedaría en el
-disco para siempre. Barrerlo al subir cuesta un listado de un directorio con muy
-pocas entradas y evita el proceso periódico que nadie va a montar.
+**Se barre lo viejo al subir algo nuevo, y además cuando lo pida un cron.** Un
+archivo cuya sesión ya caducó no lo puede recuperar nadie —el nombre inventado
+vivía ahí dentro— y quedaría en el disco para siempre. Barrerlo al subir cuesta
+un listado de un directorio con muy pocas entradas, pero depende de que alguien
+suba la siguiente planilla, y una clínica que importa una vez al llegar no sube
+ninguna más: la última se quedaría ahí con los datos de cientos de Tutores,
+incluidos los que después pidan que los borren (ticket 20). Por eso el mismo
+barrido lo corre también `manage.py barrer_importaciones`, que es lo que el
+despliegue programa.
 
 Lo viejo se mide como lo mide la sesión, y por eso **recuperar la planilla la
 rejuvenece**: la sesión de Gatabase caduca por inactividad y se renueva en cada
@@ -66,18 +71,24 @@ def _directorio():
     return directorio
 
 
-def _barrer_lo_que_ya_no_alcanza_nadie(directorio):
+def barrer_lo_que_ya_no_alcanza_nadie():
     """Borra las planillas que nadie ha tocado en lo que dura una sesión.
 
     Es el mismo plazo y la misma cuenta que la sesión de la que cuelgan —por
     inactividad, no desde que se subieron—, porque `recuperar` rejuvenece el
     archivo cada vez que se mira. Una planilla más vieja que eso es una cuya
     sesión caducó, y su nombre inventado se fue con ella.
+
+    Devuelve cuántas borró, que es lo único que quien lo corre desde un cron
+    necesita saber.
     """
     limite = timezone.now().timestamp() - settings.SESSION_COOKIE_AGE
-    for archivo in directorio.glob(f"*{EXTENSION}"):
+    barridas = 0
+    for archivo in _directorio().glob(f"*{EXTENSION}"):
         if archivo.stat().st_mtime < limite:
             archivo.unlink(missing_ok=True)
+            barridas += 1
+    return barridas
 
 
 def guardar(request, subido, que):
@@ -88,11 +99,10 @@ def guardar(request, subido, que):
     esto, confirmar una planilla de animales la leería como si fuera de personas.
     """
     olvidar(request)
-    directorio = _directorio()
-    _barrer_lo_que_ya_no_alcanza_nadie(directorio)
+    barrer_lo_que_ya_no_alcanza_nadie()
 
     guardada = uuid4().hex + EXTENSION
-    (directorio / guardada).write_bytes(subido.read())
+    (_directorio() / guardada).write_bytes(subido.read())
     request.session[CLAVE_EN_LA_SESION] = {
         "guardada": guardada,
         "nombre": subido.name,

@@ -464,6 +464,15 @@ proceso periódico porque no guarda nada: la exportación se compone mientras sa
 hacia el navegador y no llega a existir como archivo
 (`apps/exports/paquete.py`). El barrido de importaciones sigue dependiendo de que
 alguien suba la siguiente planilla.
+_Pagado el 28 de septiembre de 2026_: el mismo barrido lo corre ahora
+`manage.py barrer_importaciones`, y el README pide al despliegue que lo programe
+cada hora. Tests en `tests/test_barrido_de_importaciones.py`, que es también la
+primera vez que el barrido al subir tiene uno.
+_Lo que queda vivo_: el comando existe, pero que alguien lo programe es una
+condición de despliegue como la de ADR-0004, y a diferencia de aquella no la
+comprueba ningún `check`: no hay forma de preguntarle a Django si hay un cron.
+Una planilla sin confirmar vive, en el peor caso, lo que dure la sesión más lo
+que tarde en pasar el cron.
 
 **Un `bulk_create` de tres mil filas es una sola sentencia y no pasa por
 `save()`.** Hoy da igual —el Tutor no tiene `save()` propio y los campos
@@ -563,6 +572,16 @@ solo en cuanto se vuelve a correr.
 _Cuándo se paga_: cuando estorbe de verdad —en CI, donde no hay nadie mirando
 para saber que fue eso—. El arreglo es calcular la fecha dentro del test, o
 congelar el reloj.
+_Pagado el 28 de septiembre de 2026_, calculándola dentro del test:
+`tests/fechas.py` da `hoy()`, `ayer()` y `manana()` en el momento de pedirlas.
+`test_cambio_de_tutor.py` tenía la misma trampa —`HOY` incluido, como valor por
+defecto de dos ayudantes— y se arregló a la vez. De paso las fechas salen de
+`timezone.localdate()` y no de `date.today()`: las reglas preguntan por la fecha
+de Santiago, y una máquina en UTC entre las 20:00 y la medianoche de Santiago
+estaba ya en el día siguiente.
+_Lo que queda vivo_: un test que cruce la medianoche **entre** calcular la fecha
+y hacer la petición sigue pudiendo fallar, pero esa ventana son milisegundos y
+no minutos.
 
 ## La exportación de la Clínica
 
@@ -629,3 +648,16 @@ importador se la lleve, que es la deuda del **17** de más arriba vista desde el
 otro lado.
 _Cuándo se paga_: con el barrido periódico del importador. Ese mismo proceso
 cierra las dos.
+_Pagado el 28 de septiembre de 2026_ junto con la del **17**: una planilla que
+nadie confirmó ya no sobrevive al cron de `barrer_importaciones`.
+_Lo que queda vivo_: la planilla que alguien está mirando en el momento de la
+supresión sigue ahí hasta que la confirme o la abandone. Si la confirma, el Tutor
+anonimizado vuelve a entrar como ficha nueva —la planilla lo trae entero y ya no
+queda RUT con que reconocerlo—. Y no hace falta que coincidan en la misma media
+hora: lo mismo pasa si la clínica vuelve a subir meses después la planilla con
+la que llegó, que el README anima a subir «las veces que haga falta». El barrido
+se lleva la copia del disco, no la del computador de la clínica.
+_Cuándo se paga_: antes de que el importador se use para algo más que la llegada
+de una clínica. El remedio no es guardar los datos del suprimido para
+reconocerlo —eso sería no suprimirlos—, sino algo como una huella del RUT que el
+importador consulte, y eso se decide con el caso delante.

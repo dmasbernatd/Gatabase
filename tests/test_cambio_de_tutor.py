@@ -12,8 +12,6 @@ en `test_aislamiento_por_clinica.py`; aquí solo se comprueba que el cambio de
 manos tampoco cruza la frontera.
 """
 
-import datetime
-
 import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -25,12 +23,10 @@ from apps.patients.models import Paciente
 from apps.tutors.models import Vinculo
 from apps.tutors.traspaso import traspasar
 from tests.factories import PacienteFactory, TutorFactory, UsuarioFactory
+from tests.fechas import ayer, hoy, manana
 
 pytestmark = pytest.mark.django_db
 
-HOY = datetime.date.today()
-AYER = HOY - datetime.timedelta(days=1)
-MANANA = HOY + datetime.timedelta(days=1)
 
 
 def recepcion(client):
@@ -54,18 +50,18 @@ def con_tutor(clinica, **datos):
     return paciente, tutor
 
 
-def cambiar_de_tutor(client, paciente, tutor, fecha=HOY):
+def cambiar_de_tutor(client, paciente, tutor, fecha=None):
     """El cambio de manos desde la página del Paciente, como recepción."""
     return client.post(
         reverse("patients:traspasar", args=[paciente.pk]),
-        {"tutor": tutor.pk, "fecha": str(fecha)},
+        {"tutor": tutor.pk, "fecha": str(fecha or hoy())},
     )
 
 
-def cerrar(client, vinculo, fecha=HOY):
+def cerrar(client, vinculo, fecha=None):
     return client.post(
         reverse("patients:cerrar_vinculo", args=[vinculo.paciente.pk, vinculo.pk]),
-        {"fecha": str(fecha)},
+        {"fecha": str(fecha or hoy())},
     )
 
 
@@ -82,9 +78,9 @@ def test_cerrar_un_vinculo_lo_deja_con_fecha_y_no_lo_borra():
     otra = TutorFactory(clinic=paciente.clinic)
     vinculo = otra.se_hace_cargo_de(paciente)
 
-    vinculo.cerrar(AYER)
+    vinculo.cerrar(ayer())
 
-    assert guardado(vinculo).fecha_de_cierre == AYER
+    assert guardado(vinculo).fecha_de_cierre == ayer()
     assert Vinculo.de_todas_las_clinicas.filter(pk=vinculo.pk).exists()
 
 
@@ -93,7 +89,7 @@ def test_un_vinculo_cerrado_no_sale_entre_quienes_responden():
     otra = TutorFactory(clinic=paciente.clinic)
     vinculo = otra.se_hace_cargo_de(paciente)
 
-    vinculo.cerrar(AYER)
+    vinculo.cerrar(ayer())
 
     assert [v.tutor for v in paciente.quienes_responden] == [responsable]
     assert [v.tutor for v in paciente.quienes_respondieron] == [otra]
@@ -106,7 +102,7 @@ def test_cerrar_sin_fecha_toma_la_de_hoy():
 
     vinculo.cerrar()
 
-    assert guardado(vinculo).fecha_de_cierre == HOY
+    assert guardado(vinculo).fecha_de_cierre == hoy()
 
 
 def test_la_base_de_datos_no_admite_un_responsable_con_el_vinculo_cerrado():
@@ -116,7 +112,7 @@ def test_la_base_de_datos_no_admite_un_responsable_con_el_vinculo_cerrado():
 
     with pytest.raises(IntegrityError), transaction.atomic():
         Vinculo.de_todas_las_clinicas.filter(paciente=paciente, responsable=True).update(
-            fecha_de_cierre=AYER
+            fecha_de_cierre=ayer()
         )
 
 
@@ -128,12 +124,12 @@ def test_el_traspaso_cierra_el_vinculo_anterior_y_abre_el_nuevo(client):
     paciente, antes = con_tutor(usuario.clinic)
     ahora = TutorFactory(clinic=usuario.clinic)
 
-    respuesta = cambiar_de_tutor(client, paciente, ahora, AYER)
+    respuesta = cambiar_de_tutor(client, paciente, ahora, ayer())
 
     assert respuesta.status_code == 302
     assert paciente.responsable == ahora
     assert [v.tutor for v in paciente.quienes_respondieron] == [antes]
-    assert paciente.quienes_respondieron.get().fecha_de_cierre == AYER
+    assert paciente.quienes_respondieron.get().fecha_de_cierre == ayer()
 
 
 def test_el_traspaso_no_deja_ningun_instante_sin_responsable(client):
@@ -180,9 +176,9 @@ def test_el_animal_que_vuelve_a_su_tutor_de_siempre_son_dos_tramos(client):
     usuario = recepcion(client)
     paciente, siempre = con_tutor(usuario.clinic)
     otro = TutorFactory(clinic=usuario.clinic)
-    cambiar_de_tutor(client, paciente, otro, AYER)
+    cambiar_de_tutor(client, paciente, otro, ayer())
 
-    cambiar_de_tutor(client, paciente, siempre, HOY)
+    cambiar_de_tutor(client, paciente, siempre, hoy())
 
     assert paciente.responsable == siempre
     assert Vinculo.de_todas_las_clinicas.filter(paciente=paciente, tutor=siempre).count() == 2
@@ -195,7 +191,7 @@ def test_el_cambio_de_manos_no_puede_ser_del_futuro(client):
     usuario = recepcion(client)
     paciente, antes = con_tutor(usuario.clinic)
 
-    respuesta = cambiar_de_tutor(client, paciente, TutorFactory(clinic=usuario.clinic), MANANA)
+    respuesta = cambiar_de_tutor(client, paciente, TutorFactory(clinic=usuario.clinic), manana())
 
     assert respuesta.status_code == 200
     assert paciente.responsable == antes
@@ -228,7 +224,7 @@ def test_el_vinculo_del_responsable_de_un_paciente_activo_no_se_cierra():
     vinculo = paciente.vinculo_responsable
 
     with pytest.raises(ValidationError):
-        vinculo.cerrar(HOY)
+        vinculo.cerrar(hoy())
 
     assert paciente.responsable == responsable
 
@@ -249,7 +245,7 @@ def test_el_responsable_de_un_fallecido_si_puede_dejar_de_responder(client):
     obligaría a dejar puesto a un Tutor que no tiene nada que ver."""
     usuario = recepcion(client)
     paciente, tutor = con_tutor(usuario.clinic)
-    paciente.cambiar_de_estado(EstadoDelPaciente.FALLECIDO, AYER)
+    paciente.cambiar_de_estado(EstadoDelPaciente.FALLECIDO, ayer())
 
     cerrar(client, paciente.vinculo_responsable)
 
@@ -263,7 +259,7 @@ def test_un_paciente_sin_responsable_no_vuelve_a_activo(client):
     usuario = recepcion(client)
     paciente, _ = con_tutor(usuario.clinic)
     paciente.cambiar_de_estado(EstadoDelPaciente.INACTIVO)
-    paciente.vinculo_responsable.cerrar(AYER)
+    paciente.vinculo_responsable.cerrar(ayer())
 
     respuesta = client.post(
         reverse("patients:estado", args=[paciente.pk]),
@@ -278,7 +274,7 @@ def test_la_ficha_avisa_de_que_no_hay_quien_responda(client):
     usuario = recepcion(client)
     paciente, _ = con_tutor(usuario.clinic)
     paciente.cambiar_de_estado(EstadoDelPaciente.INACTIVO)
-    paciente.vinculo_responsable.cerrar(AYER)
+    paciente.vinculo_responsable.cerrar(ayer())
     paciente.cambiar_de_estado(EstadoDelPaciente.ACTIVO)
 
     contenido = client.get(reverse("patients:ficha", args=[paciente.pk])).content.decode()
@@ -293,7 +289,7 @@ def test_la_ficha_del_paciente_enseña_a_los_de_ahora_y_a_los_de_antes(client):
     usuario = recepcion(client)
     paciente, antes = con_tutor(usuario.clinic)
     ahora = TutorFactory(clinic=usuario.clinic, nombre="Ignacio", apellidos="Fuentes")
-    cambiar_de_tutor(client, paciente, ahora, AYER)
+    cambiar_de_tutor(client, paciente, ahora, ayer())
 
     contenido = client.get(reverse("patients:ficha", args=[paciente.pk])).content.decode()
 
@@ -307,7 +303,7 @@ def test_la_ficha_del_tutor_anterior_sigue_diciendo_que_el_paciente_fue_suyo(cli
     tiene que poder decir hasta cuándo fue suyo."""
     usuario = recepcion(client)
     paciente, antes = con_tutor(usuario.clinic, nombre="Rocco")
-    cambiar_de_tutor(client, paciente, TutorFactory(clinic=usuario.clinic), AYER)
+    cambiar_de_tutor(client, paciente, TutorFactory(clinic=usuario.clinic), ayer())
 
     contenido = client.get(reverse("tutors:ficha", args=[antes.pk])).content.decode()
 
@@ -320,7 +316,7 @@ def test_el_paciente_traspasado_deja_de_salir_entre_los_de_ahora_del_tutor_anter
     hoy: uno que entregó no está entre ellos."""
     usuario = recepcion(client)
     paciente, antes = con_tutor(usuario.clinic, nombre="Rocco")
-    cambiar_de_tutor(client, paciente, TutorFactory(clinic=usuario.clinic), AYER)
+    cambiar_de_tutor(client, paciente, TutorFactory(clinic=usuario.clinic), ayer())
 
     assert list(antes.de_quienes_se_hace_cargo) == []
     assert [v.paciente for v in antes.de_quienes_se_hizo_cargo] == [paciente]
@@ -349,7 +345,7 @@ def test_cerrar_un_vinculo_desde_el_mostrador_queda_en_el_registro(client):
     otra = TutorFactory(clinic=usuario.clinic)
     vinculo = otra.se_hace_cargo_de(paciente)
 
-    cerrar(client, vinculo, AYER)
+    cerrar(client, vinculo, ayer())
 
     assert anotaciones_sobre(paciente, Accion.MODIFICACION).exists()
     assert anotaciones_sobre(otra, Accion.MODIFICACION).get().usuario == usuario
@@ -371,7 +367,7 @@ def test_la_ficha_anota_la_lectura_de_los_tutores_de_antes(client):
     """Un nombre servido es una lectura aunque el Vínculo esté cerrado."""
     usuario = recepcion(client)
     paciente, antes = con_tutor(usuario.clinic)
-    cambiar_de_tutor(client, paciente, TutorFactory(clinic=usuario.clinic), AYER)
+    cambiar_de_tutor(client, paciente, TutorFactory(clinic=usuario.clinic), ayer())
     # El Registro no se vacía ni para un test: es inalterable (ADR-0004), así
     # que lo que se mira es que la ficha sume una anotación más.
     hasta_ahora = anotaciones_sobre(antes, Accion.LECTURA).count()
@@ -414,12 +410,12 @@ def test_un_vinculo_ya_cerrado_no_se_vuelve_a_cerrar(client):
     usuario = recepcion(client)
     paciente, _ = con_tutor(usuario.clinic)
     vinculo = TutorFactory(clinic=usuario.clinic).se_hace_cargo_de(paciente)
-    vinculo.cerrar(AYER)
+    vinculo.cerrar(ayer())
 
-    respuesta = cerrar(client, vinculo, HOY)
+    respuesta = cerrar(client, vinculo, hoy())
 
     assert respuesta.status_code == 404
-    assert guardado(vinculo).fecha_de_cierre == AYER
+    assert guardado(vinculo).fecha_de_cierre == ayer()
 
 
 def test_el_traspaso_no_toca_nada_si_algo_falla():
@@ -427,7 +423,7 @@ def test_el_traspaso_no_toca_nada_si_algo_falla():
     paciente, antes = con_tutor(TutorFactory().clinic)
 
     with pytest.raises(ValidationError):
-        traspasar(paciente, antes, HOY)
+        traspasar(paciente, antes, hoy())
 
     assert paciente.responsable == antes
     assert not paciente.quienes_respondieron.exists()

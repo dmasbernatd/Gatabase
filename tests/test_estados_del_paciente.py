@@ -19,11 +19,10 @@ from apps.audit.models import Accion, RegistroDeAcceso
 from apps.patients.estados import EstadoDelPaciente
 from apps.patients.models import Paciente
 from tests.factories import PacienteFactory, TutorFactory, UsuarioFactory, VinculoFactory
+from tests.fechas import ayer, manana
 
 pytestmark = pytest.mark.django_db
 
-AYER = datetime.date.today() - datetime.timedelta(days=1)
-MANANA = datetime.date.today() + datetime.timedelta(days=1)
 
 
 def recepcion(client):
@@ -67,11 +66,11 @@ def test_un_paciente_nace_activo():
 def test_marcar_fallecido_guarda_la_fecha():
     paciente = PacienteFactory()
 
-    paciente.cambiar_de_estado(EstadoDelPaciente.FALLECIDO, AYER)
+    paciente.cambiar_de_estado(EstadoDelPaciente.FALLECIDO, ayer())
 
     guardado = Paciente.de_todas_las_clinicas.get(pk=paciente.pk)
     assert guardado.esta_fallecido
-    assert guardado.fecha_de_fallecimiento == AYER
+    assert guardado.fecha_de_fallecimiento == ayer()
 
 
 def test_un_fallecido_puede_no_traer_fecha():
@@ -90,7 +89,7 @@ def test_salir_de_fallecido_limpia_la_fecha():
     """Deshacer un fallecimiento marcado por error no puede dejar una fecha de
     muerte en un animal vivo: la ficha diría dos cosas a la vez."""
     paciente = PacienteFactory()
-    paciente.cambiar_de_estado(EstadoDelPaciente.FALLECIDO, AYER)
+    paciente.cambiar_de_estado(EstadoDelPaciente.FALLECIDO, ayer())
 
     paciente.cambiar_de_estado(EstadoDelPaciente.ACTIVO)
 
@@ -102,7 +101,7 @@ def test_salir_de_fallecido_limpia_la_fecha():
 def test_la_base_de_datos_rechaza_una_fecha_de_muerte_sin_fallecimiento():
     """La única combinación imposible, y no depende de que nadie se acuerde."""
     with pytest.raises(IntegrityError), transaction.atomic():
-        PacienteFactory(estado=EstadoDelPaciente.INACTIVO, fecha_de_fallecimiento=AYER)
+        PacienteFactory(estado=EstadoDelPaciente.INACTIVO, fecha_de_fallecimiento=ayer())
 
 
 def test_inactivo_es_reversible():
@@ -140,7 +139,7 @@ def test_un_paciente_fallecido_conserva_toda_su_informacion():
     paciente = PacienteFactory(clinic=tutor.clinic, nombre="Rocco", color="Negro")
     tutor.se_hace_cargo_de(paciente, responsable=True)
 
-    paciente.cambiar_de_estado(EstadoDelPaciente.FALLECIDO, AYER)
+    paciente.cambiar_de_estado(EstadoDelPaciente.FALLECIDO, ayer())
 
     guardado = Paciente.de_todas_las_clinicas.get(pk=paciente.pk)
     assert guardado.nombre == "Rocco"
@@ -156,13 +155,13 @@ def test_recepcion_deja_constancia_de_que_un_paciente_fallecio(client):
     paciente = PacienteFactory(clinic=usuario.clinic)
 
     respuesta = cambiar_el_estado(
-        client, paciente, EstadoDelPaciente.FALLECIDO, fecha_de_fallecimiento=str(AYER)
+        client, paciente, EstadoDelPaciente.FALLECIDO, fecha_de_fallecimiento=str(ayer())
     )
 
     guardado = Paciente.de_todas_las_clinicas.get(pk=paciente.pk)
     assert respuesta.status_code == 302
     assert guardado.esta_fallecido
-    assert guardado.fecha_de_fallecimiento == AYER
+    assert guardado.fecha_de_fallecimiento == ayer()
 
 
 def test_el_cambio_de_estado_queda_en_el_registro_de_acceso(client):
@@ -188,7 +187,7 @@ def test_abrir_la_pagina_del_estado_deja_constancia_de_la_lectura(client):
 def test_la_ficha_de_un_fallecido_lo_dice_con_todas_sus_letras(client):
     usuario = recepcion(client)
     paciente = PacienteFactory(
-        clinic=usuario.clinic, estado=EstadoDelPaciente.FALLECIDO, fecha_de_fallecimiento=AYER
+        clinic=usuario.clinic, estado=EstadoDelPaciente.FALLECIDO, fecha_de_fallecimiento=ayer()
     )
 
     contenido = client.get(reverse("patients:ficha", args=[paciente.pk])).content.decode()
@@ -239,7 +238,7 @@ def test_marcar_por_error_a_quien_no_era_se_puede_deshacer(client):
     atrás no dependa de tocar la base de datos a mano."""
     usuario = recepcion(client)
     paciente = PacienteFactory(
-        clinic=usuario.clinic, estado=EstadoDelPaciente.FALLECIDO, fecha_de_fallecimiento=AYER
+        clinic=usuario.clinic, estado=EstadoDelPaciente.FALLECIDO, fecha_de_fallecimiento=ayer()
     )
     # Con su Tutor, que es como es un fallecido de verdad: marcar la muerte no
     # cierra ningún Vínculo. Un Paciente sin nadie que responda por él no vuelve
@@ -260,7 +259,7 @@ def test_nadie_fallece_manana(client):
     paciente = PacienteFactory(clinic=usuario.clinic)
 
     respuesta = cambiar_el_estado(
-        client, paciente, EstadoDelPaciente.FALLECIDO, fecha_de_fallecimiento=str(MANANA)
+        client, paciente, EstadoDelPaciente.FALLECIDO, fecha_de_fallecimiento=str(manana())
     )
 
     assert respuesta.status_code == 200
@@ -270,13 +269,13 @@ def test_nadie_fallece_manana(client):
 def test_nadie_fallece_antes_de_nacer(client):
     """La otra mitad del mismo error de tecleo: el año equivocado hacia atrás."""
     usuario = recepcion(client)
-    paciente = PacienteFactory(clinic=usuario.clinic, fecha_de_nacimiento=AYER)
+    paciente = PacienteFactory(clinic=usuario.clinic, fecha_de_nacimiento=ayer())
 
     respuesta = cambiar_el_estado(
         client,
         paciente,
         EstadoDelPaciente.FALLECIDO,
-        fecha_de_fallecimiento=str(AYER - datetime.timedelta(days=365)),
+        fecha_de_fallecimiento=str(ayer() - datetime.timedelta(days=365)),
     )
 
     assert respuesta.status_code == 200
