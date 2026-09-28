@@ -4,7 +4,7 @@
 
 **Blocked by:** 04, 07
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] El admin de la Clínica lanza la exportación y obtiene un archivo con Tutores, Pacientes, vínculos, catálogos y configuración de Sedes
 - [x] Formato abierto y legible por una planilla, no un volcado propio del sistema
