@@ -58,6 +58,7 @@ from apps.patients.forms import (
     VinculoForm,
 )
 from apps.patients.models import Paciente
+from apps.tutors.eleccion import EleccionDeTutor
 from apps.tutors.models import Tutor, Vinculo
 
 
@@ -178,29 +179,63 @@ def editar(request, pk):
     return anotando(respuesta, request.user, Accion.LECTURA, paciente)
 
 
+# Lo que htmx pone en toda petición suya; Django lo entrega como cabecera.
+PETICION_DE_HTMX = "HX-Request"
+
+
+def _lo_buscado(request):
+    """Lo escrito en la caja para encontrar al Tutor.
+
+    Viene en la URL mientras se busca, y en el formulario al guardar: así la
+    página que vuelve con un error enseña la misma lista que había.
+    """
+    datos = request.POST if request.method == "POST" else request.GET
+    return datos.get(EleccionDeTutor.CAMPO, "")
+
+
+def _eligiendo_tutor(request, formulario, plantilla, contexto, *objetos):
+    """La página donde se elige a un Tutor, o solo su lista si la pide htmx.
+
+    Anota lo que se sirvió y nada más. La página entera enseña lo que diga cada
+    vista (`objetos`); la lista que se repinta mientras se escribe, solo
+    Tutores. Y los Tutores se anotan **como el conjunto**, por lo mismo que en la
+    caja del mostrador: la lista cambia a cada pocas teclas, y los nombres que
+    pasan por delante mientras alguien escribe no son personas consultadas. Con
+    la caja vacía no sale ninguno, y entonces no hay nada que anotar de ellos.
+    """
+    if PETICION_DE_HTMX in request.headers:
+        respuesta = render(request, "patients/_tutores.html", {"formulario": formulario})
+        objetos = ()
+    else:
+        respuesta = render(request, plantilla, {"formulario": formulario, **contexto})
+    if not formulario.eleccion.vacia:
+        objetos = (*objetos, Tutor)
+    return anotando(respuesta, request.user, Accion.LECTURA, *objetos)
+
+
 @login_required
 def vincular(request, pk):
     """Suma otro Tutor a los que responden por el Paciente.
 
-    En página aparte y no en la ficha porque el desplegable enseña el fichero de
-    Tutores entero, y eso es una lectura del conjunto que no tiene por qué
-    quedar anotada cada vez que alguien abre una ficha.
+    En página aparte y no en la ficha porque hay que buscarlo, y buscar es leer
+    el fichero de Tutores: una lectura del conjunto que no tiene por qué quedar
+    anotada cada vez que alguien abre una ficha.
     """
     paciente = get_object_or_404(Paciente, pk=pk)
-    formulario = VinculoForm(request.POST or None, clinica=request.user.clinic, paciente=paciente)
+    formulario = VinculoForm(
+        request.POST or None,
+        clinica=request.user.clinic,
+        paciente=paciente,
+        buscado=_lo_buscado(request),
+    )
     if request.method == "POST" and formulario.is_valid():
         vinculo = formulario.guardar()
         anotar(request.user, Accion.MODIFICACION, paciente)
         anotar(request.user, Accion.MODIFICACION, vinculo.tutor)
         return redirect("patients:ficha", pk=paciente.pk)
-    respuesta = render(
-        request,
-        "patients/vincular.html",
-        {"formulario": formulario, "paciente": paciente},
+    return _eligiendo_tutor(
+        request, formulario, "patients/vincular.html", {"paciente": paciente}, paciente
     )
-    # La página enseña la ficha del Paciente y, en el desplegable, el nombre de
-    # todos los Tutores de la Clínica: el conjunto.
-    return anotando(respuesta, request.user, Accion.LECTURA, paciente, Tutor)
 
 
 @login_required
@@ -234,7 +269,12 @@ def traspasar(request, pk):
     """
     paciente = get_object_or_404(Paciente, pk=pk)
     anterior = paciente.responsable
-    formulario = TraspasoForm(request.POST or None, clinica=request.user.clinic, paciente=paciente)
+    formulario = TraspasoForm(
+        request.POST or None,
+        clinica=request.user.clinic,
+        paciente=paciente,
+        buscado=_lo_buscado(request),
+    )
     if request.method == "POST" and formulario.is_valid():
         vinculo = formulario.guardar()
         anotar(request.user, Accion.MODIFICACION, paciente)
@@ -242,15 +282,16 @@ def traspasar(request, pk):
         if anterior:
             anotar(request.user, Accion.MODIFICACION, anterior)
         return redirect("patients:ficha", pk=paciente.pk)
-    respuesta = render(
+    # La página enseña la ficha del Paciente y el nombre de quien responde
+    # ahora por él.
+    return _eligiendo_tutor(
         request,
+        formulario,
         "patients/traspaso.html",
-        {"formulario": formulario, "paciente": paciente, "anterior": anterior},
+        {"paciente": paciente, "anterior": anterior},
+        paciente,
+        *([anterior] if anterior else []),
     )
-    # La página enseña la ficha del Paciente, el nombre de quien responde ahora
-    # por él y, en el desplegable, el de todos los Tutores de la Clínica.
-    objetos = [paciente, *([anterior] if anterior else []), Tutor]
-    return anotando(respuesta, request.user, Accion.LECTURA, *objetos)
 
 
 @login_required

@@ -231,6 +231,23 @@ lo que queda es la mitad de interfaz: cambiar el `<select>` por una caja que
 busque. No se hizo en el 11 porque el 11 buscaba Pacientes y esto busca Tutores,
 y meterlo habría sido dos pantallas en un ticket. El volumen para notarlo lo
 trae el **16**.
+_Pagado el 29 de septiembre de 2026_, en «Sumar un Tutor» y también en «Cambio de
+Tutor», que tenía el mismo desplegable. Una caja busca como la del mostrador
+—GET, repintada con htmx, y sin JavaScript con su botón— y debajo, dentro del
+formulario que guarda, salen como botones de radio los que casan con lo escrito,
+con el teléfono al lado para distinguir a dos Camila Rojas. La búsqueda vive en
+`apps/tutors/eleccion.py` y busca **dentro** del conjunto que cada formulario
+dice que se puede elegir, así que la Clínica y los anonimizados siguen
+acotándolos los mismos dos formularios (`EligeUnTutor`, en
+`apps/patients/forms.py`). El `ModelChoiceField` sigue validando contra ese
+conjunto entero, que es una sola fila por clave.
+Cambia lo que se anota: con la caja vacía la página ya no enseña a ningún
+Tutor, así que el conjunto solo se anota cuando se ha buscado algo, y como el
+conjunto, por lo mismo que en el mostrador.
+_Lo que queda vivo_: marcar a alguien y seguir escribiendo repinta la lista, y
+si ya no sale, la marca se va con ella; guardar entonces pide volver a marcar.
+Es lo esperable de una lista que sigue a la caja, pero es una marca que se
+pierde sin avisar.
 
 **La ficha del Tutor y la del Paciente anotan una lectura por cada nombre que
 enseñan.** Es lo que ADR-0004 pide, y es correcto. Pero un Tutor con seis

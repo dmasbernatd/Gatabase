@@ -1,0 +1,36 @@
+{% load i18n %}
+{% comment %}
+  Buscar al Tutor y, debajo, el formulario que guarda. Son dos formularios
+  porque buscar es un GET y guardar un POST: sin JavaScript, el botón de buscar
+  vuelve a pedir la página con lo escrito, y la misma vista la responde entera.
+  Con htmx, la caja repinta solo la lista mientras se escribe, como la del
+  mostrador.
+{% endcomment %}
+<form method="get" role="search">
+  <label for="{{ formulario.eleccion.CAMPO }}">{% translate "Buscar al Tutor" %}</label>
+  <input type="search"
+         id="{{ formulario.eleccion.CAMPO }}"
+         name="{{ formulario.eleccion.CAMPO }}"
+         value="{{ formulario.eleccion.buscado }}"
+         autocomplete="off"
+         autofocus
+         hx-get="{{ request.path }}"
+         hx-target="#tutores"
+         hx-trigger="input changed delay:250ms, search">
+  <button type="submit">{% translate "Buscar" %}</button>
+</form>
+
+<form method="post">
+  {% csrf_token %}
+  {{ formulario.non_field_errors }}
+  {% comment %}
+    `aria-live` porque la lista cambia sin que la página se recargue.
+  {% endcomment %}
+  <div id="tutores" aria-live="polite">
+    {% include "patients/_tutores.html" %}
+  </div>
+  {% for campo in formulario %}
+    {% if campo.name != "tutor" %}{{ campo.as_field_group }}{% endif %}
+  {% endfor %}
+  <button type="submit">{% translate "Guardar" %}</button>
+</form>

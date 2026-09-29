@@ -19,6 +19,7 @@ from django.urls import reverse
 from apps.audit.models import EL_CONJUNTO, Accion, RegistroDeAcceso
 from apps.patients.catalogo import MESTIZO, RAZAS, Especie
 from apps.patients.models import Paciente
+from apps.tutors.eleccion import RESULTADOS
 from apps.tutors.models import Tutor
 from tests.factories import PacienteFactory, TutorFactory, UsuarioFactory, VinculoFactory
 
@@ -285,6 +286,21 @@ def test_una_raza_de_otra_especie_no_cuenta_como_del_catalogo(client):
 # --- Vínculo con los Tutores ----------------------------------------------
 
 
+def ofrecidos(contenido):
+    """Los Tutores que la página ofrece elegir, por su identificador.
+
+    Son botones de radio y no un desplegable: solo salen los que casan con lo
+    escrito en la caja, nunca el fichero entero.
+    """
+    return re.findall(r'<input type="radio" name="tutor" value="(\d+)"', contenido)
+
+
+def buscar_tutor(client, paciente, escrito, **cabeceras):
+    return client.get(
+        reverse("patients:vincular", args=[paciente.pk]), {"q": escrito}, **cabeceras
+    ).content.decode()
+
+
 def sumar_tutor(client, paciente, tutor, responsable=False):
     datos = {"tutor": tutor.pk}
     if responsable:
@@ -384,10 +400,11 @@ def test_un_tutor_que_ya_responde_por_el_paciente_no_se_vuelve_a_ofrecer(client)
     paciente = PacienteFactory(clinic=usuario.clinic)
     ya_esta = TutorFactory(clinic=usuario.clinic, nombre="Camila", apellidos="Rojas")
     ya_esta.se_hace_cargo_de(paciente)
+    tocaya = TutorFactory(clinic=usuario.clinic, nombre="Camila", apellidos="Rojas")
 
-    contenido = client.get(reverse("patients:vincular", args=[paciente.pk])).content.decode()
+    contenido = buscar_tutor(client, paciente, "camila rojas")
 
-    assert str(ya_esta.pk) not in opciones_de(contenido, "tutor")
+    assert ofrecidos(contenido) == [str(tocaya.pk)]
 
 
 def test_volver_a_vincular_al_mismo_tutor_no_duplica_el_vinculo(client):
@@ -400,6 +417,89 @@ def test_volver_a_vincular_al_mismo_tutor_no_duplica_el_vinculo(client):
 
     assert respuesta.status_code == 200
     assert paciente.quienes_responden.count() == 1
+
+
+def test_sumar_un_tutor_no_trae_el_fichero_entero_a_la_pagina(client):
+    """Con cientos de Tutores, un desplegable son cientos de líneas para
+    elegir uno: se busca primero, como en el mostrador."""
+    usuario = recepcion(client)
+    paciente = PacienteFactory(clinic=usuario.clinic)
+    TutorFactory(clinic=usuario.clinic, nombre="Anselmo", apellidos="Quintanilla")
+
+    contenido = client.get(reverse("patients:vincular", args=[paciente.pk])).content.decode()
+
+    assert ofrecidos(contenido) == []
+    assert "Quintanilla" not in contenido
+    assert "<select" not in contenido
+
+
+def test_se_elige_entre_los_tutores_que_casan_con_lo_escrito(client):
+    usuario = recepcion(client)
+    paciente = PacienteFactory(clinic=usuario.clinic)
+    camila = TutorFactory(clinic=usuario.clinic, nombre="Camila", apellidos="Rojas")
+    TutorFactory(clinic=usuario.clinic, nombre="Ignacio", apellidos="Fuentes")
+
+    contenido = buscar_tutor(client, paciente, "rojas")
+
+    assert ofrecidos(contenido) == [str(camila.pk)]
+
+
+def test_al_tutor_se_le_encuentra_tambien_por_su_telefono(client):
+    """Por donde se busca a un Tutor lo dice el Tutor, igual que en el fichero."""
+    usuario = recepcion(client)
+    paciente = PacienteFactory(clinic=usuario.clinic)
+    camila = TutorFactory(clinic=usuario.clinic, telefono="+56987654321")
+
+    contenido = buscar_tutor(client, paciente, "9 8765 4321")
+
+    assert ofrecidos(contenido) == [str(camila.pk)]
+
+
+def test_cada_tutor_ofrecido_lleva_su_telefono(client):
+    """Dos Camila Rojas se distinguen por algo que recepción pueda preguntar."""
+    usuario = recepcion(client)
+    paciente = PacienteFactory(clinic=usuario.clinic)
+    TutorFactory(clinic=usuario.clinic, nombre="Camila", apellidos="Rojas", telefono="+56987654321")
+
+    contenido = buscar_tutor(client, paciente, "rojas")
+
+    assert "+56987654321" in contenido
+
+
+def test_mientras_se_escribe_solo_se_repintan_los_tutores_encontrados(client):
+    usuario = recepcion(client)
+    paciente = PacienteFactory(clinic=usuario.clinic, nombre="Rocco")
+    camila = TutorFactory(clinic=usuario.clinic, nombre="Camila", apellidos="Rojas")
+
+    contenido = buscar_tutor(client, paciente, "rojas", HTTP_HX_REQUEST="true")
+
+    assert ofrecidos(contenido) == [str(camila.pk)]
+    assert "<h1>" not in contenido
+    assert "Rocco" not in contenido
+
+
+def test_si_hay_mas_tutores_de_los_que_caben_se_pide_afinar(client):
+    usuario = recepcion(client)
+    paciente = PacienteFactory(clinic=usuario.clinic)
+    TutorFactory.create_batch(RESULTADOS + 1, clinic=usuario.clinic, apellidos="Rojas")
+
+    contenido = buscar_tutor(client, paciente, "rojas")
+
+    assert len(ofrecidos(contenido)) == RESULTADOS
+    assert "afine la búsqueda" in contenido
+
+
+def test_si_no_se_pudo_guardar_la_busqueda_sigue_ahi(client):
+    """Olvidar marcar a quién no obliga a volver a escribirlo."""
+    usuario = recepcion(client)
+    paciente = PacienteFactory(clinic=usuario.clinic)
+    camila = TutorFactory(clinic=usuario.clinic, nombre="Camila", apellidos="Rojas")
+
+    respuesta = client.post(reverse("patients:vincular", args=[paciente.pk]), {"q": "rojas"})
+
+    assert respuesta.status_code == 200
+    assert ofrecidos(respuesta.content.decode()) == [str(camila.pk)]
+    assert not paciente.quienes_responden.exists()
 
 
 # --- Las dos fichas se ven la una a la otra -------------------------------
@@ -489,12 +589,27 @@ def test_abrir_el_formulario_de_correccion_deja_constancia_de_la_lectura(client)
     assert not anotaciones_sobre(paciente, Accion.MODIFICACION).exists()
 
 
-def test_pedir_sumar_un_tutor_deja_constancia_de_haber_visto_el_fichero(client):
-    """El desplegable enseña el nombre de todos los Tutores de la Clínica."""
+def test_abrir_sumar_un_tutor_sin_buscar_no_anota_el_fichero(client):
+    """La caja vacía no enseña a ningún Tutor: lo no servido no se anota."""
     usuario = recepcion(client)
     paciente = PacienteFactory(clinic=usuario.clinic)
 
     client.get(reverse("patients:vincular", args=[paciente.pk]))
+
+    assert not RegistroDeAcceso.de_todas_las_clinicas.filter(
+        tipo_de_objeto="tutors.Tutor", identificador=EL_CONJUNTO
+    ).exists()
+    assert RegistroDeAcceso.de_todas_las_clinicas.filter(
+        tipo_de_objeto="patients.Paciente", identificador=str(paciente.pk), accion=Accion.LECTURA
+    ).exists()
+
+
+def test_buscar_a_quien_sumar_deja_constancia_de_haber_visto_el_fichero(client):
+    """Los encontrados se anotan como el conjunto, igual que en el mostrador."""
+    usuario = recepcion(client)
+    paciente = PacienteFactory(clinic=usuario.clinic)
+
+    buscar_tutor(client, paciente, "rojas", HTTP_HX_REQUEST="true")
 
     assert RegistroDeAcceso.de_todas_las_clinicas.filter(
         tipo_de_objeto="tutors.Tutor", identificador=EL_CONJUNTO, accion=Accion.LECTURA

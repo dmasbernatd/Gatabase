@@ -1,0 +1,22 @@
+{% load i18n %}
+{% comment %}
+  Los Tutores que casan con lo escrito, para marcar a uno. Es lo que htmx
+  sustituye mientras se escribe, y lo que se incrusta en la página entera.
+
+  Va dentro del formulario que guarda, con lo escrito en un campo oculto: si
+  al guardar falta algo, la página vuelve con la misma lista y no hay que
+  volver a buscar.
+{% endcomment %}
+<input type="hidden" name="{{ formulario.eleccion.CAMPO }}" value="{{ formulario.eleccion.buscado }}">
+{{ formulario.tutor.errors }}
+{% if formulario.eleccion.resultados %}
+  <fieldset>
+    <legend>{{ formulario.tutor.label }}</legend>
+    {{ formulario.tutor }}
+  </fieldset>
+  {% if formulario.eleccion.hay_mas %}<p>{{ formulario.eleccion.HAY_MAS }}</p>{% endif %}
+{% elif formulario.eleccion.vacia %}
+  <p>{% translate "Busque al Tutor por su nombre, teléfono, RUT o correo." %}</p>
+{% else %}
+  <p>{% translate "Ningún Tutor que se pueda elegir coincide con la búsqueda." %}</p>
+{% endif %}

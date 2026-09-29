@@ -47,6 +47,7 @@ from apps.coincidencias import FormularioQueSeParece, Parecido
 from apps.patients.catalogo import Especie, canonica, razas_de
 from apps.patients.estados import EstadoDelPaciente
 from apps.patients.models import EstadoDeIdentificacion, Paciente, Sexo
+from apps.tutors.eleccion import EleccionDeTutor, como_se_ofrece
 from apps.tutors.models import Tutor
 from apps.tutors.traspaso import traspasar
 
@@ -190,36 +191,64 @@ class PacienteForm(FormularioQueSeParece):
         return razas_de(self["especie"].value())
 
 
-class VinculoForm(forms.Form):
+class EligeUnTutor:
+    """Lo que comparten sumar un Tutor y pasarle el animal a otro: elegir a quién.
+
+    El campo sigue siendo un `ModelChoiceField` sobre todos los que se pueden
+    elegir, porque validar lo enviado es buscar una fila por su clave y eso no
+    cuesta nada. Lo que se acota es lo que se **enseña**: botones de radio solo
+    para los que casan con lo escrito en la caja (`apps/tutors/eleccion.py`),
+    nunca el fichero entero. Y los radios son de ese mismo campo, así que quien
+    envía a mano el identificador de alguien que no se le ofreció choca con la
+    misma frontera que antes: el queryset.
+    """
+
+    def _ofrecer(self, ofrecidos, buscado):
+        campo = self.fields["tutor"]
+        campo.queryset = ofrecidos
+        self.eleccion = EleccionDeTutor(ofrecidos, buscado)
+        # Después del queryset y no antes: asignarlo vuelve a poner en el
+        # widget todas las opciones.
+        campo.widget.choices = [
+            (tutor.pk, como_se_ofrece(tutor)) for tutor in self.eleccion.resultados
+        ]
+
+
+class VinculoForm(EligeUnTutor, forms.Form):
     """Sumar un Tutor a los que responden por un Paciente.
 
     El Paciente no es un campo: viene de la URL de su ficha. Y no es un
     `ModelForm` porque no compone un Vínculo campo a campo — de eso sabe el
     Tutor (`se_hace_cargo_de`), que es quien tiene que decidir además si el
-    Paciente se queda sin responsable. Aquí solo se elige a quién.
+    Paciente se queda sin responsable. Aquí solo se elige a quién, buscándolo
+    (`EligeUnTutor`).
 
-    Los Tutores que se ofrecen son los de la Clínica que todavía no están
+    Los Tutores que se pueden elegir son los de la Clínica que todavía no están
     vinculados: volver a elegir a uno que ya está no es un error del que haya que
-    avisar, es una opción que no debería haberse ofrecido. Que la lista salga de
-    la Clínica del formulario es lo que impide vincular a un Tutor de otra
+    avisar, es una opción que no debería haberse ofrecido. Que salgan de la
+    Clínica del formulario es lo que impide vincular a un Tutor de otra
     (ADR-0003).
     """
 
     tutor = forms.ModelChoiceField(
         queryset=Tutor.de_todas_las_clinicas.none(),
         label=_("Tutor"),
-        empty_label=_("Elija un Tutor"),
+        widget=forms.RadioSelect,
+        error_messages={"required": _("Busque al Tutor y márquelo en la lista.")},
     )
     responsable = forms.BooleanField(label=_("Es el responsable"), required=False)
 
-    def __init__(self, *args, clinica, paciente, **kwargs):
+    def __init__(self, *args, clinica, paciente, buscado="", **kwargs):
         super().__init__(*args, **kwargs)
         self.paciente = paciente
         # Ni los que ya responden por él ni los anonimizados: sumar a uno de
         # estos sería atribuirle un animal a alguien que pidió dejar de constar.
-        self.fields["tutor"].queryset = Tutor.de_todas_las_clinicas.filter(
-            Tutor.IDENTIFICABLES, clinic=clinica
-        ).exclude(pk__in=paciente.quienes_responden.values("tutor"))
+        self._ofrecer(
+            Tutor.de_todas_las_clinicas.filter(Tutor.IDENTIFICABLES, clinic=clinica).exclude(
+                pk__in=paciente.quienes_responden.values("tutor")
+            ),
+            buscado,
+        )
 
     def guardar(self):
         """Deja constancia de que ese Tutor se hace cargo de este Paciente."""
@@ -358,15 +387,15 @@ class CierreDeVinculoForm(FechaDelCambioForm):
         return self.vinculo.cerrar(self.cleaned_data["fecha"])
 
 
-class TraspasoForm(FechaDelCambioForm):
+class TraspasoForm(EligeUnTutor, FechaDelCambioForm):
     """El Paciente cambia de manos: quién responde por él a partir de esa fecha.
 
     Es una sola pantalla y no dos porque es una sola operación (`traspaso.py`):
     cerrar el Vínculo del Tutor de antes sin decir quién lo releva dejaría, entre
     una cosa y la otra, un animal activo del que no responde nadie.
 
-    Se ofrecen los Tutores de la Clínica menos el que ya responde por él, que es
-    la única opción que no significaría nada. Los demás Tutores del Paciente sí
+    Se puede elegir a cualquier Tutor de la Clínica menos al que ya responde por
+    él, que es la única opción que no significaría nada. Los demás Tutores del Paciente sí
     se ofrecen: una pareja que se separa y uno de los dos se queda con el animal
     es exactamente esto, y ahí no se abre ningún Vínculo nuevo — se le pasa el
     cargo al que ya tenía.
@@ -375,20 +404,24 @@ class TraspasoForm(FechaDelCambioForm):
     tutor = forms.ModelChoiceField(
         queryset=Tutor.de_todas_las_clinicas.none(),
         label=_("Ahora responde"),
-        empty_label=_("Elija un Tutor"),
+        widget=forms.RadioSelect,
+        error_messages={"required": _("Busque al Tutor y márquelo en la lista.")},
     )
 
     # Primero a quién pasa el animal, que es la decisión; la fecha viene puesta.
     field_order = ["tutor", "fecha"]
 
-    def __init__(self, *args, clinica, paciente, **kwargs):
+    def __init__(self, *args, clinica, paciente, buscado="", **kwargs):
         super().__init__(*args, **kwargs)
         self.paciente = paciente
         # El animal no pasa a manos de un Tutor anonimizado, por lo mismo que
         # no se le suma a uno (`VinculoForm`).
-        self.fields["tutor"].queryset = Tutor.de_todas_las_clinicas.filter(
-            Tutor.IDENTIFICABLES, clinic=clinica
-        ).exclude(pk__in=paciente.quienes_responden.filter(responsable=True).values("tutor"))
+        self._ofrecer(
+            Tutor.de_todas_las_clinicas.filter(Tutor.IDENTIFICABLES, clinic=clinica).exclude(
+                pk__in=paciente.quienes_responden.filter(responsable=True).values("tutor")
+            ),
+            buscado,
+        )
 
     def guardar(self):
         """Deja al Paciente en manos del Tutor elegido y devuelve su Vínculo."""

@@ -8,11 +8,7 @@
 
   <p>{% blocktranslate with paciente=paciente %}Otra persona responde también por {{ paciente }}.{% endblocktranslate %}</p>
 
-  <form method="post">
-    {% csrf_token %}
-    {{ formulario.as_p }}
-    <button type="submit">{% translate "Guardar" %}</button>
-  </form>
+  {% include "patients/_elegir_tutor.html" %}
 
   <p><a href="{% url 'patients:ficha' paciente.pk %}">{% translate "Volver a la ficha" %}</a></p>
 {% endblock %}

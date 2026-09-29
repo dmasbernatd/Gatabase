@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 01:48-0300\n"
+"POT-Creation-Date: 2026-09-29 13:30-0300\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -39,7 +39,7 @@ msgstr ""
 msgid "Desde"
 msgstr ""
 
-#: apps/audit/forms.py:44 apps/patients/forms.py:322
+#: apps/audit/forms.py:44 apps/patients/forms.py:351
 msgid "Hasta"
 msgstr ""
 
@@ -190,7 +190,7 @@ msgid "id del Tutor"
 msgstr ""
 
 #: apps/exports/hojas.py:313 apps/exports/hojas.py:324
-#: apps/patients/forms.py:210 apps/tutors/models.py:122
+#: apps/patients/forms.py:235 apps/tutors/models.py:122
 #: apps/tutors/models.py:301 apps/tutors/models.py:436
 msgid "Tutor"
 msgstr ""
@@ -509,39 +509,39 @@ msgstr ""
 msgid "«%(escrito)s» no dice el sexo. Se escribe macho o hembra."
 msgstr ""
 
-#: apps/imports/pacientes.py:380
+#: apps/imports/pacientes.py:384
 #, python-format
 msgid "Ningún Tutor de la Clínica tiene el RUT %(rut)s."
 msgstr ""
 
-#: apps/imports/pacientes.py:402
+#: apps/imports/pacientes.py:406
 msgid ""
 "La fila no dice de quién es el animal: pon el RUT, el teléfono o el nombre "
 "de su Tutor."
 msgstr ""
 
-#: apps/imports/pacientes.py:408
+#: apps/imports/pacientes.py:412
 #, python-format
 msgid "No hay ningún Tutor que se llame o conteste así: %(cual)s."
 msgstr ""
 
-#: apps/imports/pacientes.py:413
+#: apps/imports/pacientes.py:417
 #, python-format
 msgid ""
 "Hay %(cuantos)s Tutores que podrían ser: %(cuales)s. Pon el RUT en la fila."
 msgstr ""
 
-#: apps/imports/pacientes.py:552
+#: apps/imports/pacientes.py:556
 #, python-format
 msgid "Ese microchip ya es el de %(cual)s."
 msgstr ""
 
-#: apps/imports/pacientes.py:562
+#: apps/imports/pacientes.py:566
 #, python-format
 msgid "El mismo animal ya venía en la línea %(cual)s de esta planilla."
 msgstr ""
 
-#: apps/imports/pacientes.py:571
+#: apps/imports/pacientes.py:575
 #, python-format
 msgid "Ya está en la Clínica: %(cual)s."
 msgstr ""
@@ -654,61 +654,61 @@ msgstr ""
 msgid "Todos"
 msgstr ""
 
-#: apps/patients/forms.py:68
+#: apps/patients/forms.py:69
 msgid "Esa fecha todavía no ha llegado."
 msgstr ""
 
-#: apps/patients/forms.py:125
+#: apps/patients/forms.py:126
 #, python-brace-format
 msgid "Este microchip ya es el de {ficha}, en esta misma Clínica."
 msgstr ""
 
-#: apps/patients/forms.py:139
+#: apps/patients/forms.py:140
 msgid "Elija una especie"
 msgstr ""
 
-#: apps/patients/forms.py:140
+#: apps/patients/forms.py:141
 msgid "Todavía no se sabe"
 msgstr ""
 
-#: apps/patients/forms.py:145
+#: apps/patients/forms.py:146
 msgid "Todavía no se ha preguntado"
 msgstr ""
 
-#: apps/patients/forms.py:176
+#: apps/patients/forms.py:177
 msgid "Tiene un microchip apuntado: no puede estar «sin chip»."
 msgstr ""
 
-#: apps/patients/forms.py:211 apps/patients/forms.py:378
-msgid "Elija un Tutor"
+#: apps/patients/forms.py:237 apps/patients/forms.py:408
+msgid "Busque al Tutor y márquelo en la lista."
 msgstr ""
 
-#: apps/patients/forms.py:213 templates/tutors/datos_del_titular.html:45
+#: apps/patients/forms.py:239 templates/tutors/datos_del_titular.html:45
 msgid "Es el responsable"
 msgstr ""
 
-#: apps/patients/forms.py:247 templates/patients/ficha.html:56
+#: apps/patients/forms.py:276 templates/patients/ficha.html:56
 #: templates/tenancy/usuarios.html:18
 msgid "Estado"
 msgstr ""
 
-#: apps/patients/forms.py:249
+#: apps/patients/forms.py:278
 msgid "Fecha de fallecimiento"
 msgstr ""
 
-#: apps/patients/forms.py:255
+#: apps/patients/forms.py:284
 msgid "Si no se sabe, déjela en blanco."
 msgstr ""
 
-#: apps/patients/forms.py:290
+#: apps/patients/forms.py:319
 msgid "Nadie responde por él: súmele antes el Tutor que lo trae."
 msgstr ""
 
-#: apps/patients/forms.py:300
+#: apps/patients/forms.py:329
 msgid "Esa fecha es anterior a la de nacimiento."
 msgstr ""
 
-#: apps/patients/forms.py:377
+#: apps/patients/forms.py:406
 msgid "Ahora responde"
 msgstr ""
 
@@ -772,15 +772,15 @@ msgstr ""
 msgid "%(paciente)s consta como fallecido: no se le pueden dar Citas."
 msgstr ""
 
-#: apps/patients/views.py:142 templates/tutors/ficha.html:126
+#: apps/patients/views.py:143 templates/tutors/ficha.html:126
 msgid "Registrar Paciente"
 msgstr ""
 
-#: apps/patients/views.py:161
+#: apps/patients/views.py:162
 msgid "La ficha de un Paciente fallecido no se corrige: queda tal como estaba."
 msgstr ""
 
-#: apps/patients/views.py:173 apps/tutors/views.py:214
+#: apps/patients/views.py:174 apps/tutors/views.py:214
 #: templates/patients/ficha.html:68 templates/tutors/ficha.html:43
 msgid "Corregir la ficha"
 msgstr ""
@@ -1069,6 +1069,10 @@ msgid ""
 "que no se le atribuyen aquí."
 msgstr ""
 
+#: apps/tutors/eleccion.py:39 apps/tutors/mostrador.py:172
+msgid "Hay más de los que caben: afine la búsqueda."
+msgstr ""
+
 #: apps/tutors/forms.py:45
 #, python-brace-format
 msgid "Este RUT ya es el de {ficha}, en esta misma Clínica."
@@ -1153,10 +1157,6 @@ msgstr ""
 
 #: apps/tutors/models.py:488
 msgid "Tutores suprimidos"
-msgstr ""
-
-#: apps/tutors/mostrador.py:172
-msgid "Hay más de los que caben: afine la búsqueda."
 msgstr ""
 
 #: apps/tutors/rut.py:92
@@ -1530,13 +1530,36 @@ msgid "Ningún Paciente de la Clínica coincide con la búsqueda."
 msgstr ""
 
 #: templates/mostrador/buscador.html:4 templates/mostrador/buscador.html:7
-#: templates/mostrador/buscador.html:30 templates/tenancy/base_panel.html:44
-#: templates/tutors/listado.html:21
+#: templates/mostrador/buscador.html:30
+#: templates/patients/_elegir_tutor.html:20
+#: templates/tenancy/base_panel.html:44 templates/tutors/listado.html:21
 msgid "Buscar"
 msgstr ""
 
 #: templates/mostrador/buscador.html:20
 msgid "Nombre del Paciente o del Tutor, teléfono, RUT o microchip"
+msgstr ""
+
+#: templates/patients/_elegir_tutor.html:10
+msgid "Buscar al Tutor"
+msgstr ""
+
+#: templates/patients/_elegir_tutor.html:36
+#: templates/patients/cerrar_vinculo.html:22 templates/patients/estado.html:24
+#: templates/patients/formulario.html:59
+#: templates/tenancy/formulario_de_derivacion.html:12
+#: templates/tenancy/formulario_de_usuario.html:12
+#: templates/tenancy/horario_de_la_sede.html:80
+#: templates/tutors/consentimiento.html:24 templates/tutors/formulario.html:25
+msgid "Guardar"
+msgstr ""
+
+#: templates/patients/_tutores.html:19
+msgid "Busque al Tutor por su nombre, teléfono, RUT o correo."
+msgstr ""
+
+#: templates/patients/_tutores.html:21
+msgid "Ningún Tutor que se pueda elegir coincide con la búsqueda."
 msgstr ""
 
 #: templates/patients/cerrar_vinculo.html:4
@@ -1551,19 +1574,9 @@ msgid ""
 "fecha que se indique, y no se borra nada."
 msgstr ""
 
-#: templates/patients/cerrar_vinculo.html:22 templates/patients/estado.html:24
-#: templates/patients/formulario.html:59 templates/patients/traspaso.html:28
-#: templates/patients/vincular.html:14
-#: templates/tenancy/formulario_de_derivacion.html:12
-#: templates/tenancy/formulario_de_usuario.html:12
-#: templates/tenancy/horario_de_la_sede.html:80
-#: templates/tutors/consentimiento.html:24 templates/tutors/formulario.html:25
-msgid "Guardar"
-msgstr ""
-
 #: templates/patients/cerrar_vinculo.html:25 templates/patients/estado.html:27
-#: templates/patients/formulario.html:63 templates/patients/traspaso.html:31
-#: templates/patients/vincular.html:17 templates/tutors/consentimiento.html:49
+#: templates/patients/formulario.html:63 templates/patients/traspaso.html:27
+#: templates/patients/vincular.html:13 templates/tutors/consentimiento.html:49
 #: templates/tutors/formulario.html:29
 msgid "Volver a la ficha"
 msgstr ""

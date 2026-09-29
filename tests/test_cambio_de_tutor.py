@@ -352,8 +352,7 @@ def test_cerrar_un_vinculo_desde_el_mostrador_queda_en_el_registro(client):
 
 
 def test_abrir_el_cambio_de_tutor_deja_constancia_de_lo_que_enseña(client):
-    """Dice de qué animal se habla, quién responde ahora por él y, en el
-    desplegable, el fichero de Tutores entero."""
+    """Dice de qué animal se habla y quién responde ahora por él."""
     usuario = recepcion(client)
     paciente, antes = con_tutor(usuario.clinic)
 
@@ -377,16 +376,39 @@ def test_la_ficha_anota_la_lectura_de_los_tutores_de_antes(client):
     assert anotaciones_sobre(antes, Accion.LECTURA).count() == hasta_ahora + 1
 
 
+def test_a_quien_pasa_el_animal_se_elige_buscando(client):
+    """Se ofrecen los que casan con lo escrito, menos quien ya responde por él."""
+    usuario = recepcion(client)
+    paciente, antes = con_tutor(usuario.clinic, nombre="Rocco")
+    antes.apellidos = "Rojas"
+    antes.save()
+    camila = TutorFactory(clinic=usuario.clinic, nombre="Camila", apellidos="Rojas")
+    TutorFactory(clinic=usuario.clinic, nombre="Ignacio", apellidos="Fuentes")
+    url = reverse("patients:traspasar", args=[paciente.pk])
+
+    sin_buscar = client.get(url).content.decode()
+    buscando = client.get(url, {"q": "rojas"}).content.decode()
+    repintado = client.get(url, {"q": "rojas"}, HTTP_HX_REQUEST="true").content.decode()
+
+    assert 'name="tutor"' not in sin_buscar
+    assert f'name="tutor" value="{camila.pk}"' in buscando
+    assert f'name="tutor" value="{antes.pk}"' not in buscando
+    assert f'name="tutor" value="{camila.pk}"' in repintado
+    assert "Rocco" not in repintado
+
+
 # --- Nada de esto cruza la frontera de la Clínica -------------------------
 
 
 def test_no_se_puede_traspasar_a_un_tutor_de_otra_clinica(client):
-    """Ni ofreciéndolo en el desplegable ni enviando su identificador a mano."""
+    """Ni ofreciéndolo al buscarlo ni enviando su identificador a mano."""
     usuario = recepcion(client)
     paciente, antes = con_tutor(usuario.clinic)
     ajeno = TutorFactory(nombre="Ignacio", apellidos="Fuentes")
 
-    ofrecidos = client.get(reverse("patients:traspasar", args=[paciente.pk])).content.decode()
+    ofrecidos = client.get(
+        reverse("patients:traspasar", args=[paciente.pk]), {"q": "ignacio"}
+    ).content.decode()
     respuesta = cambiar_de_tutor(client, paciente, ajeno)
 
     assert "Ignacio Fuentes" not in ofrecidos

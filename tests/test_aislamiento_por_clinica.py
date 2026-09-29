@@ -219,13 +219,15 @@ def test_el_paciente_que_registra_recepcion_nace_en_su_propia_clinica(client):
 
 
 def test_no_se_puede_vincular_a_un_tutor_de_otra_clinica(client):
-    """Ni ofreciéndolo en el desplegable ni enviando su identificador a mano."""
+    """Ni ofreciéndolo al buscarlo ni enviando su identificador a mano."""
     usuario = UsuarioFactory()
     propio = PacienteFactory(clinic=usuario.clinic)
     ajeno = TutorFactory(nombre="Ignacio", apellidos="Fuentes")
     client.force_login(usuario)
 
-    ofrecidos = client.get(reverse("patients:vincular", args=[propio.pk])).content.decode()
+    ofrecidos = client.get(
+        reverse("patients:vincular", args=[propio.pk]), {"q": "ignacio"}
+    ).content.decode()
     respuesta = client.post(reverse("patients:vincular", args=[propio.pk]), {"tutor": ajeno.pk})
 
     assert "Ignacio Fuentes" not in ofrecidos
