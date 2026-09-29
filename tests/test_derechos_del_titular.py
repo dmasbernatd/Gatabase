@@ -6,7 +6,10 @@ los datos personales ya no están, que la Historia del animal sigue entera, que
 consta quién lo hizo— y no cómo lo guarda la base.
 """
 
+import io
+
 import pytest
+from django.db import models
 from django.urls import reverse
 
 from apps.audit.models import Accion, RegistroDeAcceso
@@ -14,7 +17,7 @@ from apps.patients.forms import TraspasoForm, VinculoForm
 from apps.patients.models import Paciente
 from apps.tenancy.models import Rol
 from apps.tutors.consentimiento import Canal, se_puede_contactar
-from apps.tutors.models import Tutor, Vinculo
+from apps.tutors.models import Suprimido, Tutor, Vinculo
 from tests.factories import (
     ClinicaFactory,
     PacienteFactory,
@@ -412,3 +415,112 @@ def test_el_documento_no_se_pide_por_un_enlace(client):
     tutor, _, _ = camila_con_dos_animales(usuario.clinic)
 
     assert client.get(reverse(DATOS, args=[tutor.pk])).status_code == 405
+
+
+# --- Lo que no vuelve -----------------------------------------------------
+
+# La planilla con la que la clínica llegó, que el README anima a volver a subir
+# «las veces que haga falta».
+CABECERA_DE_TUTORES = "nombre,apellidos,rut,telefono,correo,direccion"
+CAMILA_EN_LA_PLANILLA = "Camila,Rojas Pizarro,12.345.678-5,9 8765 4321,,Av. Grecia 2001"
+CAMILA_SIN_RUT = "Camila,Rojas Pizarro,,9 8765 4321,,Av. Grecia 2001"
+
+
+def reimportar(client, *filas):
+    """Sube la planilla de Tutores y la confirma, como el admin la vuelve a subir."""
+    archivo = io.BytesIO(("\n".join([CABECERA_DE_TUTORES, *filas]) + "\n").encode("utf-8"))
+    archivo.name = "clientes.csv"
+    previa = client.post(reverse("imports:tutores"), {"archivo": archivo}, follow=True)
+    client.post(reverse("imports:confirmar"), follow=True)
+    return previa.content.decode()
+
+
+def suprimida(client):
+    """Camila pidió que la borraran, y el admin lo hizo."""
+    usuario = admin(client)
+    tutor, _, _ = camila_con_dos_animales(usuario.clinic)
+    anonimizar(client, tutor)
+    return usuario.clinic
+
+
+def test_la_planilla_de_siempre_no_la_vuelve_a_registrar(client):
+    """El caso de la deuda del 20: la clínica sube otra vez la planilla con la
+    que llegó, y quien pidió que la borraran no vuelve a entrar como ficha nueva."""
+    clinica = suprimida(client)
+
+    previa = reimportar(client, CAMILA_EN_LA_PLANILLA)
+
+    assert "pidió que se suprimieran sus datos" in previa
+    assert not Tutor.de_todas_las_clinicas.filter(clinic=clinica, nombre="Camila").exists()
+
+
+def test_tampoco_vuelve_por_su_nombre_y_su_telefono(client):
+    """Una tanda sin la columna del RUT la reconoce igual que el importador
+    reconoce a cualquiera: por el nombre completo con el teléfono."""
+    clinica = suprimida(client)
+
+    reimportar(client, CAMILA_SIN_RUT)
+
+    assert not Tutor.de_todas_las_clinicas.filter(clinic=clinica, nombre="Camila").exists()
+
+
+def test_otra_persona_de_la_misma_casa_y_el_mismo_nombre_si_entra(client):
+    """La reserva del importador vale también aquí: mismo nombre y mismo
+    teléfono con otro RUT es otra persona —la hija—, y no pidió nada."""
+    clinica = suprimida(client)
+
+    reimportar(client, "Camila,Rojas Pizarro,9.876.543-3,9 8765 4321,,Av. Grecia 2001")
+
+    assert Tutor.de_todas_las_clinicas.filter(clinic=clinica, nombre="Camila").exists()
+
+
+def test_rotar_la_llave_dejando_la_anterior_no_olvida_a_nadie(client, settings):
+    """Las huellas se hicieron con la llave de entonces, y se comparan con cada
+    una de las que el despliegue todavía acepta."""
+    clinica = suprimida(client)
+    settings.SECRET_KEY_FALLBACKS = [settings.SECRET_KEY]
+    settings.SECRET_KEY = "la-llave-de-despues-de-rotar"
+
+    reimportar(client, CAMILA_SIN_RUT)
+
+    assert not Tutor.de_todas_las_clinicas.filter(clinic=clinica, nombre="Camila").exists()
+
+
+def test_lo_que_se_recuerda_no_dice_quien_era(client):
+    """Para reconocerla no se guarda lo que se suprimió: ni su RUT ni su nombre
+    ni su teléfono están en ninguna columna, y lo guardado no apunta a su ficha."""
+    clinica = suprimida(client)
+
+    guardado = [
+        str(valor)
+        for fila in Suprimido.de_todas_las_clinicas.filter(clinic=clinica).values()
+        for valor in fila.values()
+    ]
+
+    assert guardado
+    for dato in ("123456785", "12.345.678", "Camila", "Rojas", "987654321"):
+        assert not any(dato in valor for valor in guardado)
+    assert not any(isinstance(campo, models.ForeignKey) and campo.related_model is Tutor
+                   for campo in Suprimido._meta.get_fields())
+
+
+def test_en_otra_clinica_no_se_la_reconoce(client):
+    """Lo que pidió lo pidió a esta Clínica. Otra que la tenga en su planilla es
+    otro responsable, y la huella de aquí ni siquiera coincide con la de allí."""
+    suprimida(client)
+    otra = ClinicaFactory()
+    admin(client, otra)
+
+    reimportar(client, CAMILA_EN_LA_PLANILLA)
+
+    assert Tutor.de_todas_las_clinicas.filter(clinic=otra, nombre="Camila").exists()
+
+
+def test_en_el_mostrador_si_se_la_puede_volver_a_registrar(client):
+    """Si vuelve ella misma a la consulta, la ficha nueva es cosa suya: lo que
+    se impide es que la planilla antigua la resucite sin que nadie se lo pida."""
+    clinica = suprimida(client)
+
+    client.post(reverse("tutors:crear"), {k: v for k, v in DE_CAMILA.items()})
+
+    assert Tutor.de_todas_las_clinicas.filter(clinic=clinica, rut=DE_CAMILA["rut"]).exists()

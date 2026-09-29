@@ -106,6 +106,34 @@ defender algo. La decisión sobre índices y sobre buscar en serio —tolerante 
 tildes, incremental— la tomó el **11** con el volumen que pudo fabricarse él
 mismo; lo que el 16 aporta es volumen **realista** —nombres que se repiten,
 apellidos que colisionan—, que es donde un barrido por nombre se nota de verdad.
+_Pagado el 29 de septiembre de 2026_, con los datos del **16** delante.
+`test_el_numero_de_consultas_no_crece_con_los_tutores` (`tests/test_fichas_de_tutor.py`)
+es la red que faltaba: por cada columna, el listado hace las mismas consultas con
+un Tutor que con setenta y cinco, buscando y en la segunda página. Se comprobó
+que caza un `N+1` metiendo uno a propósito en `Columna.celda_de`. Y se midió, en
+reloj de pared (mediana de veinte) y no con `EXPLAIN ANALYZE`, que en el
+contenedor infla cada fila por el coste de cronometrarla:
+
+| | 3000 Tutores | 30 000 Tutores |
+|---|---|---|
+| Página, por apellidos (con índice) | 1 ms | 1 ms |
+| Página, por otra columna (sin índice) | 3–4 ms | 14–16 ms |
+| `COUNT(*)` sin búsqueda | 1 ms | 3 ms |
+| Buscar un nombre raro («camila rojas»): página + `COUNT` | 26 + 24 ms | 237 + 235 ms |
+| Buscar un nombre corriente («rojas»): página + `COUNT` | 26 + 24 ms | 10 + 231 ms |
+| Buscar un teléfono («9 8765») | 2 + 2 ms | 10 + 9 ms |
+
+Conclusión: **a 3000, que es la clínica de una sede con años de historia, no hay
+nada que arreglar**, y no se añadió ningún índice. Ordenar sin índice escala bien
+hasta mucho más allá. Lo único lineal es buscar por nombre —`translate` y `LIKE`
+sobre cada fila, unos 8 µs por Tutor—, y el `COUNT` del `Paginator` lo paga dos
+veces: con un nombre corriente la página se para en cuanto llena veinticinco, y
+el `COUNT` sigue hasta el final.
+_Lo que queda vivo_: a partir de unos 10 000 Tutores la búsqueda por nombre pasa
+de 100 ms. Entonces hay dos pasos y en este orden: quitar el `COUNT` al buscar
+—el truco de la caja del **11**, traer uno de más—, que parte el coste por dos y
+deja casi gratis los nombres corrientes; y si no basta, el GIN de trigramas, con
+su `CREATE EXTENSION` pedido a quien administre la base.
 
 ## Diseño del listado de Tutores
 
@@ -550,6 +578,10 @@ Tutor por RUT, teléfono o nombre, y puede quedar ambiguo—. Con tres delante s
 si «quién es la misma persona» es una pieza de `apps/` a secas, junto a
 `coincidencias.py`, o tres respuestas legítimamente distintas a tres preguntas
 distintas.
+_Movido el 29 de septiembre de 2026_: `claves_de` vive ahora en
+`apps/tutors/reconocimiento.py`, porque la supresión del **20** la necesita y
+`tutors` no puede importar de `imports`. La pregunta de las tres reglas sigue
+igual: la del Paciente sigue en `apps/imports/pacientes.py`.
 
 **«Cuántas filas» se lee en la página de importar y no en el Registro de
 acceso.** El Registro anota que hubo una importación y apunta a la `Importacion`;
@@ -661,3 +693,33 @@ _Cuándo se paga_: antes de que el importador se use para algo más que la llega
 de una clínica. El remedio no es guardar los datos del suprimido para
 reconocerlo —eso sería no suprimirlos—, sino algo como una huella del RUT que el
 importador consulte, y eso se decide con el caso delante.
+_Pagado el 29 de septiembre de 2026_ con esa huella. Al anonimizar se guarda un
+`Suprimido`: un HMAC de cada clave por la que el importador reconoce a alguien
+—el RUT, y el nombre completo con el teléfono—, con la Clínica dentro y
+`SECRET_KEY` como llave. El importador rechaza la fila del suprimido y pide
+quitarla del Excel; el mostrador no, porque ahí es la persona quien vuelve a dar
+sus datos. Para que las dos apps reconozcan a la misma persona con la misma
+regla, `claves_de` pasó de `apps/imports/tutores.py` a
+`apps/tutors/reconocimiento.py`. Tests al final de
+`tests/test_derechos_del_titular.py`.
+Tres decisiones que no estaban escritas:
+- **Con llave y no un hash a secas.** Los RUT que existen son unos pocos
+  millones: un SHA-256 del RUT se deshace probándolos todos en segundos.
+- **En una tabla aparte, sin fecha y con UUID.** La huella no apunta al Tutor, y
+  ni el orden de las filas ni un `creado` permiten emparejarla con el Tutor
+  anonimizado en el mismo momento — que sigue unido a sus Vínculos.
+- **Las dos huellas en la misma fila**, porque se comparan juntas: el mismo
+  nombre y teléfono con otro RUT es la hija, no la madre que pidió la supresión.
+_Lo que queda vivo_:
+- La llave está al lado de la cerradura, como el secreto TOTP del **13**: quien
+  lea la base **y** el entorno puede probar RUT hasta saber quién pidió la
+  supresión. No sabe qué animales trajo. Se paga con la misma gestión de secretos.
+- Rotar `DJANGO_SECRET_KEY` sin dejar la anterior en
+  `DJANGO_SECRET_KEY_FALLBACKS` olvida todas las supresiones, en silencio. Está
+  en el README y en `.env.example`; ningún `check` lo puede ver.
+- Los `Suprimido` no salen en la exportación del **19**: sin la llave no
+  reconocen a nadie en otro sistema. Una clínica que se va y vuelve a importar su
+  planilla en otro sitio resucita a los suprimidos allí, y eso ya no depende de
+  este código.
+- Un Tutor del que solo constaba el nombre no deja huella, porque tampoco podía
+  entrar por la planilla: el importador rechaza las filas sin RUT ni teléfono.

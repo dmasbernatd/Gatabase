@@ -33,6 +33,10 @@ DEBUG = _env_bool("DJANGO_DEBUG", "True")
 # fallar al arrancar, no quedarse en marcha con la clave de desarrollo.
 CLAVE_DE_DESARROLLO = "insegura-solo-para-desarrollo"
 SECRET_KEY = _env("DJANGO_SECRET_KEY", CLAVE_DE_DESARROLLO if DEBUG else None)
+# Las claves de antes, separadas por comas, al rotar la de arriba. No es solo
+# para no cerrar las sesiones abiertas: las huellas de quienes pidieron la
+# supresión (`apps/tutors/reconocimiento.py`) se hicieron con ellas.
+SECRET_KEY_FALLBACKS = [c for c in _env("DJANGO_SECRET_KEY_FALLBACKS", "").split(",") if c]
 ALLOWED_HOSTS = [h for h in _env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
 
 INSTALLED_APPS = [

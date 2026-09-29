@@ -21,6 +21,8 @@ mismo Paciente con la misma Historia clínica, y eso solo se sostiene si el
 vínculo es una tabla aparte y no una columna del Paciente.
 """
 
+import uuid
+
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.urls import reverse
@@ -457,3 +459,30 @@ class Consentimiento(ModeloDeLaClinica):
     def a_la_vista(self):
         """Lo que dijo, tal como se lee en la historia de su ficha."""
         return lo_que_diria(self.otorgado).label
+
+
+class Suprimido(ModeloDeLaClinica):
+    """Alguien que pidió que se suprimieran sus datos, recordado sin sus datos.
+
+    Lo que se guarda son las huellas de las claves por las que el importador lo
+    reconocería (`reconocimiento.py`), para que la planilla con la que llegó la
+    clínica no lo vuelva a registrar como ficha nueva. No es su Tutor en blanco
+    ni apunta a él, y eso es lo que lo hace aceptable: quien deshiciera una
+    huella —con la base **y** la llave— sabría que ese RUT pidió la supresión en
+    esta Clínica, no qué animales trajo ni quién lo atendió.
+
+    Por eso no lleva fecha ni un identificador que crezca: cualquiera de los dos
+    permitiría emparejar cada fila con el Tutor anonimizado en el mismo orden, y
+    el Tutor sí sigue unido a sus Vínculos.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # Cada una en blanco si el Tutor no tenía esa clave. Las dos van en la misma
+    # fila porque se comparan juntas: el mismo nombre y teléfono con otro RUT es
+    # otra persona, y eso solo se sabe si se sabe qué RUT tenía esta.
+    por_el_rut = models.CharField(_("huella del RUT"), max_length=64, blank=True)
+    por_el_nombre = models.CharField(_("huella del nombre y el teléfono"), max_length=64, blank=True)
+
+    class Meta:
+        verbose_name = _("Tutor suprimido")
+        verbose_name_plural = _("Tutores suprimidos")

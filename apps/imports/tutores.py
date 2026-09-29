@@ -27,6 +27,11 @@ Cuando las dos dicen cosas distintas manda el RUT: dos fichas con el mismo
 nombre y el mismo teléfono pero con RUT distinto son dos personas —una casa con
 madre e hija del mismo nombre—, y el RUT es lo único que lo dice sin adivinar.
 
+Las claves con que se reconoce a alguien viven en `apps/tutors/reconocimiento.py`
+y no aquí, porque la supresión del **20** reconoce con ellas a quien pidió que lo
+borraran. Esa fila se rechaza: reimportar la planilla con la que llegó la clínica
+no puede devolverle la ficha a quien ya no la quiere.
+
 Y de ahí sale la tercera decisión, que es la incómoda: **una fila sin RUT y sin
 teléfono se rechaza**. No hay nada malo en ella —el mostrador registra a diario
 Tutores de los que solo se sabe el nombre— pero no hay manera de reconocerla si
@@ -45,12 +50,13 @@ from functools import partial
 from django.db import transaction
 from django.utils.translation import gettext as _
 
-from apps.busqueda import sin_tildes
 from apps.imports.informe import FilaExaminada, Informe, lo_que_esta_mal
 from apps.imports.models import Importacion, LoQueSeImporta
 from apps.imports.planilla import Columna, Planilla, ejemplo_de
 from apps.tenancy.aislamiento import FormularioDeLaClinica
+from apps.tutors.derechos import QuienesPidieronLaSupresion
 from apps.tutors.models import Tutor
+from apps.tutors.reconocimiento import POR_EL_NOMBRE, POR_EL_RUT, claves_de
 from apps.tutors.rut import digito_verificador
 
 
@@ -145,12 +151,6 @@ class FilaDeTutorForm(FormularioDeLaClinica):
         fields = list(Tutor.DATOS_PERSONALES)
 
 
-# Las dos maneras de reconocer a la misma persona. Son dos y no una porque una
-# tanda posterior casi nunca trae las mismas columnas que la primera.
-POR_EL_RUT = "rut"
-POR_EL_NOMBRE = "nombre y teléfono"
-
-
 @dataclass(frozen=True)
 class Conocido:
     """Un Tutor que ya se conoce, y de dónde: de la Clínica o de esta planilla.
@@ -162,27 +162,6 @@ class Conocido:
 
     tutor: object
     linea: int = None
-
-
-def claves_de(tutor):
-    """Todo aquello por lo que se puede reconocer a este Tutor, por cada manera.
-
-    El nombre se pliega como se pliega para buscar (`sin_tildes`), porque la
-    misma persona aparece en dos planillas como «Muñoz» y como «Munoz».
-
-    Vacío cuando no hay por dónde: sin RUT y sin teléfono, la fila no se puede
-    reconocer, y decirlo es lo que evita duplicarla en la tanda siguiente.
-    """
-    claves = {}
-    if tutor.rut:
-        claves[POR_EL_RUT] = (POR_EL_RUT, tutor.rut)
-    if tutor.telefono:
-        claves[POR_EL_NOMBRE] = (
-            POR_EL_NOMBRE,
-            sin_tildes(f"{tutor.nombre} {tutor.apellidos}".strip()),
-            tutor.telefono,
-        )
-    return claves
 
 
 def anotar_como_conocido(conocidos, tutor, linea=None):
@@ -244,6 +223,7 @@ def examinar(contenido, clinica):
     # entrar por la línea 4 se conoce igual que quien llevaba ahí dos años, y
     # llevar dos listas sería preguntar dos veces lo mismo con dos respuestas.
     conocidos = _los_que_ya_estan(clinica)
+    suprimidos = QuienesPidieronLaSupresion(clinica)
     examinadas = []
 
     for fila in Planilla.leer(contenido, columnas=COLUMNAS_DE_LA_PLANILLA):
@@ -269,7 +249,21 @@ def examinar(contenido, clinica):
                     es_un_error=True,
                 )
             )
-        elif (conocido := a_quien_ya_se_conocia(ficha, conocidos)) is None:
+        elif (conocido := a_quien_ya_se_conocia(ficha, conocidos)) is None and suprimidos.incluye(ficha):
+            # Después de mirar la Clínica y no antes: si volvió por el mostrador,
+            # ya está en ella con su ficha nueva y la fila es una repetida más.
+            examinadas.append(
+                FilaExaminada(
+                    fila.numero,
+                    resumen,
+                    _(
+                        "Esta persona pidió que se suprimieran sus datos, y no se vuelve a "
+                        "registrar. Quítala también de tu planilla."
+                    ),
+                    es_un_error=True,
+                )
+            )
+        elif conocido is None:
             anotar_como_conocido(conocidos, ficha, fila.numero)
             examinadas.append(FilaExaminada(fila.numero, resumen, ficha=ficha))
         elif conocido.linea:

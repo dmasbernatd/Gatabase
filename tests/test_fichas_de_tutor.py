@@ -13,6 +13,8 @@ import html as marcado
 import re
 
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
 from apps.audit.models import Accion, RegistroDeAcceso
@@ -358,6 +360,32 @@ def test_buscar_despues_de_ordenar_conserva_el_orden(client):
     # búsqueda volvería al orden de siempre y Alvarez saldría primero.
     assert buscado.index("Zapata") < buscado.index("Alvarez")
     assert busqueda["orden"] == "-apellidos"
+
+
+def _consultas_al_listar(client, **parametros):
+    with CaptureQueriesContext(connection) as capturadas:
+        client.get(reverse("tutors:lista"), parametros)
+    return len(capturadas)
+
+
+@pytest.mark.parametrize("orden", [columna.clave for columna in COLUMNAS])
+def test_el_numero_de_consultas_no_crece_con_los_tutores(client, orden):
+    """Un `N+1` al pintar la tabla pasaría entero y en verde sin este test.
+
+    Por cada columna, porque cada una pinta su celda por su lado y la del nombre
+    lee una propiedad del Tutor, no un campo: el día que una celda pregunte algo
+    a la base, lo pregunta veinticinco veces por página.
+    """
+    usuario = recepcion(client)
+    poblar(usuario.clinic, 1)
+    con_uno = _consultas_al_listar(client, orden=orden)
+
+    poblar(usuario.clinic, TUTORES_POR_PAGINA * 3, prefijo="Otro")
+    con_muchos = _consultas_al_listar(client, orden=orden)
+    buscando = _consultas_al_listar(client, orden=orden, q="Otro")
+    en_la_segunda = _consultas_al_listar(client, orden=orden, pagina=2)
+
+    assert con_muchos == buscando == en_la_segunda == con_uno
 
 
 # --- Búsqueda -------------------------------------------------------------

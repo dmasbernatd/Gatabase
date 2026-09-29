@@ -28,6 +28,15 @@ todo lo que colgaba de ella deja de señalar a una persona:
 
 Es irreversible a propósito: no se guarda lo que había en ninguna parte, porque
 una copia para deshacer sería justamente el dato que el Tutor pidió suprimir.
+
+**Lo único que se recuerda es que lo pidió**, y sin sus datos: una huella de su
+RUT y otra de su nombre con su teléfono (`Suprimido`), para que la planilla con
+la que llegó la clínica no lo vuelva a registrar como ficha nueva. Sin eso, el
+importador —que reconoce a la misma persona por esas dos claves— no encuentra a
+nadie en la ficha en blanco y lo da de alta entero, y basta con que la clínica
+vuelva a subir el archivo que tiene en su computador. Lo que no se impide es que
+vuelva él: en el mostrador se le registra como a cualquiera, porque entonces es
+él quien da sus datos otra vez.
 """
 
 from dataclasses import dataclass
@@ -38,7 +47,8 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.audit.models import Accion, RegistroDeAcceso
 from apps.audit.registro import anotar
-from apps.tutors.models import Tutor
+from apps.tutors.models import Suprimido, Tutor
+from apps.tutors.reconocimiento import POR_EL_NOMBRE, POR_EL_RUT, huellas_de, llaves
 
 
 def anonimizar(tutor, usuario):
@@ -56,12 +66,69 @@ def anonimizar(tutor, usuario):
         tutor = Tutor.de_todas_las_clinicas.select_for_update().get(pk=tutor.pk)
         if tutor.esta_anonimizado:
             return False
+        recordar_que_lo_pidio(tutor)
         for dato in Tutor.DATOS_PERSONALES:
             setattr(tutor, dato, "")
         tutor.anonimizado = timezone.now()
         tutor.save(update_fields=[*Tutor.DATOS_PERSONALES, "anonimizado"])
         anotar(usuario, Accion.ANONIMIZACION, tutor)
     return True
+
+
+def recordar_que_lo_pidio(tutor):
+    """Deja las huellas del Tutor antes de vaciarlo, si tiene por dónde reconocerlo.
+
+    Un Tutor del que solo constaba el nombre no deja nada: el importador tampoco
+    podría reconocerlo, y rechaza las filas así (`apps/imports/tutores.py`).
+    """
+    huellas = huellas_de(tutor, tutor.clinic)
+    if huellas:
+        Suprimido.de_todas_las_clinicas.create(
+            clinic=tutor.clinic,
+            por_el_rut=huellas.get(POR_EL_RUT, ""),
+            por_el_nombre=huellas.get(POR_EL_NOMBRE, ""),
+        )
+
+
+class QuienesPidieronLaSupresion:
+    """Los que pidieron en esa Clínica que se suprimieran sus datos, para reconocerlos.
+
+    Se leen de una vez, como el importador lee a los Tutores que ya estaban: una
+    planilla son miles de filas y esto se pregunta por cada una.
+    """
+
+    def __init__(self, clinica):
+        self.clinica = clinica
+        suprimidos = Suprimido.de_todas_las_clinicas.filter(clinic=clinica)
+        self.por_el_rut = set()
+        # La huella del RUT que tenía, o "" si no tenía: es lo que decide si el
+        # mismo nombre con el mismo teléfono es la misma persona.
+        self.por_el_nombre = {}
+        for suprimido in suprimidos:
+            if suprimido.por_el_rut:
+                self.por_el_rut.add(suprimido.por_el_rut)
+            if suprimido.por_el_nombre:
+                self.por_el_nombre[suprimido.por_el_nombre] = suprimido.por_el_rut
+
+    def incluye(self, ficha):
+        """Si esta ficha sin guardar es alguien que pidió la supresión.
+
+        Con la misma regla que el importador usa para reconocer a quien ya
+        estaba: el RUT decide solo, y el nombre con el teléfono decide salvo que
+        los dos traigan RUT y no sea el mismo —la madre y la hija de una casa—.
+        Con cada llave por separado, porque las dos huellas de un Suprimido se
+        hicieron con la misma y solo se comparan bien entre ellas.
+        """
+        for llave in llaves():
+            huellas = huellas_de(ficha, self.clinica, llave)
+            rut = huellas.get(POR_EL_RUT)
+            if rut in self.por_el_rut:
+                return True
+            if (nombre := huellas.get(POR_EL_NOMBRE)) in self.por_el_nombre:
+                el_suyo = self.por_el_nombre[nombre]
+                if not (rut and el_suyo and rut != el_suyo):
+                    return True
+        return False
 
 
 @dataclass(frozen=True)
