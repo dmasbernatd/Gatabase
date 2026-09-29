@@ -264,6 +264,25 @@ def test_el_fichero_de_tutores_lo_sigue_listando_con_su_ficha_a_un_clic(client):
     assert "Camila" not in contenido
 
 
+@pytest.mark.parametrize("orden", ["apellidos", "-apellidos", "nombre", "-rut"])
+def test_en_el_fichero_los_anonimizados_van_al_final(client, orden):
+    """Sus apellidos están en blanco, y ordenando por ellos saldrían los
+    primeros: justo donde recepción empieza a mirar. Van detrás de los que
+    todavía son alguien, se ordene por la columna que se ordene y en el sentido
+    que sea."""
+    usuario = admin(client)
+    tutor, _, _ = camila_con_dos_animales(usuario.clinic)
+    anonimizar(client, tutor)
+    TutorFactory(clinic=usuario.clinic, nombre="Zoe", apellidos="Zúñiga", rut="")
+    TutorFactory(clinic=usuario.clinic, nombre="Ana", apellidos="Alarcón", rut="")
+
+    contenido = client.get(reverse("tutors:lista"), {"orden": orden}).content.decode()
+
+    su_fila = contenido.index(f'href="{tutor.get_absolute_url()}"')
+    assert contenido.index(">Zoe<") < su_fila
+    assert contenido.index(">Ana<") < su_fila
+
+
 def test_nadie_lo_encuentra_por_lo_que_era(client):
     """Ni el fichero ni el mostrador: buscar por su nombre o su teléfono ya no
     trae nada suyo, y buscar al animal lo trae entero."""

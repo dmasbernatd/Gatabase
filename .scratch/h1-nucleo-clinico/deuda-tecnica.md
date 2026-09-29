@@ -116,7 +116,7 @@ contenedor infla cada fila por el coste de cronometrarla:
 
 | | 3000 Tutores | 30 000 Tutores |
 |---|---|---|
-| Página, por apellidos (con índice) | 1 ms | 1 ms |
+| Página, por apellidos (con índice; ya no lo usa, ver «Los derechos del titular») | 1 ms | 1 ms |
 | Página, por otra columna (sin índice) | 3–4 ms | 14–16 ms |
 | `COUNT(*)` sin búsqueda | 1 ms | 3 ms |
 | Buscar un nombre raro («camila rojas»): página + `COUNT` | 26 + 24 ms | 237 + 235 ms |
@@ -392,6 +392,13 @@ contradicción que el **08** dejó fuera de la base a propósito. No puede darse
 de un dato que solo podría entrar por el importador del **18**.
 _Cuándo se paga_: en el **18**, si el importador acaba pudiendo escribir fichas
 que el formulario no dejaría escribir.
+_Cerrado el 29 de septiembre de 2026_ sin tocar código: el **18** no deja entrar
+la contradicción. El importador de Pacientes deja el estado de identificación
+vacío —la planilla no dice si el chip está inscrito o solo implantado—, y un
+estado vacío no es `sin chip`. Lo sostiene
+`test_el_estado_de_identificacion_no_se_deduce_del_chip`
+(`tests/test_importador_de_pacientes.py`). Si algún día la planilla trae el
+estado, esta nota vuelve a abrirse.
 
 ## Sesiones de mostrador y segundo factor
 
@@ -679,6 +686,24 @@ mirar.
 _Cuándo se paga_: cuando alguien lo note. Es mandarlos al final en
 `Orden.campos` (`apps/tutors/listado.py`) o sacarlos del fichero con un filtro
 propio, y ninguna de las dos cosas se decide sin ver cuántos hay.
+_Pagado el 29 de septiembre de 2026_, mandándolos al final y no sacándolos: su
+ficha tiene que seguir a un clic, porque es por donde se llega a sus Pacientes.
+`LOS_ANONIMIZADOS_AL_FINAL` (`apps/tutors/listado.py`) va delante de cualquier
+orden y en los dos sentidos; no está en `Orden` porque no se elige ni viaja en la
+URL. Tests: `test_en_el_fichero_los_anonimizados_van_al_final`
+(`tests/test_derechos_del_titular.py`), por cuatro órdenes.
+_Lo que cuesta_: la página de entrada deja de servirse del índice
+`tutor_por_apellidos`. Medido en la Clínica de 3000 del **16** (mediana de
+veinte, reloj de pared): por apellidos pasa de 1,6 a 4,4 ms, y al revés de 2,3 a
+5,2 — lo mismo que ya costaba ordenar por cualquier otra columna, que la tabla
+de «Rendimiento» dio por bueno hasta 30 000. Se probó rehacer el índice con
+`anonimizado NULLS FIRST` delante: la página de entrada vuelve a 2 ms, pero el
+planificador cae en una trampa con todos los demás órdenes —usa el índice para
+el prefijo `anonimizado`, que es un único grupo, y lee la Clínica entera por
+índice antes de ordenarla—: 12 ms a 3000, peor que sin índice y peor al crecer.
+Por eso el índice se quedó como estaba. Si la página de entrada llega a pesar,
+el camino no es ese índice sino partir la consulta: los identificables primero
+y los anonimizados solo cuando aquellos se acaben.
 
 **El documento del titular no desglosa los accesos al conjunto.** Trae lo
 anotado sobre **su** ficha —abrirla, corregirla, su consentimiento, el propio

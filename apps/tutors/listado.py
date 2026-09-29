@@ -16,6 +16,7 @@ a un Tutor» acabarían diciendo cosas distintas.
 """
 
 from django.core.paginator import Paginator
+from django.db.models import F
 from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 
@@ -115,6 +116,12 @@ COLUMNAS_POR_CLAVE = {columna.clave: columna for columna in COLUMNAS}
 
 ORDEN_POR_DEFECTO = COLUMNAS_POR_CLAVE["apellidos"]
 
+# Antes que cualquier columna, los que todavía son alguien. Un Tutor anonimizado
+# tiene los apellidos en blanco, y ordenando por ellos saldría el primero: justo
+# en la página donde recepción empieza a mirar. No es una Columna ni viaja en la
+# URL porque no se elige: vale para todo orden y en los dos sentidos.
+LOS_ANONIMIZADOS_AL_FINAL = F("anonimizado").asc(nulls_first=True)
+
 
 class Orden:
     """Por qué Columna y en qué sentido se ordena el listado.
@@ -196,7 +203,9 @@ class ListadoDeTutores:
     def __init__(self, tutores, parametros):
         self.buscado = parametros.get(PARAMETRO_DE_BUSQUEDA, "").strip()
         self.orden = Orden.desde_la_url(parametros.get(PARAMETRO_DE_ORDEN, ""))
-        encontrados = buscar(tutores, self.buscado).order_by(*self.orden.campos)
+        encontrados = buscar(tutores, self.buscado).order_by(
+            LOS_ANONIMIZADOS_AL_FINAL, *self.orden.campos
+        )
         self.pagina = Paginator(encontrados, TUTORES_POR_PAGINA).get_page(
             parametros.get(PARAMETRO_DE_PAGINA)
         )
