@@ -22,6 +22,7 @@ from apps.audit.models import Accion, RegistroDeAcceso
 from apps.imports.models import Importacion, LoQueSeImporta
 from apps.patients.catalogo import Especie
 from apps.patients.models import Paciente, Sexo
+from apps.tutors.derechos import anonimizar
 from apps.tutors.models import Tutor, Vinculo
 from apps.tutors.rut import formateado
 from apps.tutors.traspaso import traspasar
@@ -255,6 +256,34 @@ def test_cuando_dos_tutores_se_llaman_igual_la_fila_se_rechaza_diciendo_entre_cu
     # distinguen por el nombre, que es justo lo que las hizo dudosas.
     for cual in (1, 2):
         assert formateado(rut_de_prueba(cual)) in contenido
+
+
+def test_un_tutor_anonimizado_no_se_alcanza_por_el_nombre_con_que_consta(client):
+    """«Tutor anonimizado» es lo que dice su ficha, no un nombre que nadie lleve.
+
+    Vincularle un animal sería atribuírselo a quien pidió dejar de constar, que
+    es lo que ni el formulario de vínculo ni el cambio de Tutor dejan hacer.
+    """
+    usuario = admin(client)
+    suprimido = tutor_de(usuario, nombre="Camila", apellidos="Rojas", rut=rut_de_prueba(1))
+    anonimizar(suprimido, usuario)
+
+    previa, _ = importar(client, fila(tutor="Tutor anonimizado"))
+
+    assert not Paciente.de_todas_las_clinicas.exists()
+    assert not Vinculo.de_todas_las_clinicas.exists()
+    assert "No hay ningún Tutor que se llame o conteste así" in previa.content.decode()
+
+
+def test_los_tutores_anonimizados_no_se_enumeran_como_dudas(client):
+    usuario = admin(client)
+    for cual in (1, 2):
+        anonimizar(tutor_de(usuario, rut=rut_de_prueba(cual)), usuario)
+
+    previa, _ = importar(client, fila(tutor="Tutor anonimizado"))
+
+    assert not Paciente.de_todas_las_clinicas.exists()
+    assert "Hay 2 Tutores que podrían ser" not in previa.content.decode()
 
 
 def test_una_fila_cuyo_tutor_no_esta_en_la_clinica_no_entra(client):

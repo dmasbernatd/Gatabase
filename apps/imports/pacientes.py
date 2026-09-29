@@ -348,13 +348,17 @@ class Tutores:
 
     De una vez y no una consulta por fila: una migración son miles de filas, y
     preguntar por cada una convertiría la vista previa en algo que nadie espera.
+
+    Sin los anonimizados: su ficha dice «Tutor anonimizado», que no es un nombre
+    que nadie lleve, y vincularles un animal sería atribuírselo a quien pidió
+    dejar de constar (`VinculoForm` tampoco los ofrece).
     """
 
     def __init__(self, clinica):
         self.por_el_rut = {}
         self.por_el_telefono = {}
         self.por_el_nombre = {}
-        for tutor in Tutor.de_todas_las_clinicas.filter(clinic=clinica):
+        for tutor in Tutor.de_todas_las_clinicas.filter(Tutor.IDENTIFICABLES, clinic=clinica):
             if tutor.rut:
                 self.por_el_rut[tutor.rut] = tutor
             if tutor.telefono:
