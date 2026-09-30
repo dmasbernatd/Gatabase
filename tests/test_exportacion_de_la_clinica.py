@@ -20,11 +20,13 @@ import zipfile
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.management import CommandError, call_command
 from django.http import StreamingHttpResponse
 from django.urls import reverse
 from django.utils import timezone
 
 from apps.audit.models import EL_CONJUNTO, Accion, RegistroDeAcceso
+from apps.exports import cierre
 from apps.exports.hojas import HOJAS, _de_la_clinica, de_quienes_son_los_datos
 from apps.exports.paquete import LEEME, como_un_zip, se_llama
 from apps.patients.estados import EstadoDelPaciente
@@ -32,6 +34,7 @@ from apps.tenancy.models import Clinica, Rol
 from apps.tutors.models import Tutor
 from apps.tutors.consentimiento import Canal
 from tests.factories import (
+    CONTRASENA_DE_PRUEBA,
     ClinicaDeDerivacionFactory,
     ClinicaFactory,
     ExcepcionDeAtencionFactory,
@@ -59,6 +62,14 @@ def admin(client, clinica=None):
     usuario = UsuarioFactory(rol=Rol.ADMIN, **({"clinic": clinica} if clinica else {}))
     client.force_login(usuario)
     return usuario
+
+
+def entrar(client, usuario):
+    """El login de verdad, con su contraseña, y no el atajo de `force_login`."""
+    return client.post(
+        reverse("account_login"),
+        {"login": usuario.email, "password": CONTRASENA_DE_PRUEBA},
+    )
 
 
 def descargar(client):
@@ -393,10 +404,35 @@ def test_cerrar_la_clinica_la_deja_sin_acceso(client):
     )
 
     assert respuesta.status_code == 200
-    clinica = Clinica.objects.get(pk=usuario.clinic.pk)
-    assert clinica.esta_cerrada
-    sin_acceso = get_user_model().objects.filter(clinic=clinica, is_active=False)
-    assert set(sin_acceso.values_list("pk", flat=True)) == {usuario.pk, recepcion.pk}
+    assert Clinica.objects.get(pk=usuario.clinic.pk).esta_cerrada
+    assert entrar(client, recepcion)["Location"] == reverse("account_inactive")
+    assert "_auth_user_id" not in client.session
+
+
+def test_cerrar_no_toca_quien_estaba_activo_y_quien_no(client):
+    """La fecha es la puerta, y no los Usuarios: así, al reabrir, quien se había
+    desactivado antes del cierre —el que dejó la clínica— sigue fuera."""
+    usuario = admin(client)
+    recepcion = UsuarioFactory(clinic=usuario.clinic, rol=Rol.RECEPCION)
+    se_fue = UsuarioFactory(clinic=usuario.clinic, rol=Rol.RECEPCION, is_active=False)
+
+    client.post(reverse(CIERRE), {"nombre": usuario.clinic.nombre})
+
+    activos = get_user_model().objects.filter(clinic=usuario.clinic, is_active=True)
+    assert set(activos.values_list("pk", flat=True)) == {usuario.pk, recepcion.pk}
+    assert not get_user_model().objects.get(pk=se_fue.pk).is_active
+
+
+def test_quien_tenia_la_sesion_abierta_sale_en_la_siguiente_peticion(client):
+    """Lo que cierra otro admin desde otro computador: la recepción que estaba
+    trabajando no llega a ver la página siguiente."""
+    usuario = UsuarioFactory(rol=Rol.ADMIN)
+    recepcion = UsuarioFactory(clinic=usuario.clinic, rol=Rol.RECEPCION)
+    client.force_login(recepcion)
+
+    cierre.cerrar(usuario.clinic, usuario)
+
+    assert client.get(reverse("tenancy:inicio")).status_code == 302
 
 
 def test_cerrar_la_clinica_no_borra_sus_datos(client):
@@ -433,7 +469,7 @@ def test_quien_cierra_su_clinica_deja_de_poder_entrar(client):
     client.post(reverse(CIERRE), {"nombre": usuario.clinic.nombre})
 
     assert client.get(reverse(EXPORTACION)).status_code == 302
-    assert not client.login(email=usuario.email, password="gatabase-de-prueba-2026")
+    assert not client.login(email=usuario.email, password=CONTRASENA_DE_PRUEBA)
 
 
 def test_el_nombre_mal_escrito_no_cierra_nada(client):
@@ -457,3 +493,67 @@ def test_cerrar_una_clinica_no_toca_a_la_de_al_lado(client):
 
     assert not Clinica.objects.get(pk=ajena.pk).esta_cerrada
     assert get_user_model().objects.filter(clinic=ajena, is_active=True).exists()
+
+
+# --- Reabrir ---------------------------------------------------------------
+#
+# No hay pantalla que reabra: quien cerró ya no puede entrar a pedirlo. Lo hace
+# un comando en el servidor, como `restablecer_segundo_factor`.
+
+
+def test_reabrir_devuelve_el_acceso_a_quien_lo_tenia(client):
+    usuario = admin(client)
+    recepcion = UsuarioFactory(clinic=usuario.clinic, rol=Rol.RECEPCION)
+    client.post(reverse(CIERRE), {"nombre": usuario.clinic.nombre})
+
+    call_command("reabrir_clinica", usuario.clinic.nombre, stdout=io.StringIO())
+
+    assert not Clinica.objects.get(pk=usuario.clinic.pk).esta_cerrada
+    assert entrar(client, recepcion)["Location"] == reverse("tenancy:inicio")
+
+
+def test_reabrir_no_devuelve_el_acceso_a_quien_se_habia_ido(client):
+    usuario = admin(client)
+    se_fue = UsuarioFactory(clinic=usuario.clinic, rol=Rol.RECEPCION, is_active=False)
+    client.post(reverse(CIERRE), {"nombre": usuario.clinic.nombre})
+
+    call_command("reabrir_clinica", usuario.clinic.nombre, stdout=io.StringIO())
+
+    assert entrar(client, se_fue)["Location"] == reverse("account_inactive")
+
+
+def test_reabrir_dice_a_quien_devuelve_el_acceso():
+    """Quien está en la consola tiene que ver a quién deja entrar, antes de que
+    esa gente se entere por su cuenta."""
+    clinica = ClinicaFactory(cerrada=timezone.now())
+    UsuarioFactory(clinic=clinica, email="ana@clinica.example")
+    UsuarioFactory(clinic=clinica, email="se.fue@clinica.example", is_active=False)
+    salida = io.StringIO()
+
+    call_command("reabrir_clinica", clinica.nombre, stdout=salida)
+
+    assert "ana@clinica.example" in salida.getvalue()
+    assert "se.fue@clinica.example" not in salida.getvalue()
+
+
+def test_reabrir_una_clinica_no_toca_a_la_de_al_lado():
+    clinica = ClinicaFactory(cerrada=timezone.now())
+    ajena = ClinicaFactory(cerrada=timezone.now())
+
+    call_command("reabrir_clinica", clinica.nombre, stdout=io.StringIO())
+
+    assert Clinica.objects.get(pk=ajena.pk).esta_cerrada
+
+
+def test_reabrir_se_queja_de_una_clinica_que_no_existe():
+    with pytest.raises(CommandError):
+        call_command("reabrir_clinica", "Clínica que no existe")
+
+
+def test_reabrir_se_queja_de_una_clinica_abierta():
+    """Si no estaba cerrada, lo más probable es que se escribiera mal el nombre
+    de la otra: mejor decirlo que no hacer nada en silencio."""
+    clinica = ClinicaFactory()
+
+    with pytest.raises(CommandError):
+        call_command("reabrir_clinica", clinica.nombre)

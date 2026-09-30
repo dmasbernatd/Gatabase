@@ -29,7 +29,9 @@ class Clinica(models.Model):
     acceso no admite `DELETE` (ADR-0004), así que el borrado en cascada falla, y
     tiene que fallar — la evidencia de quién vio qué sobrevive a que la clínica
     deje de ser cliente. Cerrar es lo que se hace en su lugar, y qué significa lo
-    dice `apps/exports/cierre.py`: aquí solo consta desde cuándo.
+    dice `apps/exports/cierre.py`: aquí solo consta desde cuándo. Esa fecha es
+    además lo único que deja fuera a su gente (`autenticacion.py`), así que
+    reabrirla —`manage.py reabrir_clinica`— es vaciarla.
     """
 
     nombre = models.CharField(_("nombre"), max_length=120, unique=True)

@@ -107,6 +107,12 @@ Al admin que pierde el teléfono lo rescata un comando, que retira el segundo fa
 .venv/bin/python manage.py restablecer_segundo_factor admin@losandes.example
 ```
 
+Y a la Clínica que se cerró por error, otro. Cerrar deja fuera a todos sus Usuarios —el admin que lo pidió incluido— porque la fecha del cierre es lo que mira el login, y no toca a ninguno: al reabrir vuelve a entrar exactamente quien entraba antes, y el comando lo enumera.
+
+```sh
+.venv/bin/python manage.py reabrir_clinica "Clínica Los Andes"
+```
+
 ## Datos de demostración
 
 Para desarrollar contra volumen, medir si la búsqueda aguanta y enseñarle el sistema a la clínica piloto sin abrir la ficha de un cliente real:

@@ -112,7 +112,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "tenancy.Usuario"
 
-AUTHENTICATION_BACKENDS = ["allauth.account.auth_backends.AuthenticationBackend"]
+# El de `allauth`, con una condición más: la Clínica del Usuario sigue abierta
+# (`apps/tenancy/autenticacion.py`).
+AUTHENTICATION_BACKENDS = ["apps.tenancy.autenticacion.SoloClinicasAbiertas"]
 
 # El Usuario entra con su correo y su contraseña, y nada más: no hay registro
 # abierto — sus cuentas las crea el admin de la Clínica — ni verificación por

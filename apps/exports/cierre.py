@@ -9,19 +9,20 @@ deje de ser cliente, que es justamente para lo que sirve —, pero hasta ahora l
 única manera de enterarse era pulsar algo y recibir un `IntegrityError`. Este
 módulo existe para que el sistema ofrezca lo que sí se puede hacer.
 
-**Cerrar es dejarla sin acceso.** Se anota cuándo se cerró y se desactivan todos
-sus Usuarios, incluido el admin que lo pide. A partir de ahí nadie de esa Clínica
-entra: `allauth` deja fuera al Usuario inactivo en el login, y a quien tuviera
-sesión abierta lo desconecta en su siguiente petición, porque el backend de
-autenticación no devuelve Usuarios inactivos. Los datos se quedan donde están,
-intactos y sin nadie que los mire.
+**Cerrar es dejarla sin acceso.** Se anota cuándo se cerró, y esa fecha es la
+puerta: el backend de autenticación (`apps/tenancy/autenticacion.py`) no deja
+entrar a ningún Usuario de una Clínica cerrada, ni en el login ni a quien
+tuviera sesión abierta, que sale en su siguiente petición. Los Usuarios no se
+tocan: quien estaba activo sigue activo y quien se había desactivado sigue
+desactivado, y eso es lo que permite reabrir sin adivinar. Los datos se quedan
+donde están, intactos y sin nadie que los mire.
 
-**Es un gesto terminal, y se pide como tal.** No hay pantalla que reabra una
-Clínica: para volver a entrar hay que reactivar a un Usuario en la base de datos,
-que es trabajo de consola y con alguien delante. Por eso la vista pide escribir
-el nombre de la Clínica antes de hacerlo, y por eso la página ofrece antes la
-exportación: cerrar sin haberse llevado los datos es la única manera de que esto
-duela.
+**Es un gesto terminal desde la aplicación, y se pide como tal.** No hay
+pantalla que reabra una Clínica —quien la cerró ya no puede entrar a pedirlo—:
+se reabre con `manage.py reabrir_clinica`, en el servidor y con alguien delante.
+Por eso la vista pide escribir el nombre de la Clínica antes de hacerlo, y por
+eso la página ofrece antes la exportación: cerrar sin haberse llevado los datos
+es la única manera de que esto duela.
 
 **Queda en el Registro de acceso**, como una modificación sobre la Clínica: es el
 último gesto de esa Clínica y el que explica por qué después no hay ninguno más.
@@ -32,25 +33,16 @@ from django.utils import timezone
 
 from apps.audit.models import Accion
 from apps.audit.registro import anotar
-from apps.tenancy.models import Usuario
 
 
 def cerrar(clinica, usuario):
-    """Cierra la Clínica: consta desde cuándo, y su gente deja de entrar.
+    """Cierra la Clínica: consta desde cuándo, y con eso su gente deja de entrar.
 
-    Todo en la misma transacción: una Clínica marcada como cerrada cuya gente
-    siguiera entrando, o una Clínica sin acceso que no constara cerrada, serían
-    dos maneras distintas de mentir sobre lo mismo.
-
-    Se puede llamar sobre una Clínica ya cerrada y no pasa nada — vuelve a
-    desactivar lo que ya estaba desactivado —, pero no se pisa la fecha: cuándo
-    se cerró se dice una vez.
+    Se puede llamar sobre una Clínica ya cerrada y no pasa nada, pero no se pisa
+    la fecha: cuándo se cerró se dice una vez.
     """
     with transaction.atomic():
         if not clinica.esta_cerrada:
             clinica.cerrada = timezone.now()
             clinica.save(update_fields=["cerrada"])
-        # `update` y no un bucle con `save`: son todos los Usuarios de la Clínica
-        # de un golpe, y ninguno de ellos tiene nada que hacer al guardarse.
-        Usuario.objects.filter(clinic=clinica, is_active=True).update(is_active=False)
         anotar(usuario, Accion.MODIFICACION, clinica)

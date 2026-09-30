@@ -256,6 +256,46 @@ visitas, no con los datos. No es un problema hoy —la tabla está indexada por
 Clínica y fecha— y no se toca sin medir.
 _Cuándo se paga_: cuando el **16** ponga volumen y se pueda contar de verdad
 cuánto ocupa un día de mostrador.
+_Medido el 29 de septiembre de 2026, y no hay nada que pagar_ — ni aquí ni en
+las dos entradas de la caja y la detección, que preguntaban lo mismo. Contra la
+Clínica de 3000 Tutores del `datos_mock`, con el cliente de pruebas y todo
+dentro de una transacción deshecha al final (el Registro no admite `DELETE`):
+
+| Gesto | Filas |
+|---|---|
+| Una petición de la caja del mostrador | 2 |
+| Ficha de Tutor (1 + sus Pacientes, 2,8 de media) | ~2,8 |
+| Ficha de Paciente (1 + sus Tutores) | ~2 |
+| Detección en vivo: sin coincidencia / con una | 0 / 1 |
+
+Un día muy cargado de una sede —doscientas búsquedas de una o dos peticiones,
+ochenta fichas de Paciente, sesenta de Tutor, veinte altas con detección— son
+unas mil filas. Cada fila ocupa unos 220 bytes con sus dos índices, así que un
+día son 220 kB y **un año son unas 300 000 filas y 50 MB**. Poblado el Registro
+con uno y con cinco años de eso, la página del Registro:
+
+| | 1 año (300 000) | 5 años (1,5 M, 258 MB) |
+|---|---|---|
+| Sin filtro, página 1 o 200 | 70–90 ms | 210–230 ms |
+| «Quién vio a este Tutor» | 57 ms | 157 ms |
+| Un Usuario | 94 ms | 208 ms |
+| Una semana | 66 ms | 170 ms |
+
+Conclusión: el crecimiento por visitas es real y no importa. Ni el retardo de la
+caja ni el `hx-include` de la detección se tocan, y la regla, menos todavía.
+_Lo que queda vivo_: dos consultas de la página del Registro son lineales en el
+Registro entero de la Clínica, y son las que se comen el tiempo a los cinco
+años. La peor no es la de la página: es el `DISTINCT` de
+`FiltroDelRegistro._tipos_registrados`, que rellena el desplegable de tipos
+(33 ms a un año, 130 ms a cinco, con cualquier filtro). La otra es el `COUNT`
+del `Paginator` sin filtro (18 → 60 ms). No se añadió ningún índice: Postgres
+17 no salta por un índice para un `DISTINCT`, así que un índice por
+`(clinic, tipo_de_objeto)` seguiría leyéndolo entero.
+_Cuándo se paga_: si la página del Registro pasa de medio segundo, que a este
+ritmo son más de diez años. Entonces el desplegable sale de los modelos que el
+Registro sabe nombrar (`nombre_del_tipo` ya pregunta al registro de apps) con un
+`exists()` por tipo, que usa el índice `acceso_por_objeto`, y el `COUNT` se
+cambia por traer uno de más, como en la caja del **11**.
 
 ## Coincidencias entre fichas
 
@@ -336,6 +376,8 @@ _Cuándo se paga_: con el volumen del **16**, midiendo cuánto ocupa un día de
 verdad. Si molesta, lo que se toca es el retardo de la caja —250 ms hoy—, no la
 regla: dejar de anotar la búsqueda sería una pantalla que enseña veinte nombres
 y veinte teléfonos sin dejar rastro.
+_Medido el 29 de septiembre de 2026_: dos filas por petición, como se decía, y
+no molesta. Las cifras están en «Rendimiento del vínculo».
 
 **Buscar «9» en el fichero de Tutores ya no devuelve nada**, donde antes devolvía
 a todo el que tuviera un nueve en el correo. Es consecuencia de que lo escrito se
@@ -374,6 +416,9 @@ cambiar una escritura barata por una lectura en el camino crítico.
 _Cuándo se paga_: con el volumen del **16**, midiendo cuánto ocupa un día de
 mostrador de verdad. Si molesta, lo que se toca es el retardo o el alcance del
 `hx-include`, no la regla.
+_Medido el 29 de septiembre de 2026_: una fila cuando hay coincidencia y
+ninguna cuando no, que es casi siempre. No molesta. Las cifras están en
+«Rendimiento del vínculo».
 
 **Sin JavaScript no hay detección hasta guardar.** El hueco de los avisos llega
 vacío y lo llena htmx; quien navegue sin él sigue teniendo la red de siempre —el
@@ -652,6 +697,21 @@ admin que se equivoque de pestaña teniendo dos Clínicas.
 _Cuándo se paga_: si llega a pasar una vez, con un comando `reabrir_clinica` al
 lado de `restablecer_segundo_factor`, que existe por el mismo motivo — la
 aplicación puede dejarte fuera y la consola es la única puerta que queda.
+_Pagado el 29 de septiembre de 2026_, sin esperar a que pasara, porque al
+escribir el comando salió que no se podía escribir bien: el cierre desactivaba a
+todos los Usuarios, y después no había forma de distinguir a quien estaba activo
+de quien el admin había desactivado antes —el que dejó la clínica—. Reabrir
+tenía que devolverle el acceso a todos o a nadie. Así que **cerrar ya no toca a
+los Usuarios**: la fecha `Clinica.cerrada` es la puerta, y la mira el backend de
+autenticación (`apps/tenancy/autenticacion.py`) en el login y en cada petición
+con sesión, más el adaptador de `allauth`, que si no dejaría pasar por su atajo
+de «cuenta inactiva» al Usuario activo de una Clínica cerrada.
+`manage.py reabrir_clinica "<nombre>"` vacía la fecha y enumera a quién le
+devuelve el acceso. No anota en el Registro —no hay Usuario que lo haga—; la
+anotación del cierre sigue diciendo quién cerró y cuándo.
+_Lo que queda_: las Clínicas cerradas **antes** de este cambio tienen a sus
+Usuarios desactivados, y `reabrir_clinica` no los reactiva. Solo pasa en bases
+de desarrollo; si pasara en una de verdad, es reactivar a mano a quien toque.
 
 **Una Clínica cerrada solo se nota en el login.** El acceso se corta porque sus
 Usuarios quedan inactivos, no porque nada mire `Clinica.cerrada`: un Usuario que
@@ -660,6 +720,9 @@ igual —reactivar a mano es exactamente lo que se haría para reabrirla— pero
 bandera y el acceso son dos hechos que nadie obliga a coincidir.
 _Cuándo se paga_: cuando exista el comando de reabrir, que es quien tendría que
 ocuparse de las dos cosas a la vez.
+_Pagado el 29 de septiembre de 2026_ con lo de arriba: ahora la bandera **es**
+el acceso. Un Usuario activo de una Clínica cerrada no entra, y quien tenía la
+sesión abierta sale en su siguiente petición.
 
 **El zip se comprueba con volumen a mano, no en la suite.** Con 3000 Tutores y
 3000 Pacientes el pico de memoria de la exportación entera queda en algo más de un mega —1155 KiB en la última medición—,
