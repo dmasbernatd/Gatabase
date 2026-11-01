@@ -1,0 +1,29 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block panel %}
+  <h1>{{ titulo }}</h1>
+
+  <p>{% blocktranslate with paciente=paciente %}Atención de {{ paciente }}.{% endblocktranslate %}</p>
+
+  {% comment %}
+    Se dice antes de empezar a escribir, no después de guardar: guardar no
+    cierra nada, y lo que se cierra ya no se corrige. Quien atiende tiene que
+    saber las dos mitades mientras escribe, que es cuando le sirven.
+  {% endcomment %}
+  <p>{% translate "Guarde cuantas veces quiera: la Consulta sigue abierta y puede seguir escribiéndola." %}</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ formulario.as_p }}
+    <button type="submit">{% translate "Guardar" %}</button>
+  </form>
+
+  {% if consulta %}
+    <p><a href="{% url 'records:consulta' consulta.pk %}">{% translate "Volver a la Consulta" %}</a></p>
+  {% endif %}
+
+  <p><a href="{% url 'patients:ficha' paciente.pk %}">{% translate "Volver a la ficha del Paciente" %}</a></p>
+{% endblock %}

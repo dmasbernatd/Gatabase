@@ -14,6 +14,7 @@ from django.contrib.auth import get_user_model
 from apps.audit.models import Accion, RegistroDeAcceso
 from apps.patients.catalogo import Especie
 from apps.patients.models import Paciente, Sexo
+from apps.records.models import Consulta
 from apps.tenancy.horarios import Dia
 from apps.tenancy.models import (
     Clinica,
@@ -145,6 +146,33 @@ class VinculoFactory(FabricaDeLaClinica):
     tutor = factory.SubFactory(TutorFactory)
     paciente = factory.SubFactory(PacienteFactory, clinic=factory.SelfAttribute("..tutor.clinic"))
     clinic = factory.SelfAttribute("tutor.clinic")
+
+
+class ConsultaFactory(FabricaDeLaClinica):
+    """Un encuentro clínico entre un Paciente y un veterinario.
+
+    La Clínica sale del Paciente, como en el Vínculo: una Consulta de un animal
+    de otra Clínica no significaría nada, y dejar que la fábrica invente una
+    tercera escondería justo los escenarios de aislamiento que se quieren armar.
+
+    El veterinario nace con su rol puesto y en la misma Clínica: una Consulta
+    firmada por recepción no es un documento clínico, y una firmada por alguien
+    de otra Clínica no es nada. La Sede sale de él, que es donde atendió.
+
+    Nace **abierta** y sin nada escrito, que es como nace de verdad: el
+    veterinario la abre al empezar a atender y la va llenando.
+    """
+
+    class Meta:
+        model = Consulta
+
+    paciente = factory.SubFactory(PacienteFactory)
+    clinic = factory.SelfAttribute("paciente.clinic")
+    veterinario = factory.SubFactory(
+        UsuarioFactory, rol=Rol.VETERINARIO, clinic=factory.SelfAttribute("..paciente.clinic")
+    )
+    sede = factory.LazyAttribute(lambda consulta: consulta.veterinario.sedes.first())
+    motivo = "Cojea de la pata de atrás desde el fin de semana"
 
 
 class RegistroDeAccesoFactory(FabricaDeLaClinica):

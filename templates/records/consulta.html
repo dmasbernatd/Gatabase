@@ -1,0 +1,77 @@
+{% extends "tenancy/base_panel.html" %}
+{% load i18n %}
+
+{% block title %}{{ consulta }}{% endblock %}
+
+{% block panel %}
+  <h1>{% blocktranslate with paciente=consulta.paciente %}Consulta de {{ paciente }}{% endblocktranslate %}</h1>
+
+  {% comment %}
+    Quién atendió, cuándo y dónde va arriba y no al pie: es lo primero que se
+    pregunta al leer una Consulta de hace seis meses —a quién le pregunto por
+    esto— y es lo que hace de esta página un documento y no una nota.
+
+    La fecha se presenta en `America/Santiago`; en la base de datos está en UTC.
+  {% endcomment %}
+  <dl>
+    <dt>{% translate "Atendió" %}</dt>
+    <dd>{{ consulta.veterinario }}</dd>
+
+    <dt>{% translate "Abierta" %}</dt>
+    <dd>{{ consulta.abierta }}</dd>
+
+    <dt>{% translate "Sede" %}</dt>
+    <dd>{{ consulta.sede }}</dd>
+
+    <dt>{% translate "Paciente" %}</dt>
+    <dd><a href="{% url 'patients:ficha' consulta.paciente.pk %}">{{ consulta.paciente }}</a></dd>
+  </dl>
+
+  <h2>{% translate "Motivo de la Consulta" %}</h2>
+  <p>{{ consulta.motivo|linebreaksbr|default:"—" }}</p>
+
+  {% comment %}
+    El SOAP en cuatro apartados y con sus nombres: es como se escribió y como se
+    busca después. Un apartado vacío se enseña igual, con el guion: que no se
+    anotara nada en «objetivo» es un dato, y esconderlo haría que una Consulta a
+    medio escribir pareciera una completa.
+  {% endcomment %}
+  <h2>{% translate "Subjetivo" %}</h2>
+  <p>{{ consulta.subjetivo|linebreaksbr|default:"—" }}</p>
+
+  <h2>{% translate "Objetivo" %}</h2>
+  <p>{{ consulta.objetivo|linebreaksbr|default:"—" }}</p>
+
+  <h2>{% translate "Evaluación" %}</h2>
+  <p>{{ consulta.evaluacion|linebreaksbr|default:"—" }}</p>
+
+  <h2>{% translate "Plan" %}</h2>
+  <p>{{ consulta.plan|linebreaksbr|default:"—" }}</p>
+
+  <h2>{% translate "Diagnóstico" %}</h2>
+  <p>{{ consulta.diagnostico|linebreaksbr|default:"—" }}</p>
+
+  <h2>{% translate "Tratamiento indicado" %}</h2>
+  <p>{{ consulta.tratamiento_indicado|linebreaksbr|default:"—" }}</p>
+
+  {% comment %}
+    El folio dice dónde está la receta, no la receta: este sistema no emite
+    recetas de antimicrobianos, las emite el SAG. Se dice con todas sus letras
+    para que nadie busque aquí el PDF.
+  {% endcomment %}
+  <h2>{% translate "Receta del SAG" %}</h2>
+  <p>{{ consulta.folio_de_la_receta_del_sag|default:"—" }}</p>
+
+  {% comment %}
+    El enlace para seguir escribiendo sale solo para quien puede, y la vista lo
+    comprueba otra vez: esconderlo no basta para quien llegue con la URL en la
+    mano. Quien no puede ve dicho por qué, que es mejor que un hueco.
+  {% endcomment %}
+  {% if la_escribe %}
+    <p><a href="{% url 'records:escribir' consulta.pk %}">{% translate "Seguir escribiendo" %}</a></p>
+  {% else %}
+    <p>{% blocktranslate with veterinario=consulta.veterinario %}La escribe {{ veterinario }}, que la abrió.{% endblocktranslate %}</p>
+  {% endif %}
+
+  <p><a href="{% url 'patients:ficha' consulta.paciente.pk %}">{% translate "Volver a la ficha del Paciente" %}</a></p>
+{% endblock %}

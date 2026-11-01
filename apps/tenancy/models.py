@@ -160,6 +160,10 @@ class Usuario(AbstractBaseUser):
     def es_admin(self):
         return self.rol == Rol.ADMIN
 
+    @property
+    def es_veterinario(self):
+        return self.rol == Rol.VETERINARIO
+
 
 class FranjaDeAtencion(ModeloDeLaClinica):
     """Un tramo de un día de la semana en que la Sede atiende.

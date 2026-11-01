@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gatabase 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 23:05-0300\n"
+"POT-Creation-Date: 2026-11-01 03:47-0300\n"
 "PO-Revision-Date: 2026-08-17 18:51-0400\n"
 "Last-Translator: Equipo Gatabase\n"
 "Language-Team: es-CL\n"
@@ -112,7 +112,7 @@ msgstr ""
 #: apps/exports/hojas.py:330 apps/exports/hojas.py:345
 #: apps/patients/models.py:79 apps/tenancy/models.py:37
 #: apps/tenancy/models.py:66 apps/tenancy/models.py:137
-#: apps/tenancy/models.py:273 apps/tutors/models.py:54
+#: apps/tenancy/models.py:277 apps/tutors/models.py:54
 msgid "nombre"
 msgstr ""
 
@@ -127,7 +127,7 @@ msgid "RUT"
 msgstr ""
 
 #: apps/exports/hojas.py:286 apps/exports/hojas.py:345
-#: apps/tenancy/models.py:274 apps/tutors/consentimiento.py:42
+#: apps/tenancy/models.py:278 apps/tutors/consentimiento.py:42
 #: apps/tutors/models.py:66
 msgid "teléfono"
 msgstr ""
@@ -139,7 +139,7 @@ msgstr ""
 
 #: apps/exports/hojas.py:286 apps/exports/hojas.py:330
 #: apps/exports/hojas.py:345 apps/tenancy/models.py:67
-#: apps/tenancy/models.py:275 apps/tutors/models.py:68
+#: apps/tenancy/models.py:279 apps/tutors/models.py:68
 msgid "dirección"
 msgstr ""
 
@@ -200,7 +200,8 @@ msgid "id del Paciente"
 msgstr ""
 
 #: apps/exports/hojas.py:315 apps/patients/models.py:130
-#: apps/tutors/models.py:307 templates/mostrador/_resultados.html:14
+#: apps/records/models.py:53 apps/tutors/models.py:307
+#: templates/mostrador/_resultados.html:14 templates/records/consulta.html:27
 #: templates/tutors/datos_del_titular.html:43
 msgid "Paciente"
 msgstr ""
@@ -210,8 +211,8 @@ msgid "es el responsable"
 msgstr ""
 
 #: apps/exports/hojas.py:317 apps/exports/hojas.py:335
-#: apps/exports/hojas.py:340 apps/tenancy/models.py:182
-#: apps/tenancy/models.py:227 apps/tutors/models.py:315
+#: apps/exports/hojas.py:340 apps/tenancy/models.py:186
+#: apps/tenancy/models.py:231 apps/tutors/models.py:315
 msgid "hasta"
 msgstr ""
 
@@ -224,7 +225,7 @@ msgid "autoriza"
 msgstr ""
 
 #: apps/exports/hojas.py:324 apps/exports/hojas.py:340
-#: apps/tenancy/models.py:222 apps/tutors/models.py:443
+#: apps/tenancy/models.py:226 apps/tutors/models.py:443
 msgid "fecha"
 msgstr ""
 
@@ -238,22 +239,23 @@ msgid "teléfono de urgencias"
 msgstr ""
 
 #: apps/exports/hojas.py:335 apps/exports/hojas.py:340
-#: apps/tenancy/models.py:81 apps/tenancy/models.py:178
-#: apps/tenancy/models.py:220 templates/tenancy/base_panel.html:8
+#: apps/records/models.py:65 apps/tenancy/models.py:81
+#: apps/tenancy/models.py:182 apps/tenancy/models.py:224
+#: templates/records/consulta.html:24 templates/tenancy/base_panel.html:8
 msgid "Sede"
 msgstr ""
 
-#: apps/exports/hojas.py:335 apps/tenancy/models.py:180
+#: apps/exports/hojas.py:335 apps/tenancy/models.py:184
 msgid "día"
 msgstr ""
 
 #: apps/exports/hojas.py:335 apps/exports/hojas.py:340
-#: apps/tenancy/models.py:181 apps/tenancy/models.py:226
+#: apps/tenancy/models.py:185 apps/tenancy/models.py:230
 msgid "desde"
 msgstr ""
 
 #: apps/exports/hojas.py:340 apps/imports/informe.py:120
-#: apps/tenancy/models.py:225
+#: apps/tenancy/models.py:229
 msgid "motivo"
 msgstr ""
 
@@ -438,7 +440,7 @@ msgid "Tutor del que no consta nada del contacto"
 msgstr ""
 
 #: apps/imports/models.py:42 apps/tutors/models.py:123
-#: templates/patients/ficha.html:73 templates/tenancy/base_panel.html:45
+#: templates/patients/ficha.html:85 templates/tenancy/base_panel.html:45
 #: templates/tutors/lista.html:4 templates/tutors/lista.html:7
 msgid "Tutores"
 msgstr ""
@@ -772,6 +774,13 @@ msgstr ""
 msgid "%(paciente)s consta como fallecido: no se le pueden dar Citas."
 msgstr ""
 
+#: apps/patients/models.py:390
+#, python-format
+msgid ""
+"%(paciente)s consta como fallecido: su Historia clínica queda en solo "
+"lectura."
+msgstr ""
+
 #: apps/patients/views.py:143 templates/tutors/ficha.html:126
 msgid "Registrar Paciente"
 msgstr ""
@@ -783,6 +792,104 @@ msgstr ""
 #: apps/patients/views.py:174 apps/tutors/views.py:214
 #: templates/patients/ficha.html:68 templates/tutors/ficha.html:43
 msgid "Corregir la ficha"
+msgstr ""
+
+#: apps/records/forms.py:27
+msgid "En palabras del Tutor: por qué vino."
+msgstr ""
+
+#: apps/records/forms.py:28
+msgid "Lo que cuenta el Tutor: la anamnesis."
+msgstr ""
+
+#: apps/records/forms.py:29
+msgid "Lo que usted observa y mide en la exploración."
+msgstr ""
+
+#: apps/records/forms.py:30
+msgid "Su interpretación de lo anterior."
+msgstr ""
+
+#: apps/records/forms.py:31
+msgid "Qué se va a hacer: pruebas, tratamiento, revisión."
+msgstr ""
+
+#: apps/records/forms.py:33
+msgid ""
+"El folio de la receta que emitió en la plataforma del SAG, si emitió alguna. "
+"Este sistema no emite recetas."
+msgstr ""
+
+#: apps/records/models.py:59 apps/tenancy/models.py:103
+msgid "veterinario"
+msgstr ""
+
+#: apps/records/models.py:74
+msgid "abierta"
+msgstr ""
+
+#: apps/records/models.py:79
+msgid "motivo de la Consulta"
+msgstr ""
+
+#: apps/records/models.py:86
+msgid "subjetivo"
+msgstr ""
+
+#: apps/records/models.py:87
+msgid "objetivo"
+msgstr ""
+
+#: apps/records/models.py:88
+msgid "evaluación"
+msgstr ""
+
+#: apps/records/models.py:89
+msgid "plan"
+msgstr ""
+
+#: apps/records/models.py:91
+msgid "diagnóstico"
+msgstr ""
+
+#: apps/records/models.py:92
+msgid "tratamiento indicado"
+msgstr ""
+
+#: apps/records/models.py:101
+msgid "folio de la receta del SAG"
+msgstr ""
+
+#: apps/records/models.py:111
+msgid "Consulta"
+msgstr ""
+
+#: apps/records/models.py:112
+msgid "Consultas"
+msgstr ""
+
+#: apps/records/models.py:132
+#, python-format
+msgid "Consulta de %(paciente)s del %(fecha)s"
+msgstr ""
+
+#: apps/records/views.py:45
+msgid ""
+"Esta Consulta la escribe el veterinario que la abrió. Puede leerla entera."
+msgstr ""
+
+#: apps/records/views.py:50
+msgid ""
+"No consta en qué Sede trabaja: pídale al admin de la Clínica que le asigne "
+"una."
+msgstr ""
+
+#: apps/records/views.py:112 templates/patients/ficha.html:82
+msgid "Abrir Consulta"
+msgstr ""
+
+#: apps/records/views.py:149
+msgid "Escribir la Consulta"
 msgstr ""
 
 #: apps/telefono.py:55
@@ -981,10 +1088,6 @@ msgstr ""
 msgid "Sedes"
 msgstr ""
 
-#: apps/tenancy/models.py:103
-msgid "veterinario"
-msgstr ""
-
 #: apps/tenancy/models.py:104
 msgid "recepción"
 msgstr ""
@@ -1009,37 +1112,37 @@ msgstr ""
 msgid "Usuarios"
 msgstr ""
 
-#: apps/tenancy/models.py:185
+#: apps/tenancy/models.py:189
 msgid "Franja de atención"
 msgstr ""
 
-#: apps/tenancy/models.py:186
+#: apps/tenancy/models.py:190
 msgid "Franjas de atención"
 msgstr ""
 
-#: apps/tenancy/models.py:230
+#: apps/tenancy/models.py:234
 msgid "Excepción de atención"
 msgstr ""
 
-#: apps/tenancy/models.py:231
+#: apps/tenancy/models.py:235
 msgid "Excepciones de atención"
 msgstr ""
 
-#: apps/tenancy/models.py:249
+#: apps/tenancy/models.py:253
 #, python-format
 msgid "%(fecha)s: cerrado"
 msgstr ""
 
-#: apps/tenancy/models.py:250
+#: apps/tenancy/models.py:254
 #, python-format
 msgid "%(fecha)s: de %(desde)s a %(hasta)s"
 msgstr ""
 
-#: apps/tenancy/models.py:278
+#: apps/tenancy/models.py:282
 msgid "Clínica de derivación"
 msgstr ""
 
-#: apps/tenancy/models.py:279 templates/tenancy/configuracion.html:27
+#: apps/tenancy/models.py:283 templates/tenancy/configuracion.html:27
 #: templates/tenancy/derivaciones.html:4 templates/tenancy/derivaciones.html:7
 msgid "Clínicas de derivación"
 msgstr ""
@@ -1575,7 +1678,7 @@ msgstr ""
 
 #: templates/patients/_elegir_tutor.html:36
 #: templates/patients/cerrar_vinculo.html:22 templates/patients/estado.html:24
-#: templates/patients/formulario.html:59
+#: templates/patients/formulario.html:59 templates/records/formulario.html:22
 #: templates/tenancy/formulario_de_derivacion.html:12
 #: templates/tenancy/formulario_de_usuario.html:12
 #: templates/tenancy/horario_de_la_sede.html:80
@@ -1592,7 +1695,7 @@ msgid "Ningún Tutor que se pueda elegir coincide con la búsqueda."
 msgstr ""
 
 #: templates/patients/cerrar_vinculo.html:4
-#: templates/patients/cerrar_vinculo.html:7 templates/patients/ficha.html:97
+#: templates/patients/cerrar_vinculo.html:7 templates/patients/ficha.html:109
 msgid "Cerrar el Vínculo"
 msgstr ""
 
@@ -1670,37 +1773,37 @@ msgstr ""
 msgid "Cambiar el estado"
 msgstr ""
 
-#: templates/patients/ficha.html:89
+#: templates/patients/ficha.html:101
 msgid "responsable"
 msgstr ""
 
-#: templates/patients/ficha.html:93
+#: templates/patients/ficha.html:105
 msgid "Hacer responsable"
 msgstr ""
 
-#: templates/patients/ficha.html:101
+#: templates/patients/ficha.html:113
 msgid "Nadie responde por este Paciente."
 msgstr ""
 
-#: templates/patients/ficha.html:111
+#: templates/patients/ficha.html:123
 msgid "Nadie responde por él: súmele el Tutor que lo trae ahora."
 msgstr ""
 
-#: templates/patients/ficha.html:114 templates/patients/vincular.html:4
+#: templates/patients/ficha.html:126 templates/patients/vincular.html:4
 #: templates/patients/vincular.html:7
 msgid "Sumar un Tutor"
 msgstr ""
 
-#: templates/patients/ficha.html:116 templates/patients/traspaso.html:4
+#: templates/patients/ficha.html:128 templates/patients/traspaso.html:4
 #: templates/patients/traspaso.html:7
 msgid "Cambio de Tutor"
 msgstr ""
 
-#: templates/patients/ficha.html:125
+#: templates/patients/ficha.html:137
 msgid "Antes respondían por él"
 msgstr ""
 
-#: templates/patients/ficha.html:130 templates/tutors/ficha.html:144
+#: templates/patients/ficha.html:142 templates/tutors/ficha.html:144
 #, python-format
 msgid "hasta el %(fecha)s"
 msgstr ""
@@ -1733,6 +1836,79 @@ msgstr ""
 #: templates/patients/vincular.html:9
 #, python-format
 msgid "Otra persona responde también por %(paciente)s."
+msgstr ""
+
+#: templates/records/consulta.html:7
+#, python-format
+msgid "Consulta de %(paciente)s"
+msgstr ""
+
+#: templates/records/consulta.html:18
+msgid "Atendió"
+msgstr ""
+
+#: templates/records/consulta.html:21
+msgid "Abierta"
+msgstr ""
+
+#: templates/records/consulta.html:31
+msgid "Motivo de la Consulta"
+msgstr ""
+
+#: templates/records/consulta.html:41
+msgid "Subjetivo"
+msgstr ""
+
+#: templates/records/consulta.html:44
+msgid "Objetivo"
+msgstr ""
+
+#: templates/records/consulta.html:47
+msgid "Evaluación"
+msgstr ""
+
+#: templates/records/consulta.html:50
+msgid "Plan"
+msgstr ""
+
+#: templates/records/consulta.html:53
+msgid "Diagnóstico"
+msgstr ""
+
+#: templates/records/consulta.html:56
+msgid "Tratamiento indicado"
+msgstr ""
+
+#: templates/records/consulta.html:65
+msgid "Receta del SAG"
+msgstr ""
+
+#: templates/records/consulta.html:75
+msgid "Seguir escribiendo"
+msgstr ""
+
+#: templates/records/consulta.html:77
+#, python-format
+msgid "La escribe %(veterinario)s, que la abrió."
+msgstr ""
+
+#: templates/records/consulta.html:80 templates/records/formulario.html:29
+msgid "Volver a la ficha del Paciente"
+msgstr ""
+
+#: templates/records/formulario.html:9
+#, python-format
+msgid "Atención de %(paciente)s."
+msgstr ""
+
+#: templates/records/formulario.html:17
+msgid ""
+"Guarde cuantas veces quiera: la Consulta sigue abierta y puede seguir "
+"escribiéndola."
+msgstr ""
+
+#: templates/records/formulario.html:26
+msgid "Volver a la Consulta"
 msgstr ""
 
 #: templates/tenancy/alta_de_segundo_factor.html:4

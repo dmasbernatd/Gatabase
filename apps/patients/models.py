@@ -355,6 +355,41 @@ class Paciente(ModeloDeLaClinica):
             "paciente": self.nombre
         }
 
+    @property
+    def admite_consultas(self):
+        """Si se le puede abrir una Consulta nueva.
+
+        A un Paciente fallecido, no: su Historia clínica se conserva entera y en
+        solo lectura (`CONTEXT.md`), que es lo contrario de borrarla, y una
+        Consulta nueva sobre un animal que ya no está es o un error de ficha o
+        la atención de otro animal apuntada en la de este. `inactivo` no lo
+        impide: que un animal llevara dos años sin venir es justamente lo que
+        deja de ser verdad cuando entra por la puerta.
+
+        Lo que ya está escrito no se toca: las Consultas que tenga siguen
+        enteras, y las Enmiendas a una Consulta cerrada no pasan por aquí —
+        corregir lo que se hizo mientras el animal vivía sigue haciendo falta
+        después, y a veces justamente después.
+
+        La regla vive aquí y no en `records` por lo mismo que `admite_citas`: es
+        un hecho del Paciente, y `records` no puede preguntárselo al revés.
+        """
+        return not self.esta_fallecido
+
+    @property
+    def por_que_no_admite_consultas(self):
+        """Lo que hay que decirle a quien intenta abrirle una Consulta.
+
+        `None` si se puede. Se devuelve el motivo y no un `False` a secas por lo
+        mismo que en las Citas: quien tropiece con la regla tiene que poder
+        decir qué pasa sin volver a deducirlo.
+        """
+        if self.admite_consultas:
+            return None
+        return _(
+            "%(paciente)s consta como fallecido: su Historia clínica queda en solo lectura."
+        ) % {"paciente": self.nombre}
+
     def cambiar_de_estado(self, estado, fecha_de_fallecimiento=None):
         """Deja al Paciente en ese estado, con la fecha si es que falleció.
 

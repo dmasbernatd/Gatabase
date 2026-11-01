@@ -28,6 +28,11 @@ urlpatterns = [
     path("panel/buscar/", mostrador, name="buscar"),
     path("panel/tutores/", include("apps.tutors.urls")),
     path("panel/pacientes/", include("apps.patients.urls")),
+    # La Historia clínica cuelga del panel y no de `patients`, aunque se entre
+    # siempre por la ficha de un Paciente: es su propia app, con sus propios
+    # permisos —escribir una Consulta es del veterinario— y de ella va a colgar
+    # todo lo demás de H2.
+    path("panel/consultas/", include("apps.records.urls")),
     path("panel/registro/", include("apps.audit.urls")),
     # La importación de planillas: es del admin, y escribe en las dos apps de
     # dominio a la vez, así que cuelga del panel y no de ninguna de ellas.

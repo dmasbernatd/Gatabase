@@ -68,6 +68,17 @@
 
   <p><a href="{% url 'patients:estado' paciente.pk %}">{% translate "Cambiar el estado" %}</a></p>
 
+  {% comment %}
+    Abrir una Consulta se ofrece desde aquí porque es donde se abre: con el
+    animal delante. Solo al veterinario, que es quien la firma, y solo si el
+    Paciente las admite —la Historia clínica de un fallecido queda en solo
+    lectura—. La vista lo comprueba las dos cosas otra vez: esconder el botón no
+    basta para quien llegue con la URL en la mano.
+  {% endcomment %}
+  {% if user.es_veterinario and paciente.admite_consultas %}
+    <p><a href="{% url 'records:abrir' paciente.pk %}">{% translate "Abrir Consulta" %}</a></p>
+  {% endif %}
+
   <h2>{% translate "Tutores" %}</h2>
 
   {% comment %}
