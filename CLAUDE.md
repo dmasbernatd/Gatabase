@@ -12,6 +12,27 @@ Default five canonical roles, unchanged. See `docs/agents/triage-labels.md`.
 
 Single-context layout — `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 
+### Subagent routing
+
+Tiers and the standing rules live in `~/.claude/CLAUDE.md`. This section says who takes which step of `/code-review` and `/triage`, because neither skill names an agent itself — left alone, every sub-agent it spawns inherits the session model.
+
+The pattern both follow: **cheap models fetch and run; Opus decides.** The saving comes from keeping the diff, the issue bodies and the test output out of an Opus context — never from letting a cheap model form an opinion.
+
+**`/code-review`**
+
+- Steps 1–3 (resolve the fixed point, capture the diff and commit list, fetch the spec, locate standards sources) → `scout`.
+- Step 4, both axes → `deep`. Standards is not the cheap axis: the smell baseline is a judgement call by the skill's own wording, and step 5 forbids reranking, so a sub-agent's findings reach the user near-verbatim. A weak reviewer's false positives would be published, not filtered.
+- Step 5 (aggregate) stays in the main context — the final call on a finding is never delegated.
+
+**`/triage`**
+
+- Bucketing what needs attention → `scout`.
+- Step 1: `scout` gathers candidate existing implementations and `.out-of-scope/` matches; deciding whether it is *the same domain concept* stays here.
+- Step 2 (recommend category and state) is interactive — never delegated.
+- Step 3 (verify the claim: reproduce the bug, check out the PR, run the tests) → `scout`, reporting output verbatim. Heavy output, binary result.
+- Step 4 (grill, domain-modeling) stays here: it writes `CONTEXT.md` and ADRs.
+- Step 5: the agent brief → `deep`, since it is the contract a later agent builds from. Closing an issue or writing `.out-of-scope/` touches the tracker — confirm with the maintainer first.
+
 ## Reglas del proyecto
 
 Usa el vocabulario de `CONTEXT.md` en código, tests, plantillas y mensajes de commit. Lee `docs/adr/` antes de tocar tenancy, Consulta, auditoría o mensajería.
